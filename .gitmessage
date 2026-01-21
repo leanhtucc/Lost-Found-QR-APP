@@ -1,0 +1,45 @@
+# Commit Message Template
+# 
+# Format: <type>: <subject>
+#
+# Type:
+#   feat:     New feature
+#   fix:      Bug fix
+#   docs:     Documentation only changes
+#   style:    Code style changes (formatting, semicolons, etc)
+#   refactor: Code change that neither fixes a bug nor adds a feature
+#   perf:     Performance improvement
+#   test:     Adding or updating tests
+#   chore:    Changes to build process or auxiliary tools
+#
+# Subject:
+#   - Use imperative mood ("add" not "added" or "adds")
+#   - Don't capitalize first letter
+#   - No period at the end
+#   - Keep under 50 characters
+#
+# Example:
+#   feat: add tab navigation with four main screens
+#   fix: update navigation logic to enhance user experience
+#   refactor: improve code structure in HomeScreen component
+#
+# Current commit example (based on your request):
+# fix: update lesson visibility logic to enhance user experience in PhaseComponent
+
+# Current changes for Lost & Found QR:
+feat: add tab navigation with four beautiful screens
+
+- Created ScanScreen with QR code scanner interface and flash control
+- Created RegisterScreen with comprehensive item registration form
+- Created MyItemsScreen with stats cards and item management
+- Enhanced HomeScreen with gradient design and feature cards
+- Implemented TabNavigator with bottom tabs using Lucide icons
+- Updated App.tsx to use NavigationContainer
+- Fixed TypeScript issues with NativeWind className props
+- Added proper type definitions for tab bar icon props
+
+This commit significantly enhances user experience by providing:
+- Beautiful, modern UI with gradients and smooth animations
+- Intuitive navigation between main features
+- Clear visual hierarchy and information architecture
+- Consistent design language across all screens

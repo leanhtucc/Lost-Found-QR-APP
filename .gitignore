@@ -31,7 +31,25 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.local
 .env*.local
+.env.dev
+.env.development
+.env.staging
+.env.production
+
+# Security & Secrets
+*.pem
+*.key
+*.p12
+*.p8
+*.mobileprovision
+*.jks
+android-service-account.json
+google-services.json
+GoogleService-Info.plist
+secrets.json
 
 # typescript
 *.tsbuildinfo
@@ -39,3 +57,5 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+.env.local
