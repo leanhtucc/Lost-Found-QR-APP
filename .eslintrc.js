@@ -18,6 +18,7 @@ module.exports = {
     'react/prop-types': 'off',
     'react-native/no-unused-styles': 'warn',
     'react-native/no-inline-styles': 'warn',
+    'import/no-unresolved': 'off', // Disable import resolution - handled by TypeScript and Babel
   },
   env: {
     'react-native/react-native': true,

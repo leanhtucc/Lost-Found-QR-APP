@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 // Screens
 import { HomeScreen, ScanScreen, RegisterScreen, MyItemsScreen } from '@screens/index';
+import { LoginScreen } from '@screens/auth/login';
 import { TabNavigator } from './tab-navigator';
 
 // Type definitions
@@ -23,7 +24,7 @@ export type RootStackParamList = {
   EditItem: { itemId: string };
   Notifications: undefined;
   Help: undefined;
-  // Auth screens (for future use)
+  // Auth screens
   Login: undefined;
   SignUp: undefined;
   ForgotPassword: undefined;
@@ -33,8 +34,8 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export default function RootStack() {
   const navigationRef = useRef<any>(null);
-  
-  // For now, we'll assume user is not logged in (can be changed to true for testing)
+
+  // For now, we'll assume user is not logged in
   // In the future, this can be replaced with actual auth state management
   const isLoggedIn = false; // Change to true to test logged-in flow
   const [isLoading] = useState(false);
@@ -42,7 +43,9 @@ export default function RootStack() {
   // Show loading while checking auth state
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+      <View
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}
+      >
         <ActivityIndicator size="large" color="#2563eb" />
       </View>
     );
@@ -50,9 +53,8 @@ export default function RootStack() {
 
   return (
     <NavigationContainer ref={navigationRef}>
-      {/* Main App Stack - Direct to TabNavigator for now */}
       <Stack.Navigator
-        initialRouteName="TabNavigator"
+        initialRouteName={isLoggedIn ? 'TabNavigator' : 'Login'}
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
@@ -95,33 +97,21 @@ export default function RootStack() {
           },
         }}
       >
+        {/* Auth Screen - shown first when not logged in */}
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+
+        {/* Main App Screens */}
         <Stack.Screen
           name="TabNavigator"
           component={TabNavigator}
           options={{ headerShown: false }}
         />
-        
+
         {/* Individual screen routes (can be accessed directly) */}
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Scan"
-          component={ScanScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="MyItems"
-          component={MyItemsScreen}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Scan" component={ScanScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="MyItems" component={MyItemsScreen} options={{ headerShown: false }} />
 
         {/* Additional screens can be added here */}
         {/* 

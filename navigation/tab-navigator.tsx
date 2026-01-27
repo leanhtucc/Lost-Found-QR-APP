@@ -59,11 +59,7 @@ export const TabNavigator = () => {
         options={{
           tabBarLabel: 'Scan',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
-            <QrCode
-              size={size}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
+            <QrCode size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
@@ -88,11 +84,7 @@ export const TabNavigator = () => {
         options={{
           tabBarLabel: 'My Items',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
-            <Package
-              size={size}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
+            <Package size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />

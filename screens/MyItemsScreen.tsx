@@ -35,18 +35,14 @@ export const MyItemsScreen = () => {
       {/* Header */}
       <View className="bg-gradient-to-r from-purple-600 to-indigo-600 pt-12 pb-6 px-6 rounded-b-3xl shadow-lg">
         <Text className="text-3xl font-bold text-white mb-2">My Items</Text>
-        <Text className="text-purple-100 text-base">
-          {MOCK_ITEMS.length} items registered
-        </Text>
+        <Text className="text-purple-100 text-base">{MOCK_ITEMS.length} items registered</Text>
       </View>
 
       <ScrollView className="flex-1 px-6 pt-6">
         {/* Search Bar */}
         <View className="bg-white rounded-2xl shadow-sm mb-6 flex-row items-center px-4 py-3">
           <Search size={20} color="#9ca3af" />
-          <Text className="flex-1 ml-3 text-gray-400 text-base">
-            Search your items...
-          </Text>
+          <Text className="flex-1 ml-3 text-gray-400 text-base">Search your items...</Text>
         </View>
 
         {/* Stats Cards */}
@@ -97,12 +93,8 @@ export const MyItemsScreen = () => {
                         <Package size={20} color="#9333ea" />
                       </View>
                       <View className="flex-1">
-                        <Text className="text-gray-900 font-bold text-lg">
-                          {item.name}
-                        </Text>
-                        <Text className="text-gray-500 text-sm">
-                          {item.description}
-                        </Text>
+                        <Text className="text-gray-900 font-bold text-lg">{item.name}</Text>
+                        <Text className="text-gray-500 text-sm">{item.description}</Text>
                       </View>
                     </View>
                   </View>
@@ -128,16 +120,12 @@ export const MyItemsScreen = () => {
                 <View className="flex-row gap-2">
                   <TouchableOpacity className="flex-1 bg-purple-50 py-2.5 rounded-xl flex-row items-center justify-center">
                     <QrCode size={18} color="#9333ea" />
-                    <Text className="text-purple-700 font-semibold ml-2 text-sm">
-                      View QR
-                    </Text>
+                    <Text className="text-purple-700 font-semibold ml-2 text-sm">View QR</Text>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity className="flex-1 bg-gray-100 py-2.5 rounded-xl flex-row items-center justify-center">
                     <Package size={18} color="#6b7280" />
-                    <Text className="text-gray-700 font-semibold ml-2 text-sm">
-                      Details
-                    </Text>
+                    <Text className="text-gray-700 font-semibold ml-2 text-sm">Details</Text>
                   </TouchableOpacity>
                 </View>
               </View>

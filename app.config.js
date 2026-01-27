@@ -7,7 +7,7 @@ export default {
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     splash: {
-      image: './assets/splash.png',
+      image: './assets/icon.png',
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
     },
@@ -16,13 +16,14 @@ export default {
       supportsTablet: true,
     },
     android: {
+      package: 'com.anhtu081204.lostandfoundqr',
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: './assets/icon.png',
         backgroundColor: '#ffffff',
       },
     },
     web: {
-      favicon: './assets/favicon.png',
+      favicon: './assets/icon.png',
     },
   },
 };

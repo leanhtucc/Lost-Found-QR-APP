@@ -114,6 +114,7 @@ LostAndFoundQR/
 ## 🎯 Key Directories Explained
 
 ### Source Code (`/`)
+
 - **components/** - Shared UI components (Button, Input, etc.)
 - **screens/** - Full-screen views (Home, Profile, etc.)
 - **navigation/** - Navigation configuration
@@ -127,6 +128,7 @@ LostAndFoundQR/
 - **translations/** - Multi-language support
 
 ### Configuration Files
+
 - **package.json** - Dependencies and npm scripts
 - **tsconfig.json** - TypeScript config with path aliases
 - **babel.config.js** - Babel with NativeWind & dotenv
@@ -136,12 +138,14 @@ LostAndFoundQR/
 - **.prettierrc** - Code formatting rules
 
 ### Security Files
+
 - **.env.example** - Environment template (committed)
 - **.env** - Actual environment (gitignored)
 - **.gitignore** - Prevents committing sensitive files
 - **SECURITY.md** - Security best practices
 
 ### Documentation
+
 - **README.md** - Project overview and quick start
 - **docs/CODE_QUALITY.md** - Code quality guidelines
 - **docs/EAS_GUIDE.md** - Build and deployment guide
@@ -153,6 +157,7 @@ LostAndFoundQR/
 ## 📝 File Naming Conventions
 
 ### Components
+
 ```
 components/
 ├── Button.tsx              # Component file
@@ -161,6 +166,7 @@ components/
 ```
 
 ### Screens
+
 ```
 screens/
 ├── HomeScreen.tsx          # Screen component
@@ -169,6 +175,7 @@ screens/
 ```
 
 ### Utilities
+
 ```
 utils/
 ├── formatDate.ts           # Utility function
@@ -177,6 +184,7 @@ utils/
 ```
 
 ### Types
+
 ```
 types/
 ├── User.ts                 # Type definitions
@@ -190,20 +198,23 @@ types/
 ## 🎨 Import Path Aliases
 
 Instead of messy relative imports:
+
 ```typescript
 // ❌ Bad
 import { Button } from '../../../components/Button';
 ```
 
 Use clean path aliases:
+
 ```typescript
 // ✅ Good
 import { Button } from '@components/Button';
 ```
 
 ### Available Aliases
+
 - `@components/*` - Components
-- `@screens/*` - Screens  
+- `@screens/*` - Screens
 - `@navigation/*` - Navigation
 - `@hooks/*` - Custom hooks
 - `@utils/*` - Utilities
@@ -240,6 +251,7 @@ Component Re-render
 ## 📦 Adding New Features
 
 ### 1. New Component
+
 ```bash
 # Create file
 components/NewComponent.tsx
@@ -249,6 +261,7 @@ components/index.ts
 ```
 
 ### 2. New Screen
+
 ```bash
 # Create file
 screens/NewScreen.tsx
@@ -261,6 +274,7 @@ screens/index.ts
 ```
 
 ### 3. New Utility
+
 ```bash
 # Create file
 utils/newUtil.ts
@@ -270,6 +284,7 @@ utils/index.ts
 ```
 
 ### 4. New Type
+
 ```bash
 # Create file
 types/NewType.ts
@@ -283,18 +298,21 @@ types/index.ts
 ## 🎯 Best Practices
 
 ### File Organization
+
 ✅ One component per file
 ✅ Group related files in folders
 ✅ Use index.ts for exports
 ✅ Keep files focused and small
 
 ### Naming
+
 ✅ Components: PascalCase
 ✅ Files: PascalCase for components
 ✅ Utilities: camelCase
 ✅ Constants: UPPER_SNAKE_CASE
 
 ### Imports
+
 ✅ Use path aliases
 ✅ Group imports logically
 ✅ Sort alphabetically
@@ -302,6 +320,7 @@ types/index.ts
 ---
 
 This structure provides:
+
 - 🎯 **Clear organization**
 - 🔍 **Easy navigation**
 - 📚 **Scalability**

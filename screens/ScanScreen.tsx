@@ -15,9 +15,7 @@ export const ScanScreen = () => {
       {/* Header */}
       <View className="bg-blue-600 pt-12 pb-6 px-6 rounded-b-3xl shadow-lg">
         <Text className="text-3xl font-bold text-white mb-2">Scan QR Code</Text>
-        <Text className="text-blue-100 text-base">
-          Point your camera at a QR code to scan
-        </Text>
+        <Text className="text-blue-100 text-base">Point your camera at a QR code to scan</Text>
       </View>
 
       <ScrollView className="flex-1 px-6 pt-6">
@@ -27,9 +25,7 @@ export const ScanScreen = () => {
             {!isScanning ? (
               <View className="items-center">
                 <QrCode size={120} color="#ffffff" strokeWidth={1.5} />
-                <Text className="text-white text-lg mt-4 font-semibold">
-                  Tap to start scanning
-                </Text>
+                <Text className="text-white text-lg mt-4 font-semibold">Tap to start scanning</Text>
               </View>
             ) : (
               <View className="items-center">
@@ -39,7 +35,7 @@ export const ScanScreen = () => {
                   <View className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-400" />
                   <View className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-400" />
                   <View className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-400" />
-                  
+
                   {/* Scanning line animation placeholder */}
                   <View className="absolute top-1/2 left-0 right-0 h-1 bg-blue-400 opacity-70" />
                 </View>
@@ -64,9 +60,7 @@ export const ScanScreen = () => {
                 fill={flashEnabled ? '#ffffff' : 'none'}
               />
               <Text
-                className={`ml-2 font-semibold ${
-                  flashEnabled ? 'text-white' : 'text-gray-700'
-                }`}
+                className={`ml-2 font-semibold ${flashEnabled ? 'text-white' : 'text-gray-700'}`}
               >
                 {flashEnabled ? 'Flash On' : 'Flash Off'}
               </Text>
@@ -77,9 +71,7 @@ export const ScanScreen = () => {
         {/* Scan Button */}
         <TouchableOpacity
           onPress={handleScan}
-          className={`py-4 rounded-2xl shadow-lg mb-6 ${
-            isScanning ? 'bg-red-500' : 'bg-blue-600'
-          }`}
+          className={`py-4 rounded-2xl shadow-lg mb-6 ${isScanning ? 'bg-red-500' : 'bg-blue-600'}`}
         >
           <View className="flex-row items-center justify-center">
             <Camera size={24} color="#ffffff" />
@@ -93,11 +85,10 @@ export const ScanScreen = () => {
         <View className="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-4 mb-6 flex-row">
           <AlertCircle size={24} color="#2563eb" className="mr-3" />
           <View className="flex-1">
-            <Text className="text-blue-900 font-bold text-base mb-1">
-              How to scan
-            </Text>
+            <Text className="text-blue-900 font-bold text-base mb-1">How to scan</Text>
             <Text className="text-blue-700 text-sm leading-5">
-              Position the QR code within the frame. The scanner will automatically detect and process it.
+              Position the QR code within the frame. The scanner will automatically detect and
+              process it.
             </Text>
           </View>
         </View>
@@ -105,8 +96,8 @@ export const ScanScreen = () => {
         {/* Recent Scans */}
         <View className="mb-6">
           <Text className="text-xl font-bold text-gray-800 mb-4">Recent Scans</Text>
-          
-          {[1, 2, 3].map((item) => (
+
+          {[1, 2, 3].map(item => (
             <TouchableOpacity
               key={item}
               className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-100 flex-row items-center"
@@ -115,9 +106,7 @@ export const ScanScreen = () => {
                 <QrCode size={24} color="#2563eb" />
               </View>
               <View className="flex-1">
-                <Text className="text-gray-900 font-semibold text-base">
-                  Item #{item}2345
-                </Text>
+                <Text className="text-gray-900 font-semibold text-base">Item #{item}2345</Text>
                 <Text className="text-gray-500 text-sm mt-1">
                   Scanned {item} hour{item > 1 ? 's' : ''} ago
                 </Text>
