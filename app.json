@@ -34,7 +34,8 @@
           "project": "react-native",
           "organization": "anh-tu-studio"
         }
-      ]
+      ],
+      "expo-secure-store"
     ]
   }
 }

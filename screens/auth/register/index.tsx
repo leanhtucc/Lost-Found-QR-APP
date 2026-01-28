@@ -1,43 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { AuthHeader } from '../components/AuthHeader';
 import { RegisterForm } from './components/RegisterForm';
 import { GoogleLoginButton } from '../components/GoogleLoginButton';
+import { useAuth } from '@hooks/useAuth';
 
 export const RegisterScreen: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const navigation = useNavigation();
+  const { isLoading, register, navigateToLogin, navigateToCodeVerify } = useAuth();
 
-  const handleRegister = async (
-    fullName: string,
-    phone: string,
-    email: string,
-    password: string
-  ) => {
-    setIsLoading(true);
-    try {
-      // TODO: Implement registration logic
-      console.log('Register:', { fullName, phone, email, password });
-      // await registerAPI(fullName, phone, email, password);
-    } catch (error) {
-      console.error('Registration error:', error);
-    } finally {
-      setIsLoading(false);
+  const handleRegister = async (displayName: string, email: string, password: string) => {
+    const success = await register(displayName, email, password);
+    if (success) {
+      // Navigate to OTP verification screen
+      navigateToCodeVerify(email);
     }
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      // TODO: Implement Google login
-      console.log('Google login');
-    } catch (error) {
-      console.error('Google login error:', error);
-    }
-  };
-
-  const navigateToLogin = () => {
-    navigation.navigate('Login' as never);
+    // TODO: Implement Google login
+    Alert.alert('Thông báo', 'Chức năng đăng nhập Google đang được phát triển');
   };
 
   return (

@@ -1,2 +1,6 @@
-// Export your services here
-export {};
+/**
+ * Services index
+ * Re-exports all API services
+ */
+
+export * from './auth';

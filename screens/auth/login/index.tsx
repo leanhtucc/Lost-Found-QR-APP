@@ -1,43 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { AuthHeader } from '../components/AuthHeader';
 import { LoginForm } from './components/LoginForm';
 import { GoogleLoginButton } from '../components/GoogleLoginButton';
+import { useAuth } from '@hooks/useAuth';
 
 export const LoginScreen: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const navigation = useNavigation();
+  const { isLoading, login, navigateToRegister, navigateToForgotPassword, navigateToMainApp } =
+    useAuth();
 
   const handleLogin = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      // TODO: Implement login logic
-      console.log('Login:', { email, password });
-      // await loginAPI(email, password);
-    } catch (error) {
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
+    const success = await login(email, password);
+    if (success) {
+      navigateToMainApp();
     }
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      // TODO: Implement Google login
-      console.log('Google login');
-    } catch (error) {
-      console.error('Google login error:', error);
-    }
-  };
-
-  const handleForgotPassword = () => {
-    // TODO: Navigate to forgot password screen
-    console.log('Forgot password');
-  };
-
-  const navigateToRegister = () => {
-    navigation.navigate('Register' as never);
+    // TODO: Implement Google login
+    Alert.alert('Thông báo', 'Chức năng đăng nhập Google đang được phát triển');
   };
 
   return (
@@ -59,7 +40,7 @@ export const LoginScreen: React.FC = () => {
           <LoginForm
             onSubmit={handleLogin}
             isLoading={isLoading}
-            onForgotPassword={handleForgotPassword}
+            onForgotPassword={navigateToForgotPassword}
           />
           <GoogleLoginButton onPress={handleGoogleLogin} />
         </View>

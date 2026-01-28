@@ -6,6 +6,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 // Screens
 import { HomeScreen, ScanScreen, RegisterScreen, MyItemsScreen } from '@screens/index';
 import { LoginScreen } from '@screens/auth/login';
+import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
+import { CodeVerifyScreen } from '@screens/auth/codeVerify';
+import { ForgotPasswordScreen } from '@screens/auth/forgotPass';
+import { ResetPasswordScreen } from '@screens/auth/resetPass';
 import { TabNavigator } from './tab-navigator';
 
 // Type definitions
@@ -26,8 +30,11 @@ export type RootStackParamList = {
   Help: undefined;
   // Auth screens
   Login: undefined;
-  SignUp: undefined;
+  AuthRegister: undefined;
+  CodeVerify: { phoneNumber?: string };
   ForgotPassword: undefined;
+  ResetPassword: undefined;
+  SignUp: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -97,8 +104,28 @@ export default function RootStack() {
           },
         }}
       >
-        {/* Auth Screen - shown first when not logged in */}
+        {/* Auth Screens - shown first when not logged in */}
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="AuthRegister"
+          component={AuthRegisterScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CodeVerify"
+          component={CodeVerifyScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResetPassword"
+          component={ResetPasswordScreen}
+          options={{ headerShown: false }}
+        />
 
         {/* Main App Screens */}
         <Stack.Screen

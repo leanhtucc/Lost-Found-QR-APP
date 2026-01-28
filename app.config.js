@@ -25,5 +25,9 @@ export default {
     web: {
       favicon: './assets/icon.png',
     },
+    plugins: ['expo-secure-store'],
+    extra: {
+      apiUrl: process.env.API_URL || 'https://backend-api-8rw9.onrender.com',
+    },
   },
 };

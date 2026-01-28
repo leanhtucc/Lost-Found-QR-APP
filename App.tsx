@@ -7,13 +7,14 @@ import * as Sentry from '@sentry/react-native';
 import 'react-native-reanimated';
 
 import RootStack from './navigation';
+import ENV from './constants/environment';
 
 /**
  * Initialize Sentry for error tracking and crash reporting
  * https://docs.sentry.io/platforms/react-native/
  */
 Sentry.init({
-  dsn: 'https://ea6dd677088dcb31aabbd85249df6c02@o4510742785228800.ingest.de.sentry.io/4510742789423184',
+  dsn: ENV.SENTRY_DSN,
 
   // Collect additional context data (IP, user agent, etc.)
   sendDefaultPii: true,
