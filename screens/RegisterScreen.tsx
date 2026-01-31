@@ -12,9 +12,7 @@ export const RegisterScreen = () => {
       {/* Header */}
       <View className="bg-gradient-to-r from-green-600 to-emerald-600 pt-12 pb-6 px-6 rounded-b-3xl shadow-lg">
         <Text className="text-3xl font-bold text-white mb-2">Register Item</Text>
-        <Text className="text-green-100 text-base">
-          Add your belongings to keep them safe
-        </Text>
+        <Text className="text-green-100 text-base">Add your belongings to keep them safe</Text>
       </View>
 
       <ScrollView className="flex-1 px-6 pt-6">
@@ -26,9 +24,7 @@ export const RegisterScreen = () => {
           <View className="mb-5">
             <View className="flex-row items-center mb-2">
               <Package size={20} color="#059669" />
-              <Text className="text-gray-700 font-semibold ml-2 text-base">
-                Item Name *
-              </Text>
+              <Text className="text-gray-700 font-semibold ml-2 text-base">Item Name *</Text>
             </View>
             <TextInput
               value={itemName}
@@ -43,9 +39,7 @@ export const RegisterScreen = () => {
           <View className="mb-5">
             <View className="flex-row items-center mb-2">
               <Tag size={20} color="#059669" />
-              <Text className="text-gray-700 font-semibold ml-2 text-base">
-                Description *
-              </Text>
+              <Text className="text-gray-700 font-semibold ml-2 text-base">Description *</Text>
             </View>
             <TextInput
               value={description}
@@ -63,9 +57,7 @@ export const RegisterScreen = () => {
           <View className="mb-5">
             <View className="flex-row items-center mb-2">
               <MapPin size={20} color="#059669" />
-              <Text className="text-gray-700 font-semibold ml-2 text-base">
-                Usual Location
-              </Text>
+              <Text className="text-gray-700 font-semibold ml-2 text-base">Usual Location</Text>
             </View>
             <TextInput
               value={location}
@@ -84,17 +76,13 @@ export const RegisterScreen = () => {
                 Item Photo (Optional)
               </Text>
             </View>
-            
+
             <TouchableOpacity className="border-2 border-dashed border-gray-300 rounded-xl p-8 items-center bg-gray-50">
               <View className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-3">
                 <Upload size={28} color="#059669" />
               </View>
-              <Text className="text-gray-600 font-semibold mb-1">
-                Upload a photo
-              </Text>
-              <Text className="text-gray-400 text-sm">
-                PNG, JPG up to 10MB
-              </Text>
+              <Text className="text-gray-600 font-semibold mb-1">Upload a photo</Text>
+              <Text className="text-gray-400 text-sm">PNG, JPG up to 10MB</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -102,7 +90,7 @@ export const RegisterScreen = () => {
         {/* QR Code Preview */}
         <View className="bg-white rounded-3xl shadow-xl p-6 mb-6">
           <Text className="text-xl font-bold text-gray-800 mb-4">Your QR Code</Text>
-          
+
           <View className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 items-center">
             <View className="w-48 h-48 bg-white rounded-2xl shadow-lg items-center justify-center mb-4">
               <View className="w-40 h-40 bg-gray-900 rounded-xl" />
@@ -117,9 +105,7 @@ export const RegisterScreen = () => {
         <TouchableOpacity className="bg-gradient-to-r from-green-600 to-emerald-600 py-4 rounded-2xl shadow-xl mb-6">
           <View className="flex-row items-center justify-center">
             <CheckCircle2 size={24} color="#ffffff" />
-            <Text className="text-white text-lg font-bold ml-3">
-              Register Item
-            </Text>
+            <Text className="text-white text-lg font-bold ml-3">Register Item</Text>
           </View>
         </TouchableOpacity>
 

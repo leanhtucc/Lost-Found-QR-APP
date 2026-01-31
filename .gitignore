@@ -7,7 +7,6 @@ node_modules/
 .expo/
 dist/
 web-build/
-expo-env.d.ts
 
 # Native
 .kotlin/
@@ -59,3 +58,10 @@ secrets.json
 /android
 
 .env.local
+
+.env
+
+.env.production
+
+
+

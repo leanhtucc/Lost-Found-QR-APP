@@ -61,12 +61,12 @@ export const HomeScreen = ({ navigation }: any) => {
                 key={index}
                 className="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
               >
-                <View className={`w-10 h-10 ${stat.color} rounded-xl items-center justify-center mb-2`}>
+                <View
+                  className={`w-10 h-10 ${stat.color} rounded-xl items-center justify-center mb-2`}
+                >
                   <stat.icon size={20} color="#ffffff" />
                 </View>
-                <Text className="text-gray-900 text-2xl font-bold mb-1">
-                  {stat.value}
-                </Text>
+                <Text className="text-gray-900 text-2xl font-bold mb-1">{stat.value}</Text>
                 <Text className="text-gray-500 text-xs">{stat.label}</Text>
               </View>
             ))}
@@ -76,28 +76,26 @@ export const HomeScreen = ({ navigation }: any) => {
         {/* Features Section */}
         <View className="mb-6">
           <Text className="text-xl font-bold text-gray-800 mb-4">Features</Text>
-          
+
           {features.map((feature, index) => (
             <TouchableOpacity
               key={index}
               onPress={() => navigation.navigate(feature.action)}
               className="mb-4"
             >
-              <View className={`bg-gradient-to-r ${feature.color} rounded-3xl shadow-xl overflow-hidden`}>
+              <View
+                className={`bg-gradient-to-r ${feature.color} rounded-3xl shadow-xl overflow-hidden`}
+              >
                 <View className="p-6 flex-row items-center">
                   <View className="w-16 h-16 bg-white/20 rounded-2xl items-center justify-center mr-4">
                     <feature.icon size={32} color="#ffffff" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white text-xl font-bold mb-1">
-                      {feature.title}
-                    </Text>
-                    <Text className="text-white/90 text-sm leading-5">
-                      {feature.description}
-                    </Text>
+                    <Text className="text-white text-xl font-bold mb-1">{feature.title}</Text>
+                    <Text className="text-white/90 text-sm leading-5">{feature.description}</Text>
                   </View>
                 </View>
-                
+
                 {/* Decorative element */}
                 <View className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full" />
                 <View className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full" />
@@ -109,7 +107,7 @@ export const HomeScreen = ({ navigation }: any) => {
         {/* Why Choose Us Section */}
         <View className="mb-8">
           <Text className="text-xl font-bold text-gray-800 mb-4">Why Choose Us</Text>
-          
+
           <View className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             {[
               { icon: Shield, title: 'Secure & Private', desc: 'End-to-end encryption' },
@@ -124,9 +122,7 @@ export const HomeScreen = ({ navigation }: any) => {
                   <item.icon size={24} color="#2563eb" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-gray-900 font-bold text-base mb-1">
-                    {item.title}
-                  </Text>
+                  <Text className="text-gray-900 font-bold text-base mb-1">{item.title}</Text>
                   <Text className="text-gray-500 text-sm">{item.desc}</Text>
                 </View>
               </View>

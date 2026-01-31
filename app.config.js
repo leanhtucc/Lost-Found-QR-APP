@@ -2,12 +2,13 @@ export default {
   expo: {
     name: 'LostAndFoundQR',
     slug: 'lost-and-found-qr',
+    scheme: 'lostfoundqr',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     splash: {
-      image: './assets/splash.png',
+      image: './assets/icon.png',
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
     },
@@ -16,13 +17,18 @@ export default {
       supportsTablet: true,
     },
     android: {
+      package: 'com.anhtu081204.lostandfoundqr',
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: './assets/icon.png',
         backgroundColor: '#ffffff',
       },
     },
     web: {
-      favicon: './assets/favicon.png',
+      favicon: './assets/icon.png',
+    },
+    plugins: ['expo-secure-store'],
+    extra: {
+      apiUrl: process.env.API_URL || 'https://backend-api-8rw9.onrender.com',
     },
   },
 };

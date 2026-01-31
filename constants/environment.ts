@@ -1,26 +1,49 @@
 import Constants from 'expo-constants';
 
-// Environment variables configuration
-const ENV = {
-  dev: {
-    apiUrl: 'http://localhost:3000',
-    environment: 'development',
-  },
-  staging: {
-    apiUrl: 'https://api-staging.yourapp.com',
-    environment: 'staging',
-  },
-  production: {
-    apiUrl: 'https://api.yourapp.com',
-    environment: 'production',
-  },
+/**
+ * Environment Configuration
+ * Reads from app.config.js extra field which loads from .env files
+ */
+
+// Get extra config from expo
+const expoExtra = Constants.expoConfig?.extra || {};
+
+// Environment configuration
+export const ENV = {
+  // API URL from .env file (via app.config.js)
+  API_URL: expoExtra.apiUrl || process.env.API_URL || 'http://192.168.10.102:3000',
+
+  // Current environment
+  ENVIRONMENT: expoExtra.environment || process.env.ENV || 'development',
+
+  // Check if we're in development mode
+  IS_DEV: __DEV__,
+
+  // Check if we're in production mode
+  IS_PROD: !__DEV__,
+
+  SENTRY_DSN: expoExtra.sentryDsn || process.env.SENTRY_DSN || '',
+};
+console.log(ENV.SENTRY_DSN);
+console.log(ENV.API_URL);
+console.log(ENV.ENVIRONMENT);
+// Helper function to get API URL
+export const getApiUrl = (): string => {
+  return ENV.API_URL;
 };
 
-// Get environment from Constants
-const getEnvVars = (env = Constants.expoConfig?.extra?.environment || 'dev') => {
-  if (env === 'production') return ENV.production;
-  if (env === 'staging') return ENV.staging;
-  return ENV.dev;
+// Helper function to get auth API URL
+export const getAuthApiUrl = (): string => {
+  return `${ENV.API_URL}/api/auth`;
 };
 
-export default getEnvVars();
+// Helper function to check environment
+export const isDevelopment = (): boolean => {
+  return ENV.IS_DEV;
+};
+
+export const isProduction = (): boolean => {
+  return ENV.IS_PROD;
+};
+
+export default ENV;

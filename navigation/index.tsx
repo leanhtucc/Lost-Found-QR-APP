@@ -1,11 +1,20 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import * as Linking from 'expo-linking';
 
 // Screens
 import { HomeScreen, ScanScreen, RegisterScreen, MyItemsScreen } from '@screens/index';
+import { LoginScreen } from '@screens/auth/login';
+import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
+import { CodeVerifyScreen } from '@screens/auth/codeVerify';
+import { ForgotPasswordScreen } from '@screens/auth/forgotPass';
+import { ResetPasswordScreen } from '@screens/auth/resetPass';
+import { CongratulationScreen } from '@screens/auth/congratulation';
+import { OnboardingScreen } from '@screens/onboarding';
 import { TabNavigator } from './tab-navigator';
+import { appStorage } from '@storage/app';
 
 // Type definitions
 export type RootStackParamList = {
@@ -23,36 +32,89 @@ export type RootStackParamList = {
   EditItem: { itemId: string };
   Notifications: undefined;
   Help: undefined;
-  // Auth screens (for future use)
+  // Auth screens
+  Onboarding: undefined;
   Login: undefined;
-  SignUp: undefined;
+  AuthRegister: undefined;
+  CodeVerify: { phoneNumber?: string };
   ForgotPassword: undefined;
+  ResetPassword: { token?: string };
+  Congratulation: undefined;
+  SignUp: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
+// Deep linking configuration
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: [
+    Linking.createURL('/'),
+    'lostfoundqr://', // Khớp với app.config.js của bạn
+    'lostfound://', // Dự phòng scheme cũ
+  ],
+  config: {
+    screens: {
+      ResetPassword: {
+        path: 'reset-password',
+        parse: {
+          token: (token: string) => token,
+        },
+      },
+      Login: 'login',
+      AuthRegister: 'register',
+      ForgotPassword: 'forgot-password',
+    },
+  },
+};
+
 export default function RootStack() {
   const navigationRef = useRef<any>(null);
-  
-  // For now, we'll assume user is not logged in (can be changed to true for testing)
+
+  // For now, we'll assume user is not logged in
   // In the future, this can be replaced with actual auth state management
   const isLoggedIn = false; // Change to true to test logged-in flow
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  // Show loading while checking auth state
+  // Check onboarding status on mount
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const completed = await appStorage.isOnboardingCompleted();
+        setHasCompletedOnboarding(completed);
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, []);
+
+  // Determine initial route
+  const getInitialRoute = (): keyof RootStackParamList => {
+    if (isLoggedIn) {
+      return 'TabNavigator';
+    }
+    return hasCompletedOnboarding ? 'Login' : 'Onboarding';
+  };
+
+  // Show loading while checking status
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+      <View
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}
+      >
         <ActivityIndicator size="large" color="#2563eb" />
       </View>
     );
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
-      {/* Main App Stack - Direct to TabNavigator for now */}
+    <NavigationContainer ref={navigationRef} linking={linking}>
       <Stack.Navigator
-        initialRouteName="TabNavigator"
+        initialRouteName={getInitialRoute()}
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
@@ -95,33 +157,51 @@ export default function RootStack() {
           },
         }}
       >
+        {/* Auth Screens - shown first when not logged in */}
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="AuthRegister"
+          component={AuthRegisterScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CodeVerify"
+          component={CodeVerifyScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResetPassword"
+          component={ResetPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Congratulation"
+          component={CongratulationScreen}
+          options={{ headerShown: false }}
+        />
+
+        {/* Main App Screens */}
         <Stack.Screen
           name="TabNavigator"
           component={TabNavigator}
           options={{ headerShown: false }}
         />
-        
+
         {/* Individual screen routes (can be accessed directly) */}
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Scan"
-          component={ScanScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="MyItems"
-          component={MyItemsScreen}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Scan" component={ScanScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="MyItems" component={MyItemsScreen} options={{ headerShown: false }} />
 
         {/* Additional screens can be added here */}
         {/* 

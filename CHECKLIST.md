@@ -3,6 +3,7 @@
 ## ✅ Completed Setup
 
 ### 1. Code Quality & Formatting
+
 - [x] Prettier configured
 - [x] ESLint configured with TypeScript rules
 - [x] VSCode auto-format on save
@@ -10,12 +11,14 @@
 - [x] Lint scripts added to package.json
 
 ### 2. EAS Configuration
+
 - [x] eas.json configured
 - [x] Build profiles created (dev, preview, production)
 - [x] Build scripts added to package.json
 - [x] Submit scripts added to package.json
 
 ### 3. Security
+
 - [x] .env.example template created
 - [x] Environment type definitions
 - [x] .gitignore updated with security rules
@@ -23,6 +26,7 @@
 - [x] Pre-commit hook template
 
 ### 4. Documentation
+
 - [x] README.md updated
 - [x] CODE_QUALITY.md created
 - [x] EAS_GUIDE.md created
@@ -31,6 +35,7 @@
 - [x] SETUP_COMPLETE.md created
 
 ### 5. Scripts & Automation
+
 - [x] Quick setup scripts (Windows & Unix)
 - [x] Pre-commit security hook
 - [x] Validation script
@@ -42,11 +47,13 @@
 ### Immediate (Before Coding)
 
 #### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 #### 2. Setup Environment
+
 ```bash
 # Copy template
 copy .env.example .env
@@ -55,6 +62,7 @@ copy .env.example .env
 ```
 
 #### 3. Verify Setup
+
 ```bash
 # Format code
 npm run format
@@ -72,6 +80,7 @@ npm run validate
 ### Before First Commit
 
 #### 4. Setup Git Hooks (Optional)
+
 ```bash
 # Option A: Copy manually
 copy scripts\pre-commit .git\hooks\pre-commit
@@ -85,6 +94,7 @@ npx husky add .git/hooks/pre-commit "npm run validate"
 ### For Production Deployment
 
 #### 5. Setup EAS
+
 ```bash
 # Install EAS CLI globally
 npm install -g eas-cli
@@ -97,6 +107,7 @@ eas build:configure
 ```
 
 #### 6. Setup EAS Secrets
+
 ```bash
 # Example: Add API key
 eas secret:create --scope project --name API_KEY --value "your-actual-api-key"
@@ -107,6 +118,7 @@ eas secret:create --scope project --name FIREBASE_PROJECT_ID --value "your-proje
 ```
 
 #### 7. First Build
+
 ```bash
 # Development build (for testing)
 npm run build:dev
@@ -123,18 +135,21 @@ npm run build:production
 ## ⚠️ Important Reminders
 
 ### Security
+
 - [ ] NEVER commit `.env` files
 - [ ] NEVER hardcode API keys in code
 - [ ] Use EAS Secrets for production
 - [ ] Review code before commit
 
 ### Code Quality
+
 - [ ] Run `npm run format` before commit
 - [ ] Run `npm run validate` before push
 - [ ] Fix all TypeScript errors
 - [ ] Follow naming conventions
 
 ### Development
+
 - [ ] Use path aliases (@components, @screens, etc.)
 - [ ] Use Tailwind classes (className="...")
 - [ ] Write TypeScript, not JavaScript
@@ -172,6 +187,7 @@ git push
 ## 📚 Quick Reference
 
 ### Common Commands
+
 ```bash
 # Development
 npm start              # Start Expo
@@ -191,6 +207,7 @@ npm run build:production  # Production build
 ```
 
 ### File Locations
+
 - Environment: `.env`, `.env.example`
 - Configs: `package.json`, `tsconfig.json`, `eas.json`
 - Docs: `docs/` folder
@@ -214,8 +231,9 @@ npm run build:production  # Production build
 ## 🎉 You're Ready!
 
 Dự án của bạn đã được setup hoàn chỉnh với:
+
 - ✨ Professional code quality tools
-- 🔐 Enterprise security practices  
+- 🔐 Enterprise security practices
 - 🏗️ Production-ready build system
 - 📚 Complete documentation
 

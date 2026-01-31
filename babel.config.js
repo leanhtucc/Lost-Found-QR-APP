@@ -5,6 +5,31 @@ module.exports = function (api) {
     plugins: [
       'nativewind/babel',
       [
+        'module-resolver',
+        {
+          root: ['./'],
+          alias: {
+            '@': './',
+            '@components': './components',
+            '@screens': './screens',
+            '@navigation': './navigation',
+            '@hooks': './hooks',
+            '@utils': './utils',
+            '@constants': './constants',
+            '@services': './services',
+            '@store': './store',
+            '@types': './types',
+            '@firebase': './firebase',
+            '@libs': './libs',
+            '@storage': './storage',
+            '@schemas': './schemas',
+            '@translations': './translations',
+            '@assets': './assets',
+          },
+          extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+        },
+      ],
+      [
         'module:react-native-dotenv',
         {
           moduleName: '@env',

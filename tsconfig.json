@@ -3,22 +3,60 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./*"],
-      "@components/*": ["./components/*"],
-      "@screens/*": ["./screens/*"],
-      "@navigation/*": ["./navigation/*"],
-      "@hooks/*": ["./hooks/*"],
-      "@utils/*": ["./utils/*"],
-      "@constants/*": ["./constants/*"],
-      "@services/*": ["./services/*"],
-      "@store/*": ["./store/*"],
-      "@types/*": ["./types/*"],
-      "@firebase/*": ["./firebase/*"],
-      "@libs/*": ["./libs/*"],
-      "@storage/*": ["./storage/*"],
-      "@schemas/*": ["./schemas/*"],
-      "@translations/*": ["./translations/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@components/*": [
+        "./components/*"
+      ],
+      "@screens/*": [
+        "./screens/*"
+      ],
+      "@navigation/*": [
+        "./navigation/*"
+      ],
+      "@hooks/*": [
+        "./hooks/*"
+      ],
+      "@utils/*": [
+        "./utils/*"
+      ],
+      "@constants/*": [
+        "./constants/*"
+      ],
+      "@services/*": [
+        "./services/*"
+      ],
+      "@store/*": [
+        "./store/*"
+      ],
+      "@types/*": [
+        "./types/*"
+      ],
+      "@firebase/*": [
+        "./firebase/*"
+      ],
+      "@libs/*": [
+        "./libs/*"
+      ],
+      "@storage/*": [
+        "./storage/*"
+      ],
+      "@schemas/*": [
+        "./schemas/*"
+      ],
+      "@translations/*": [
+        "./translations/*"
+      ],
+      "@assets": [
+        "./assets"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "nativewind-env.d.ts",
+    "types/assets.d.ts"
+  ]
 }
