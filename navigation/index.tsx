@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import * as Linking from 'expo-linking';
 
 // Screens
 import { HomeScreen, ScanScreen, RegisterScreen, MyItemsScreen } from '@screens/index';
@@ -10,7 +11,10 @@ import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
 import { CodeVerifyScreen } from '@screens/auth/codeVerify';
 import { ForgotPasswordScreen } from '@screens/auth/forgotPass';
 import { ResetPasswordScreen } from '@screens/auth/resetPass';
+import { CongratulationScreen } from '@screens/auth/congratulation';
+import { OnboardingScreen } from '@screens/onboarding';
 import { TabNavigator } from './tab-navigator';
+import { appStorage } from '@storage/app';
 
 // Type definitions
 export type RootStackParamList = {
@@ -29,15 +33,39 @@ export type RootStackParamList = {
   Notifications: undefined;
   Help: undefined;
   // Auth screens
+  Onboarding: undefined;
   Login: undefined;
   AuthRegister: undefined;
   CodeVerify: { phoneNumber?: string };
   ForgotPassword: undefined;
-  ResetPassword: undefined;
+  ResetPassword: { token?: string };
+  Congratulation: undefined;
   SignUp: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
+
+// Deep linking configuration
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: [
+    Linking.createURL('/'),
+    'lostfoundqr://', // Khớp với app.config.js của bạn
+    'lostfound://', // Dự phòng scheme cũ
+  ],
+  config: {
+    screens: {
+      ResetPassword: {
+        path: 'reset-password',
+        parse: {
+          token: (token: string) => token,
+        },
+      },
+      Login: 'login',
+      AuthRegister: 'register',
+      ForgotPassword: 'forgot-password',
+    },
+  },
+};
 
 export default function RootStack() {
   const navigationRef = useRef<any>(null);
@@ -45,9 +73,34 @@ export default function RootStack() {
   // For now, we'll assume user is not logged in
   // In the future, this can be replaced with actual auth state management
   const isLoggedIn = false; // Change to true to test logged-in flow
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  // Show loading while checking auth state
+  // Check onboarding status on mount
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const completed = await appStorage.isOnboardingCompleted();
+        setHasCompletedOnboarding(completed);
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, []);
+
+  // Determine initial route
+  const getInitialRoute = (): keyof RootStackParamList => {
+    if (isLoggedIn) {
+      return 'TabNavigator';
+    }
+    return hasCompletedOnboarding ? 'Login' : 'Onboarding';
+  };
+
+  // Show loading while checking status
   if (isLoading) {
     return (
       <View
@@ -59,9 +112,9 @@ export default function RootStack() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} linking={linking}>
       <Stack.Navigator
-        initialRouteName={isLoggedIn ? 'TabNavigator' : 'Login'}
+        initialRouteName={getInitialRoute()}
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
@@ -105,6 +158,11 @@ export default function RootStack() {
         }}
       >
         {/* Auth Screens - shown first when not logged in */}
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="AuthRegister"
@@ -124,6 +182,11 @@ export default function RootStack() {
         <Stack.Screen
           name="ResetPassword"
           component={ResetPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Congratulation"
+          component={CongratulationScreen}
           options={{ headerShown: false }}
         />
 

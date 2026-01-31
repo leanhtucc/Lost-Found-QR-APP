@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { User, Mail, Lock, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react-native';
+import { Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react-native';
 import { InputField } from '../../../../components/InputField';
 import { validateEmail, validateDisplayName, validateConfirmPassword } from '@services/auth';
+import { AvatarPicker } from './AvatarPicker';
 
 interface RegisterFormProps {
-  onSubmit: (displayName: string, email: string, password: string) => void;
+  onSubmit: (displayName: string, email: string, password: string, photoURL?: string) => void;
   isLoading: boolean;
 }
 
@@ -43,6 +44,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -89,7 +91,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
   const handleSubmit = () => {
     if (validateForm()) {
-      onSubmit(displayName.trim(), email.trim(), password);
+      onSubmit(displayName.trim(), email.trim(), password, photoUri || undefined);
     }
   };
 
@@ -104,82 +106,73 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
   };
 
   return (
-    <View className="gap-4">
+    <View className="gap-5">
+      {/* Avatar Picker */}
+      <AvatarPicker value={photoUri} onChange={setPhotoUri} />
+
       {/* Display Name Input */}
       <View>
-        <View className="relative">
-          <View className="absolute left-3 top-4 z-10">
-            <User size={20} color="#6B7280" />
-          </View>
-          <InputField
-            placeholder="Họ và tên"
-            value={displayName}
-            onChangeText={text => {
-              setDisplayName(text);
-              clearError('displayName');
-            }}
-            className="pl-10 h-12 rounded-xl bg-gray-50 border-0"
-          />
-        </View>
+        <Text className="text-sm font-medium text-gray-700 mb-2">Họ và tên</Text>
+        <InputField
+          placeholder="Nhập họ và tên của bạn"
+          value={displayName}
+          onChangeText={text => {
+            setDisplayName(text);
+            clearError('displayName');
+          }}
+          className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4"
+        />
         {errors.displayName && (
-          <Text className="text-red-500 text-xs mt-1 ml-1">{errors.displayName}</Text>
+          <Text className="text-red-500 text-xs mt-1">{errors.displayName}</Text>
         )}
       </View>
 
       {/* Email Input */}
       <View>
-        <View className="relative">
-          <View className="absolute left-3 top-4 z-10">
-            <Mail size={20} color="#6B7280" />
-          </View>
-          <InputField
-            placeholder="Email"
-            value={email}
-            onChangeText={text => {
-              setEmail(text);
-              clearError('email');
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            className="pl-10 h-12 rounded-xl bg-gray-50 border-0"
-          />
-        </View>
-        {errors.email && <Text className="text-red-500 text-xs mt-1 ml-1">{errors.email}</Text>}
+        <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
+        <InputField
+          placeholder="example@gmail.com"
+          value={email}
+          onChangeText={text => {
+            setEmail(text);
+            clearError('email');
+          }}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4"
+        />
+        {errors.email && <Text className="text-red-500 text-xs mt-1">{errors.email}</Text>}
       </View>
 
       {/* Password Input */}
       <View>
+        <Text className="text-sm font-medium text-gray-700 mb-2">Mật khẩu</Text>
         <View className="relative">
-          <View className="absolute left-3 top-4 z-10">
-            <Lock size={20} color="#6B7280" />
-          </View>
           <InputField
             secureTextEntry={!showPassword}
-            placeholder="Mật khẩu"
+            placeholder="••••••••"
             value={password}
             onChangeText={text => {
               setPassword(text);
               clearError('password');
             }}
-            className="pl-10 pr-10 h-12 rounded-xl bg-gray-50 border-0"
+            className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4 pr-12"
           />
           <TouchableOpacity
-            className="absolute right-3 top-4 z-10"
+            className="absolute right-4 top-4 z-10"
             onPress={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
-              <EyeOff size={20} color="#6B7280" />
+              <EyeOff size={22} color="#9CA3AF" />
             ) : (
-              <Eye size={20} color="#6B7280" />
+              <Eye size={22} color="#9CA3AF" />
             )}
           </TouchableOpacity>
         </View>
-        {errors.password && (
-          <Text className="text-red-500 text-xs mt-1 ml-1">{errors.password}</Text>
-        )}
+        {errors.password && <Text className="text-red-500 text-xs mt-1">{errors.password}</Text>}
 
         {/* Password Requirements UI */}
-        <View className="mt-3 bg-gray-50 rounded-xl p-3">
+        <View className="mt-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
           {passwordValidation.map(rule => (
             <View key={rule.id} className="flex-row items-center mb-2 last:mb-0">
               {rule.passed ? (
@@ -197,37 +190,35 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
       {/* Confirm Password Input */}
       <View>
+        <Text className="text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu</Text>
         <View className="relative">
-          <View className="absolute left-3 top-4 z-10">
-            <Lock size={20} color="#6B7280" />
-          </View>
           <InputField
             secureTextEntry={!showConfirmPassword}
-            placeholder="Xác nhận mật khẩu"
+            placeholder="••••••••"
             value={confirmPassword}
             onChangeText={text => {
               setConfirmPassword(text);
               clearError('confirmPassword');
             }}
-            className="pl-10 pr-10 h-12 rounded-xl bg-gray-50 border-0"
+            className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4 pr-12"
           />
           <TouchableOpacity
-            className="absolute right-3 top-4 z-10"
+            className="absolute right-4 top-4 z-10"
             onPress={() => setShowConfirmPassword(!showConfirmPassword)}
           >
             {showConfirmPassword ? (
-              <EyeOff size={20} color="#6B7280" />
+              <EyeOff size={22} color="#9CA3AF" />
             ) : (
-              <Eye size={20} color="#6B7280" />
+              <Eye size={22} color="#9CA3AF" />
             )}
           </TouchableOpacity>
         </View>
         {errors.confirmPassword && (
-          <Text className="text-red-500 text-xs mt-1 ml-1">{errors.confirmPassword}</Text>
+          <Text className="text-red-500 text-xs mt-1">{errors.confirmPassword}</Text>
         )}
         {/* Show match indicator when both fields have content */}
         {confirmPassword.length > 0 && password.length > 0 && (
-          <View className="flex-row items-center mt-2 ml-1">
+          <View className="flex-row items-center mt-2">
             {password === confirmPassword ? (
               <>
                 <CheckCircle2 size={16} color="#22c55e" />
@@ -245,7 +236,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
       {/* Submit Button */}
       <TouchableOpacity
-        className={`h-12 rounded-xl justify-center items-center mt-2 ${
+        className={`h-14 rounded-full justify-center items-center mt-2 ${
           isLoading ? 'bg-blue-400' : 'bg-blue-600 active:bg-blue-700'
         }`}
         onPress={handleSubmit}

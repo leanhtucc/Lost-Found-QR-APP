@@ -10,12 +10,16 @@ import {
   ResendVerificationRequest,
   RefreshTokenRequest,
   UpdateProfileRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
   ApiResponse,
   RegisterResponseData,
   LoginResponseData,
   VerifyEmailResponseData,
   ResendVerificationResponseData,
   RefreshTokenResponseData,
+  ForgotPasswordResponseData,
+  ResetPasswordResponseData,
   User,
 } from './types';
 import { authStorage } from '@storage/auth';
@@ -97,7 +101,18 @@ export const authApi = {
     // Store tokens on success
     if (response.success && response.data) {
       await authStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
-      await authStorage.saveUser(response.data.user);
+      // Only save user if it exists in response
+      if (response.data.user) {
+        await authStorage.saveUser(response.data.user);
+      } else {
+        // If user is not in response, fetch profile to get user data
+        console.log('verifyEmail: user not in response, fetching profile...');
+        try {
+          await this.getProfile();
+        } catch (profileError) {
+          console.warn('verifyEmail: failed to fetch profile:', profileError);
+        }
+      }
     }
 
     return response;
@@ -215,6 +230,30 @@ export const authApi = {
     }
 
     return response;
+  },
+
+  /**
+   * Request password reset
+   * Sends email with reset link
+   */
+  async forgotPassword(
+    data: ForgotPasswordRequest
+  ): Promise<ApiResponse<ForgotPasswordResponseData>> {
+    return apiRequest<ForgotPasswordResponseData>('/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Reset password with token
+   * Token received from email link
+   */
+  async resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<ResetPasswordResponseData>> {
+    return apiRequest<ResetPasswordResponseData>('/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 };
 

@@ -1,15 +1,34 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { AuthHeader } from '../components/AuthHeader';
-import { RegisterForm } from './components/RegisterForm';
-import { GoogleLoginButton } from '../components/GoogleLoginButton';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '@navigation/index';
 import { useAuth } from '@hooks/useAuth';
+import { RegisterForm } from './components/RegisterForm';
+import { SocialLoginButtons } from '../components/SocialLoginButtons';
+
+type RegisterNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const RegisterScreen: React.FC = () => {
+  const navigation = useNavigation<RegisterNavigationProp>();
   const { isLoading, register, navigateToLogin, navigateToCodeVerify } = useAuth();
 
-  const handleRegister = async (displayName: string, email: string, password: string) => {
-    const success = await register(displayName, email, password);
+  const handleRegister = async (
+    displayName: string,
+    email: string,
+    password: string,
+    photoURL?: string
+  ) => {
+    const success = await register(displayName, email, password, photoURL);
     if (success) {
       // Navigate to OTP verification screen
       navigateToCodeVerify(email);
@@ -17,35 +36,60 @@ export const RegisterScreen: React.FC = () => {
   };
 
   const handleGoogleLogin = async () => {
-    // TODO: Implement Google login
     Alert.alert('Thông báo', 'Chức năng đăng nhập Google đang được phát triển');
   };
 
-  return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="flex-1 justify-center p-4 min-h-screen">
-        <AuthHeader />
+  const handleAppleLogin = async () => {
+    Alert.alert('Thông báo', 'Chức năng đăng nhập Apple đang được phát triển');
+  };
 
-        <View className="bg-white rounded-2xl p-8 shadow-lg">
-          {/* Tab Switcher */}
-          <View className="flex-row bg-gray-100 rounded-xl p-1 mb-6">
-            <TouchableOpacity className="flex-1 py-2.5" onPress={navigateToLogin}>
-              <Text className="text-center text-sm font-medium text-gray-600">Đăng nhập</Text>
-            </TouchableOpacity>
-            <View className="flex-1 py-2.5 bg-white rounded-lg shadow-sm">
-              <Text className="text-center text-sm font-medium text-gray-900">Đăng ký</Text>
-            </View>
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex-1 px-6 pt-9">
+          {/* Back Button */}
+          <TouchableOpacity
+            onPress={handleGoBack}
+            className="w-10 h-10 rounded-xl bg-gray-100 items-center justify-center mb-4"
+          >
+            <ChevronLeft size={24} color="#1f2937" />
+          </TouchableOpacity>
+
+          {/* Welcome Text */}
+          <View className="mb-2">
+            <Text className="text-base text-gray-500">Tạo tài khoản mới</Text>
           </View>
 
-          <RegisterForm onSubmit={handleRegister} isLoading={isLoading} />
-          <GoogleLoginButton onPress={handleGoogleLogin} />
-        </View>
+          {/* Title */}
+          <View className="mb-6">
+            <Text className="text-3xl font-bold text-gray-900">Đăng ký</Text>
+          </View>
 
-        <Text className="text-center text-sm text-gray-600 mt-6">
-          © 2024 PTIT Lost & Found. Made with ❤️
-        </Text>
-      </View>
-    </ScrollView>
+          {/* Register Form */}
+          <RegisterForm onSubmit={handleRegister} isLoading={isLoading} />
+
+          {/* Social Login */}
+          <SocialLoginButtons onGooglePress={handleGoogleLogin} onApplePress={handleAppleLogin} />
+
+          {/* Login Link */}
+          <View className="flex-row justify-center mt-8 mb-6">
+            <Text className="text-base text-gray-600">Đã có tài khoản? </Text>
+            <TouchableOpacity onPress={navigateToLogin}>
+              <Text className="text-base font-semibold text-blue-600">Đăng nhập ngay</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

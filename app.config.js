@@ -2,6 +2,7 @@ export default {
   expo: {
     name: 'LostAndFoundQR',
     slug: 'lost-and-found-qr',
+    scheme: 'lostfoundqr',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',

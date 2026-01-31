@@ -59,4 +59,9 @@ secrets.json
 
 .env.local
 
-.env.local
+.env
+
+.env.production
+
+
+

@@ -17,9 +17,16 @@ interface UseAuthReturn {
   error: string | null;
   // Auth functions
   login: (email: string, password: string) => Promise<boolean>;
-  register: (displayName: string, email: string, password: string) => Promise<boolean>;
+  register: (
+    displayName: string,
+    email: string,
+    password: string,
+    photoURL?: string
+  ) => Promise<boolean>;
   verifyEmail: (email: string, code: string) => Promise<boolean>;
   resendVerification: (email: string) => Promise<boolean>;
+  forgotPassword: (email: string) => Promise<boolean>;
+  resetPassword: (token: string, newPassword: string) => Promise<boolean>;
   logout: () => Promise<void>;
   // Navigation helpers
   navigateToLogin: () => void;
@@ -27,6 +34,7 @@ interface UseAuthReturn {
   navigateToForgotPassword: () => void;
   navigateToCodeVerify: (email: string) => void;
   navigateToMainApp: () => void;
+  navigateToResetPassword: (token: string) => void;
   // Utility
   clearError: () => void;
 }
@@ -94,7 +102,12 @@ export const useAuth = (): UseAuthReturn => {
    * Register new account
    */
   const register = useCallback(
-    async (displayName: string, email: string, password: string): Promise<boolean> => {
+    async (
+      displayName: string,
+      email: string,
+      password: string,
+      photoURL?: string
+    ): Promise<boolean> => {
       setIsLoading(true);
       setError(null);
 
@@ -103,6 +116,7 @@ export const useAuth = (): UseAuthReturn => {
           email,
           password,
           displayName,
+          photoURL,
         });
 
         if (response.success) {
@@ -138,7 +152,7 @@ export const useAuth = (): UseAuthReturn => {
       const response = await authApi.verifyEmail({ email, code });
 
       if (response.success) {
-        Alert.alert('Thành công', 'Xác thực email thành công! Bạn có thể sử dụng ứng dụng ngay.');
+        // No alert needed - Congratulation screen will show the success message
         return true;
       } else {
         // Handle specific errors
@@ -212,6 +226,83 @@ export const useAuth = (): UseAuthReturn => {
     }
   }, [navigation]);
 
+  /**
+   * Request password reset email
+   */
+  const forgotPassword = useCallback(async (email: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await authApi.forgotPassword({ email });
+
+      if (response.success) {
+        Alert.alert(
+          'Email đã gửi',
+          'Nếu tài khoản tồn tại, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu.'
+        );
+        return true;
+      } else {
+        // Still show success message for security (don't reveal if email exists)
+        Alert.alert(
+          'Email đã gửi',
+          'Nếu tài khoản tồn tại, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu.'
+        );
+        return true;
+      }
+    } catch (err) {
+      const errorMessage = 'Không thể kết nối đến server. Vui lòng thử lại.';
+      setError(errorMessage);
+      Alert.alert('Lỗi', errorMessage);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  /**
+   * Reset password with token
+   */
+  const resetPassword = useCallback(
+    async (token: string, newPassword: string): Promise<boolean> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await authApi.resetPassword({ token, newPassword });
+
+        if (response.success) {
+          Alert.alert(
+            'Thành công',
+            'Mật khẩu đã được đặt lại. Bạn có thể đăng nhập với mật khẩu mới.'
+          );
+          return true;
+        } else {
+          // Handle specific error messages
+          if (response.message?.includes('expired')) {
+            setError('Link đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu lại.');
+            Alert.alert('Hết hạn', 'Link đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu lại.');
+          } else if (response.message?.includes('Invalid')) {
+            setError('Link đặt lại mật khẩu không hợp lệ.');
+            Alert.alert('Không hợp lệ', 'Link đặt lại mật khẩu không hợp lệ.');
+          } else {
+            setError(response.message || 'Không thể đặt lại mật khẩu.');
+            Alert.alert('Lỗi', response.message || 'Không thể đặt lại mật khẩu.');
+          }
+          return false;
+        }
+      } catch (err) {
+        const errorMessage = 'Không thể kết nối đến server. Vui lòng thử lại.';
+        setError(errorMessage);
+        Alert.alert('Lỗi', errorMessage);
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
   // ==================== NAVIGATION HELPERS ====================
 
   const navigateToLogin = useCallback(() => {
@@ -240,6 +331,13 @@ export const useAuth = (): UseAuthReturn => {
     });
   }, [navigation]);
 
+  const navigateToResetPassword = useCallback(
+    (token: string) => {
+      navigation.navigate('ResetPassword', { token } as any);
+    },
+    [navigation]
+  );
+
   return {
     isLoading,
     error,
@@ -247,12 +345,15 @@ export const useAuth = (): UseAuthReturn => {
     register,
     verifyEmail,
     resendVerification,
+    forgotPassword,
+    resetPassword,
     logout,
     navigateToLogin,
     navigateToRegister,
     navigateToForgotPassword,
     navigateToCodeVerify,
     navigateToMainApp,
+    navigateToResetPassword,
     clearError,
   };
 };

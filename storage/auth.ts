@@ -88,6 +88,11 @@ export const authStorage = {
    */
   async saveUser(user: User): Promise<void> {
     try {
+      // Validate user before saving to prevent AsyncStorage error
+      if (!user) {
+        console.warn('saveUser: user is null or undefined, skipping save');
+        return;
+      }
       await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
     } catch (error) {
       console.error('Error saving user:', error);

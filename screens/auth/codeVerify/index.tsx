@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { ChevronLeft } from 'lucide-react-native';
 import { RootStackParamList } from '@navigation/index';
 import { useAuth } from '@hooks/useAuth';
@@ -19,13 +20,14 @@ const OTP_LENGTH = 6;
 const RESEND_COUNTDOWN = 30;
 
 type CodeVerifyRouteProp = RouteProp<RootStackParamList, 'CodeVerify'>;
+type CodeVerifyNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const CodeVerifyScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<CodeVerifyNavigationProp>();
   const route = useRoute<CodeVerifyRouteProp>();
   const email = route.params?.phoneNumber || '';
 
-  const { isLoading, verifyEmail, resendVerification, navigateToMainApp } = useAuth();
+  const { isLoading, verifyEmail, resendVerification } = useAuth();
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [countdown, setCountdown] = useState(RESEND_COUNTDOWN);
@@ -75,7 +77,11 @@ export const CodeVerifyScreen: React.FC = () => {
 
     const success = await verifyEmail(email, otpCode);
     if (success) {
-      navigateToMainApp();
+      // Navigate to congratulation screen after successful verification
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Congratulation' as const }],
+      });
     }
   };
 

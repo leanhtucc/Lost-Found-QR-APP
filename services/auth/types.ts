@@ -61,6 +61,21 @@ export interface UpdateProfileRequest {
   pushToken?: string;
 }
 
+/**
+ * Forgot password request body
+ */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+/**
+ * Reset password request body
+ */
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
 // ==================== RESPONSE TYPES ====================
 
 /**
@@ -105,12 +120,13 @@ export interface RegisterResponseData {
 
 /**
  * Verify email response data
+ * Note: Backend only returns tokens, user data must be fetched via /profile
  */
 export interface VerifyEmailResponseData {
   message: string;
   accessToken: string;
   refreshToken: string;
-  user: User;
+  user?: User; // Optional - backend doesn't return user in verify-email
 }
 
 /**
@@ -134,6 +150,20 @@ export interface ResendVerificationResponseData {
 export interface RefreshTokenResponseData {
   accessToken: string;
   refreshToken: string;
+}
+
+/**
+ * Forgot password response data
+ */
+export interface ForgotPasswordResponseData {
+  message: string;
+}
+
+/**
+ * Reset password response data
+ */
+export interface ResetPasswordResponseData {
+  message: string;
 }
 
 // ==================== ERROR TYPES ====================
