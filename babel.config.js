@@ -25,6 +25,7 @@ module.exports = function (api) {
             '@schemas': './schemas',
             '@translations': './translations',
             '@assets': './assets',
+            '@contexts': './contexts',
           },
           extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
         },

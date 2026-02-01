@@ -23,10 +23,23 @@ export const ENV = {
   IS_PROD: !__DEV__,
 
   SENTRY_DSN: expoExtra.sentryDsn || process.env.SENTRY_DSN || '',
+
+  // Google OAuth Client IDs
+  // Lấy từ Firebase Console > Project Settings > General > Your apps
+  GOOGLE_WEB_CLIENT_ID:
+    expoExtra.googleWebClientId ||
+    process.env.GOOGLE_WEB_CLIENT_ID ||
+    '970897912928-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com',
+  GOOGLE_IOS_CLIENT_ID: expoExtra.googleIosClientId || process.env.GOOGLE_IOS_CLIENT_ID || '',
+  GOOGLE_ANDROID_CLIENT_ID:
+    expoExtra.googleAndroidClientId || process.env.GOOGLE_ANDROID_CLIENT_ID || '',
 };
-console.log(ENV.SENTRY_DSN);
-console.log(ENV.API_URL);
-console.log(ENV.ENVIRONMENT);
+console.log('🔍 Environment Config:');
+console.log('SENTRY_DSN:', ENV.SENTRY_DSN);
+console.log('API_URL:', ENV.API_URL);
+console.log('ENVIRONMENT:', ENV.ENVIRONMENT);
+console.log('GOOGLE_WEB_CLIENT_ID:', ENV.GOOGLE_WEB_CLIENT_ID);
+console.log('expoExtra:', expoExtra);
 // Helper function to get API URL
 export const getApiUrl = (): string => {
   return ENV.API_URL;

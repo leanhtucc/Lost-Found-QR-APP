@@ -12,6 +12,7 @@ import {
   UpdateProfileRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  GoogleLoginRequest,
   ApiResponse,
   RegisterResponseData,
   LoginResponseData,
@@ -20,6 +21,7 @@ import {
   RefreshTokenResponseData,
   ForgotPasswordResponseData,
   ResetPasswordResponseData,
+  GoogleLoginResponseData,
   User,
 } from './types';
 import { authStorage } from '@storage/auth';
@@ -143,6 +145,25 @@ export const authApi = {
     // Store tokens on success
     if (response.success && response.data) {
       await authStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
+    }
+
+    return response;
+  },
+
+  /**
+   * Login with Google
+   * Sends Google ID Token to backend
+   */
+  async googleLogin(data: GoogleLoginRequest): Promise<ApiResponse<GoogleLoginResponseData>> {
+    const response = await apiRequest<GoogleLoginResponseData>('/google', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    // Store tokens and user on success
+    if (response.success && response.data) {
+      await authStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
+      await authStorage.saveUser(response.data.user);
     }
 
     return response;

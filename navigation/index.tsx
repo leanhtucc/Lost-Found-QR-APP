@@ -1,3 +1,8 @@
+/**
+ * Navigation
+ * Root navigation stack với authentication state management
+ */
+
 import React, { useRef, useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
@@ -15,6 +20,7 @@ import { CongratulationScreen } from '@screens/auth/congratulation';
 import { OnboardingScreen } from '@screens/onboarding';
 import { TabNavigator } from './tab-navigator';
 import { appStorage } from '@storage/app';
+import { useAuthContext } from '@contexts/AuthContext';
 
 // Type definitions
 export type RootStackParamList = {
@@ -23,7 +29,6 @@ export type RootStackParamList = {
   Scan: undefined;
   Register: undefined;
   MyItems: undefined;
-  // Add more screens as needed
   ItemDetails: { itemId: string };
   QRCodeView: { itemId: string };
   ScanResult: { qrData: string };
@@ -47,11 +52,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 // Deep linking configuration
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: [
-    Linking.createURL('/'),
-    'lostfoundqr://', // Khớp với app.config.js của bạn
-    'lostfound://', // Dự phòng scheme cũ
-  ],
+  prefixes: [Linking.createURL('/'), 'lostfoundqr://', 'lostfound://'],
   config: {
     screens: {
       ResetPassword: {
@@ -67,13 +68,41 @@ const linking: LinkingOptions<RootStackParamList> = {
   },
 };
 
+// Screen options for smooth transitions
+const screenOptions = {
+  headerShown: false,
+  gestureEnabled: true,
+  gestureDirection: 'horizontal' as const,
+  transitionSpec: {
+    open: { animation: 'timing' as const, config: { duration: 300 } },
+    close: { animation: 'timing' as const, config: { duration: 250 } },
+  },
+  cardStyleInterpolator: ({ current, next, layouts }: any) => ({
+    cardStyle: {
+      transform: [
+        {
+          translateX: current.progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [layouts.screen.width, 0],
+          }),
+        },
+        {
+          translateX: next
+            ? next.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, -layouts.screen.width],
+              })
+            : 0,
+        },
+      ],
+    },
+  }),
+};
+
 export default function RootStack() {
   const navigationRef = useRef<any>(null);
-
-  // For now, we'll assume user is not logged in
-  // In the future, this can be replaced with actual auth state management
-  const isLoggedIn = false; // Change to true to test logged-in flow
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   // Check onboarding status on mount
@@ -83,25 +112,26 @@ export default function RootStack() {
         const completed = await appStorage.isOnboardingCompleted();
         setHasCompletedOnboarding(completed);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error checking onboarding status:', error);
       } finally {
-        setIsLoading(false);
+        setIsCheckingOnboarding(false);
       }
     };
 
     checkOnboardingStatus();
   }, []);
 
-  // Determine initial route
+  // Determine initial route based on auth state and onboarding
   const getInitialRoute = (): keyof RootStackParamList => {
-    if (isLoggedIn) {
+    if (isAuthenticated) {
       return 'TabNavigator';
     }
     return hasCompletedOnboarding ? 'Login' : 'Onboarding';
   };
 
-  // Show loading while checking status
-  if (isLoading) {
+  // Show loading while checking auth and onboarding status
+  if (authLoading || isCheckingOnboarding) {
     return (
       <View
         style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}
@@ -113,169 +143,22 @@ export default function RootStack() {
 
   return (
     <NavigationContainer ref={navigationRef} linking={linking}>
-      <Stack.Navigator
-        initialRouteName={getInitialRoute()}
-        screenOptions={{
-          headerShown: false,
-          gestureEnabled: true,
-          gestureDirection: 'horizontal',
-          transitionSpec: {
-            open: {
-              animation: 'timing',
-              config: {
-                duration: 300,
-              },
-            },
-            close: {
-              animation: 'timing',
-              config: {
-                duration: 250,
-              },
-            },
-          },
-          cardStyleInterpolator: ({ current, next, layouts }) => {
-            return {
-              cardStyle: {
-                transform: [
-                  {
-                    translateX: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.width, 0],
-                    }),
-                  },
-                  {
-                    translateX: next
-                      ? next.progress.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, -layouts.screen.width],
-                        })
-                      : 0,
-                  },
-                ],
-              },
-            };
-          },
-        }}
-      >
-        {/* Auth Screens - shown first when not logged in */}
-        <Stack.Screen
-          name="Onboarding"
-          component={OnboardingScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen
-          name="AuthRegister"
-          component={AuthRegisterScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="CodeVerify"
-          component={CodeVerifyScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ForgotPassword"
-          component={ForgotPasswordScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ResetPassword"
-          component={ResetPasswordScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Congratulation"
-          component={CongratulationScreen}
-          options={{ headerShown: false }}
-        />
+      <Stack.Navigator initialRouteName={getInitialRoute()} screenOptions={screenOptions}>
+        {/* Auth Screens */}
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="AuthRegister" component={AuthRegisterScreen} />
+        <Stack.Screen name="CodeVerify" component={CodeVerifyScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        <Stack.Screen name="Congratulation" component={CongratulationScreen} />
 
         {/* Main App Screens */}
-        <Stack.Screen
-          name="TabNavigator"
-          component={TabNavigator}
-          options={{ headerShown: false }}
-        />
-
-        {/* Individual screen routes (can be accessed directly) */}
-        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Scan" component={ScanScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="MyItems" component={MyItemsScreen} options={{ headerShown: false }} />
-
-        {/* Additional screens can be added here */}
-        {/* 
-        <Stack.Screen
-          name="ItemDetails"
-          component={ItemDetailsScreen}
-          options={{ 
-            headerShown: false,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="QRCodeView"
-          component={QRCodeViewScreen}
-          options={{ 
-            headerShown: false,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="ScanResult"
-          component={ScanResultScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="EditItem"
-          component={EditItemScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Notifications"
-          component={NotificationsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Help"
-          component={HelpScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ 
-            headerShown: false,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="SignUp"
-          component={SignUpScreen}
-          options={{ 
-            headerShown: false,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="ForgotPassword"
-          component={ForgotPasswordScreen}
-          options={{ 
-            headerShown: false,
-            presentation: 'modal',
-          }}
-        />
-        */}
+        <Stack.Screen name="TabNavigator" component={TabNavigator} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Scan" component={ScanScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="MyItems" component={MyItemsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   FlatList,
   Animated,
-  SafeAreaView,
   StatusBar,
   ViewToken,
 } from 'react-native';
@@ -16,6 +15,7 @@ import { SlideItem } from './components/SlideItem';
 import { DotIndicator } from './components/DotIndicator';
 import { slides } from './data/slides';
 import { appStorage } from '@storage/app';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type OnboardingNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -29,7 +29,7 @@ export const OnboardingScreen: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
-
+  const insets = useSafeAreaInsets();
   const handleComplete = async () => {
     // Save onboarding completed status
     await appStorage.setOnboardingCompleted();
@@ -68,7 +68,7 @@ export const OnboardingScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
       {/* Skip Button */}
-      <View className="flex-row justify-end px-6 mt-9">
+      <View className="flex-row justify-end px-6" style={{ marginTop: insets.top }}>
         <TouchableOpacity onPress={handleSkip} className="py-2 px-4">
           <Text className="text-gray-500 text-base">Bỏ qua</Text>
         </TouchableOpacity>
@@ -97,7 +97,7 @@ export const OnboardingScreen: React.FC = () => {
       </View>
 
       {/* Bottom Section */}
-      <View className="px-6 pb-8">
+      <View className="px-6 pb-8" style={{ paddingBottom: 8 + insets.bottom }}>
         {/* Dot Indicators */}
         <DotIndicator data={slides} scrollX={scrollX} onDotPress={handleDotPress} />
 
