@@ -46,6 +46,13 @@ export interface ResendVerificationRequest {
 }
 
 /**
+ * Google login request body
+ */
+export interface GoogleLoginRequest {
+  idToken: string;
+}
+
+/**
  * Refresh token request body
  */
 export interface RefreshTokenRequest {
@@ -142,6 +149,16 @@ export interface LoginResponseData {
  */
 export interface ResendVerificationResponseData {
   message: string;
+}
+
+/**
+ * Google login response data
+ */
+export interface GoogleLoginResponseData {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+  isNewUser: boolean;
 }
 
 /**

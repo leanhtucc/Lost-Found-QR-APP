@@ -7,6 +7,8 @@ import * as Sentry from '@sentry/react-native';
 import 'react-native-reanimated';
 
 import RootStack from './navigation';
+import { AuthProvider } from '@contexts/AuthContext';
+import { ToastProvider } from '@contexts/ToastContext';
 import ENV from './constants/environment';
 
 /**
@@ -57,15 +59,21 @@ Sentry.init({
  * 1. GestureHandlerRootView: Required for react-native-gesture-handler
  * 2. SafeAreaProvider: Handle safe areas on devices with notches
  * 3. KeyboardProvider: Advanced keyboard handling and smooth animations
- * 4. Sentry.wrap: Error boundary and crash reporting
+ * 4. AuthProvider: Global authentication state management
+ * 5. ToastProvider: Global toast notifications
+ * 6. Sentry.wrap: Error boundary and crash reporting
  */
 function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <KeyboardProvider>
-          <RootStack />
-          <StatusBar style="light" />
+          <AuthProvider>
+            <ToastProvider>
+              <RootStack />
+              <StatusBar style="light" />
+            </ToastProvider>
+          </AuthProvider>
         </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useGoogleAuth } from '@hooks';
 
 interface GoogleLoginButtonProps {
-  onPress: () => void;
+  onSuccess?: (user: any, isNewUser: boolean) => void;
+  onError?: (error: string) => void;
 }
 
 const GoogleIcon = () => (
@@ -27,7 +29,23 @@ const GoogleIcon = () => (
   </Svg>
 );
 
-export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onPress }) => {
+export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onError }) => {
+  const { signInWithGoogle, loading, error, user, isNewUser } = useGoogleAuth();
+
+  // Handle successful login
+  React.useEffect(() => {
+    if (user && isNewUser !== null) {
+      onSuccess?.(user, isNewUser);
+    }
+  }, [user, isNewUser]);
+
+  // Handle error
+  React.useEffect(() => {
+    if (error) {
+      onError?.(error);
+    }
+  }, [error]);
+
   return (
     <>
       <View className="flex-row items-center my-6">
@@ -38,10 +56,17 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onPress })
 
       <TouchableOpacity
         className="flex-row items-center justify-center h-12 border-2 border-gray-200 rounded-xl bg-white active:bg-gray-50"
-        onPress={onPress}
+        onPress={signInWithGoogle}
+        disabled={loading}
       >
-        <GoogleIcon />
-        <Text className="text-base font-medium text-gray-900">Đăng nhập bằng Google</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#4285F4" className="mr-2" />
+        ) : (
+          <GoogleIcon />
+        )}
+        <Text className="text-base font-medium text-gray-900">
+          {loading ? 'Đang đăng nhập...' : 'Đăng nhập bằng Google'}
+        </Text>
       </TouchableOpacity>
     </>
   );

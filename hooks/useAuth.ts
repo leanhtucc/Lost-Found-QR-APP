@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
 import { authApi } from '@services/auth';
+import { useToast } from '@contexts/ToastContext';
 
 type AuthNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -41,6 +42,7 @@ interface UseAuthReturn {
 
 export const useAuth = (): UseAuthReturn => {
   const navigation = useNavigation<AuthNavigationProp>();
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +52,7 @@ export const useAuth = (): UseAuthReturn => {
 
   /**
    * Login with email and password
+   * Shows success toast and navigates to home on success
    */
   const login = useCallback(
     async (email: string, password: string): Promise<boolean> => {
@@ -62,6 +65,18 @@ export const useAuth = (): UseAuthReturn => {
         if (response.success) {
           // Fetch user profile after successful login
           await authApi.getProfile();
+
+          // Show success toast
+          toast.success('Đăng nhập thành công', 'Chào mừng bạn quay trở lại!');
+
+          // Navigate to main app after a short delay
+          setTimeout(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'TabNavigator' }],
+            });
+          }, 500);
+
           return true;
         } else {
           // Check if email not verified
@@ -79,7 +94,7 @@ export const useAuth = (): UseAuthReturn => {
             );
           } else {
             setError(response.message || 'Email hoặc mật khẩu không đúng.');
-            Alert.alert(
+            toast.error(
               'Đăng nhập thất bại',
               response.message || 'Email hoặc mật khẩu không đúng.'
             );
@@ -89,13 +104,13 @@ export const useAuth = (): UseAuthReturn => {
       } catch (err) {
         const errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
         setError(errorMessage);
-        Alert.alert('Lỗi', errorMessage);
+        toast.error('Lỗi kết nối', errorMessage);
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [navigation]
+    [navigation, toast]
   );
 
   /**

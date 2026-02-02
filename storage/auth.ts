@@ -155,6 +155,42 @@ export const authStorage = {
       user,
     };
   },
+
+  // ==================== GENERIC STORAGE ====================
+
+  /**
+   * Set a generic item (for last activity, etc.)
+   */
+  async setItem(key: string, value: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (error) {
+      console.error(`Error setting ${key}:`, error);
+    }
+  },
+
+  /**
+   * Get a generic item
+   */
+  async getItem(key: string): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem(key);
+    } catch (error) {
+      console.error(`Error getting ${key}:`, error);
+      return null;
+    }
+  },
+
+  /**
+   * Remove a generic item
+   */
+  async removeItem(key: string): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Error removing ${key}:`, error);
+    }
+  },
 };
 
 export default authStorage;

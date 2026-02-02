@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, QrCode, PlusCircle, Package } from 'lucide-react-native';
 import { HomeScreen, ScanScreen, RegisterScreen, MyItemsScreen } from '@screens/index';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
 
@@ -12,6 +13,7 @@ interface TabBarIconProps {
 }
 
 export const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -19,8 +21,8 @@ export const TabNavigator = () => {
         tabBarActiveTintColor: '#2563eb',
         tabBarInactiveTintColor: '#9ca3af',
         tabBarStyle: {
-          height: 70,
-          paddingBottom: 10,
+          height: 70 + insets.bottom,
+          paddingBottom: 10 + insets.bottom,
           paddingTop: 10,
           backgroundColor: '#ffffff',
           borderTopWidth: 1,

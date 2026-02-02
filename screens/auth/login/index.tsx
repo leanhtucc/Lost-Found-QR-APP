@@ -1,20 +1,16 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  SafeAreaView,
-  StatusBar,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@hooks/useAuth';
+import { useToast } from '@contexts/ToastContext';
 import { LoginForm } from './components/LoginForm';
-import { SocialLoginButtons } from '../components/SocialLoginButtons';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
+import type { User } from '@services/auth/types';
 
 export const LoginScreen: React.FC = () => {
   const { isLoading, login, navigateToRegister, navigateToForgotPassword, navigateToMainApp } =
     useAuth();
+  const toast = useToast();
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async (email: string, password: string) => {
@@ -24,12 +20,26 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    Alert.alert('Thông báo', 'Chức năng đăng nhập Google đang được phát triển');
+  const handleGoogleSuccess = async (user: User, isNewUser: boolean) => {
+    // User đã được authenticate và tokens đã được lưu vào storage
+    // Show success message
+    if (isNewUser) {
+      toast.success(
+        'Đăng ký thành công!',
+        `Chào mừng ${user.displayName} đến với Lost & Found QR!`
+      );
+    } else {
+      toast.success('Đăng nhập thành công!', `Chào mừng bạn quay lại, ${user.displayName}!`);
+    }
+
+    // Navigate to main app after a short delay
+    setTimeout(() => {
+      navigateToMainApp();
+    }, 500);
   };
 
-  const handleAppleLogin = async () => {
-    Alert.alert('Thông báo', 'Chức năng đăng nhập Apple đang được phát triển');
+  const handleGoogleError = (error: string) => {
+    toast.error('Đăng nhập Google thất bại', error);
   };
 
   return (
@@ -60,8 +70,8 @@ export const LoginScreen: React.FC = () => {
             onRememberMeChange={setRememberMe}
           />
 
-          {/* Social Login */}
-          <SocialLoginButtons onGooglePress={handleGoogleLogin} onApplePress={handleAppleLogin} />
+          {/* Google Sign In */}
+          <GoogleLoginButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
 
           {/* Register Link */}
           <View className="flex-row justify-center mt-8 mb-6">

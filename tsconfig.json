@@ -3,60 +3,24 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@components/*": [
-        "./components/*"
-      ],
-      "@screens/*": [
-        "./screens/*"
-      ],
-      "@navigation/*": [
-        "./navigation/*"
-      ],
-      "@hooks/*": [
-        "./hooks/*"
-      ],
-      "@utils/*": [
-        "./utils/*"
-      ],
-      "@constants/*": [
-        "./constants/*"
-      ],
-      "@services/*": [
-        "./services/*"
-      ],
-      "@store/*": [
-        "./store/*"
-      ],
-      "@types/*": [
-        "./types/*"
-      ],
-      "@firebase/*": [
-        "./firebase/*"
-      ],
-      "@libs/*": [
-        "./libs/*"
-      ],
-      "@storage/*": [
-        "./storage/*"
-      ],
-      "@schemas/*": [
-        "./schemas/*"
-      ],
-      "@translations/*": [
-        "./translations/*"
-      ],
-      "@assets": [
-        "./assets"
-      ]
+      "@/*": ["./*"],
+      "@components/*": ["./components/*"],
+      "@screens/*": ["./screens/*"],
+      "@navigation/*": ["./navigation/*"],
+      "@hooks/*": ["./hooks/*"],
+      "@utils/*": ["./utils/*"],
+      "@constants/*": ["./constants/*"],
+      "@services/*": ["./services/*"],
+      "@store/*": ["./store/*"],
+      "@types/*": ["./types/*"],
+      "@firebase/*": ["./firebase/*"],
+      "@libs/*": ["./libs/*"],
+      "@storage/*": ["./storage/*"],
+      "@schemas/*": ["./schemas/*"],
+      "@translations/*": ["./translations/*"],
+      "@assets": ["./assets"],
+      "@contexts/*": ["./contexts/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "nativewind-env.d.ts",
-    "types/assets.d.ts"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts", "types/assets.d.ts"]
 }
