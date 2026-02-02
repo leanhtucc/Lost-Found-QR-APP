@@ -1,9 +1,9 @@
 /**
  * AddItemModal Component
- * Modal thêm món đồ mới
+ * Modal thêm món đồ mới với UI đẹp và categories từ BE
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,14 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
-import { X, Laptop, Wallet, Key, Smartphone, Briefcase, Package } from 'lucide-react-native';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+import { X, AlertCircle } from 'lucide-react-native';
+import Animated, { FadeIn, SlideInDown, FadeInDown } from 'react-native-reanimated';
 import { ItemCategory } from '@/types/item';
-import { LucideIcon } from 'lucide-react-native';
+import { itemsApi } from '@/services/items';
+import { CATEGORY_OPTIONS } from '@/constants/categories';
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -24,19 +27,42 @@ interface AddItemModalProps {
   onSubmit: (name: string, category: ItemCategory) => void;
 }
 
-// Category options
-const CATEGORIES: { value: ItemCategory; label: string; Icon: LucideIcon }[] = [
-  { value: 'laptop', label: 'Laptop', Icon: Laptop },
-  { value: 'wallet', label: 'Ví', Icon: Wallet },
-  { value: 'keys', label: 'Chìa khóa', Icon: Key },
-  { value: 'phone', label: 'Điện thoại', Icon: Smartphone },
-  { value: 'bag', label: 'Túi xách', Icon: Briefcase },
-  { value: 'other', label: 'Khác', Icon: Package },
-];
+interface CategoryOption {
+  value: ItemCategory;
+  label: string;
+  icon: string;
+}
 
 export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ItemCategory>('other');
+  const [categories, setCategories] = useState<CategoryOption[]>(CATEGORY_OPTIONS);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+
+  // Load categories from API when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadCategories();
+    }
+  }, [isOpen]);
+
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      setCategoryError(null);
+
+      const apiCategories = await itemsApi.getCategories();
+      setCategories(apiCategories);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      setCategoryError('Không thể tải danh mục');
+      // Fallback to local categories
+      setCategories(CATEGORY_OPTIONS);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   const handleSubmit = () => {
     if (name.trim()) {
@@ -51,6 +77,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
   const handleClose = () => {
     setName('');
     setCategory('other');
+    setCategoryError(null);
     onClose();
   };
 
@@ -61,78 +88,128 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
         className="flex-1"
       >
         {/* Backdrop */}
-        <Animated.View entering={FadeIn.duration(200)} className="absolute inset-0 bg-black/50">
+        <Animated.View entering={FadeIn.duration(200)} className="absolute inset-0 bg-black/60">
           <TouchableOpacity className="flex-1" activeOpacity={1} onPress={handleClose} />
         </Animated.View>
 
         {/* Modal Content */}
         <Animated.View
           entering={SlideInDown.duration(300).springify()}
-          className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6"
+          className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] shadow-2xl"
+          style={{ maxHeight: '85%' }}
         >
-          {/* Header */}
-          <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-xl font-bold text-gray-900">Thêm món đồ mới</Text>
-            <TouchableOpacity
-              onPress={handleClose}
-              className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
-            >
-              <X size={20} color="#6b7280" />
-            </TouchableOpacity>
-          </View>
+          <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+            <View className="p-6 pb-8">
+              {/* Header */}
+              <View className="flex-row items-center justify-between mb-6">
+                <View>
+                  <Text className="text-2xl font-bold text-gray-900">Thêm món đồ mới</Text>
+                  <Text className="text-sm text-gray-500 mt-1">
+                    Thêm vật phẩm để bảo vệ tài sản của bạn
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={handleClose}
+                  className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
+                >
+                  <X size={20} color="#6b7280" />
+                </TouchableOpacity>
+              </View>
 
-          {/* Form */}
-          <View className="space-y-6">
-            {/* Name Input */}
-            <View>
-              <Text className="text-sm font-medium text-gray-900 mb-2">Tên món đồ</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="VD: Laptop Dell Vostro"
-                placeholderTextColor="#9ca3af"
-                className="h-12 px-4 rounded-xl bg-gray-100 text-gray-900"
-              />
-            </View>
+              {/* Form */}
+              <View className="space-y-6">
+                {/* Name Input */}
+                <Animated.View entering={FadeInDown.duration(300).delay(100)}>
+                  <Text className="text-sm font-semibold text-gray-900 mb-2">
+                    Tên món đồ <Text className="text-red-500">*</Text>
+                  </Text>
+                  <TextInput
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="VD: Laptop Dell Vostro"
+                    placeholderTextColor="#9ca3af"
+                    className="h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-base"
+                    style={{ fontSize: 15 }}
+                  />
+                </Animated.View>
 
-            {/* Category Selection */}
-            <View>
-              <Text className="text-sm font-medium text-gray-900 mb-3">Danh mục</Text>
-              <View className="flex-row flex-wrap gap-3">
-                {CATEGORIES.map(({ value, label, Icon }) => (
+                {/* Category Selection */}
+                <Animated.View entering={FadeInDown.duration(300).delay(200)}>
+                  <Text className="text-sm font-semibold text-gray-900 mb-3">
+                    Danh mục <Text className="text-red-500">*</Text>
+                  </Text>
+
+                  {/* Category Error */}
+                  {categoryError && (
+                    <View className="flex-row items-center gap-2 mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                      <AlertCircle size={16} color="#f59e0b" />
+                      <Text className="flex-1 text-xs text-amber-700">{categoryError}</Text>
+                      <TouchableOpacity onPress={loadCategories}>
+                        <Text className="text-xs font-semibold text-amber-600">Thử lại</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Loading Categories */}
+                  {loadingCategories ? (
+                    <View className="py-8 items-center justify-center">
+                      <ActivityIndicator size="large" color="#3b82f6" />
+                      <Text className="text-sm text-gray-500 mt-2">Đang tải danh mục...</Text>
+                    </View>
+                  ) : (
+                    <View className="flex-row flex-wrap gap-2.5">
+                      {categories.map(({ value, label, icon }, index) => {
+                        const isSelected = category === value;
+                        return (
+                          <Animated.View
+                            key={value}
+                            entering={FadeInDown.duration(300).delay(250 + index * 30)}
+                            className="w-[31%]"
+                          >
+                            <TouchableOpacity
+                              onPress={() => setCategory(value)}
+                              activeOpacity={0.7}
+                              className={`aspect-square rounded-2xl items-center justify-center border-2 ${
+                                isSelected
+                                  ? 'bg-blue-50 border-blue-500 shadow-sm'
+                                  : 'bg-gray-50 border-gray-200'
+                              }`}
+                            >
+                              <Text className="text-3xl mb-2">{icon}</Text>
+                              <Text
+                                className={`text-xs font-semibold text-center ${
+                                  isSelected ? 'text-blue-600' : 'text-gray-600'
+                                }`}
+                                numberOfLines={1}
+                              >
+                                {label}
+                              </Text>
+                            </TouchableOpacity>
+                          </Animated.View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </Animated.View>
+
+                {/* Submit Button */}
+                <Animated.View entering={FadeInDown.duration(300).delay(500)}>
                   <TouchableOpacity
-                    key={value}
-                    onPress={() => setCategory(value)}
-                    className={`w-[30%] p-4 rounded-2xl items-center border-2 ${
-                      category === value
-                        ? 'bg-blue-50 border-blue-500'
-                        : 'bg-gray-100 border-transparent'
+                    onPress={handleSubmit}
+                    disabled={!name.trim()}
+                    activeOpacity={0.8}
+                    className={`h-14 rounded-2xl items-center justify-center shadow-lg ${
+                      name.trim() ? 'bg-blue-600' : 'bg-gray-300'
                     }`}
                   >
-                    <Icon size={24} color={category === value ? '#3b82f6' : '#6b7280'} />
-                    <Text
-                      className={`text-xs font-medium mt-2 ${
-                        category === value ? 'text-blue-600' : 'text-gray-500'
-                      }`}
-                    >
-                      {label}
+                    <Text className="text-base font-bold text-white">
+                      {name.trim() ? '✨ Thêm món đồ' : 'Nhập tên món đồ'}
                     </Text>
                   </TouchableOpacity>
-                ))}
+                </Animated.View>
               </View>
             </View>
-
-            {/* Submit Button */}
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={!name.trim()}
-              className={`h-12 rounded-xl items-center justify-center ${
-                name.trim() ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
-            >
-              <Text className="text-base font-semibold text-white">Thêm món đồ</Text>
-            </TouchableOpacity>
-          </View>
+          </ScrollView>
 
           {/* Bottom safe area */}
           <View className="h-6" />

@@ -1,56 +1,41 @@
 /**
  * ItemCard Component
- * Card hiển thị thông tin một món đồ
+ * Card hiển thị thông tin item với category icon, status badge
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import {
-  Laptop,
-  Wallet,
-  Key,
-  Smartphone,
-  Briefcase,
-  Package,
-  LucideIcon,
-} from 'lucide-react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { MoreVertical } from 'lucide-react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { Item, ItemCategory, CATEGORY_CONFIG } from '@/types/item';
+import type { Item } from '@/types/item';
+import { CATEGORY_CONFIG } from '@/types/item';
+import { getCategoryIcon, getCategoryLabel } from '@/constants/categories';
 
 interface ItemCardProps {
   item: Item;
   index: number;
   onPress: () => void;
+  onMenuPress?: () => void;
 }
-
-// Icon mapping
-const CATEGORY_ICONS: Record<ItemCategory, LucideIcon> = {
-  laptop: Laptop,
-  wallet: Wallet,
-  keys: Key,
-  phone: Smartphone,
-  bag: Briefcase,
-  other: Package,
-};
-
-// Color mapping for icons
-const ICON_COLORS: Record<ItemCategory, string> = {
-  laptop: '#2563eb',
-  wallet: '#d97706',
-  keys: '#9333ea',
-  phone: '#059669',
-  bag: '#e11d48',
-  other: '#64748b',
-};
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-export const ItemCard: React.FC<ItemCardProps> = ({ item, index, onPress }) => {
-  const Icon = CATEGORY_ICONS[item.category];
-  const config = CATEGORY_CONFIG[item.category];
-  const iconColor = ICON_COLORS[item.category];
+export const ItemCard: React.FC<ItemCardProps> = ({ item, index, onPress, onMenuPress }) => {
+  const categoryConfig = CATEGORY_CONFIG[item.category];
+  const categoryIcon = getCategoryIcon(item.category);
+  const categoryLabel = getCategoryLabel(item.category);
 
-  const formatDate = (date: Date) => {
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Hôm nay';
+    if (diffDays === 1) return 'Hôm qua';
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
@@ -65,37 +50,85 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, index, onPress }) => {
         .springify()}
       onPress={onPress}
       activeOpacity={0.7}
-      className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3"
+      className="mx-4 mb-3 bg-white rounded-xl border border-gray-200 shadow-sm"
     >
-      <View className="flex-row items-center gap-4">
-        {/* Category Icon */}
-        <View className={`w-14 h-14 rounded-2xl items-center justify-center ${config.bgColor}`}>
-          <Icon size={28} color={iconColor} />
+      <View className="flex-row p-3">
+        {/* Left - Image or Icon */}
+        <View className="mr-3">
+          {item.imagePublicUrl ? (
+            <View className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+              <Image
+                source={{ uri: item.imagePublicUrl }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            </View>
+          ) : (
+            <View
+              className={`w-16 h-16 rounded-lg ${categoryConfig.bgColor} items-center justify-center`}
+            >
+              <Text className="text-3xl">{categoryIcon}</Text>
+            </View>
+          )}
         </View>
 
-        {/* Content */}
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2">
-            <Text className="font-semibold text-gray-900 flex-1" numberOfLines={1}>
-              {item.name}
-            </Text>
-            {item.isLost && <View className="w-2 h-2 rounded-full bg-red-500" />}
+        {/* Center - Content */}
+        <View className="flex-1 justify-center">
+          {/* Item Name */}
+          <Text className="text-base font-semibold text-gray-900 mb-1" numberOfLines={1}>
+            {item.name}
+          </Text>
+
+          {/* Category & Date */}
+          <View className="flex-row items-center mb-1">
+            <View className={`px-2 py-0.5 rounded ${categoryConfig.bgColor}`}>
+              <Text className={`text-xs font-medium ${categoryConfig.textColor}`}>
+                {categoryLabel}
+              </Text>
+            </View>
+            <Text className="text-xs text-gray-400 ml-2">• {formatDate(item.createdAt)}</Text>
           </View>
-          <Text className="text-sm text-gray-500 mt-0.5" numberOfLines={1}>
-            ID: {item.id}
-          </Text>
-          <Text className="text-xs text-gray-400 mt-1">{formatDate(item.createdAt)}</Text>
+
+          {/* Status Badge */}
+          <View className="flex-row items-center">
+            {item.status === 'safe' ? (
+              <View className="flex-row items-center bg-green-50 px-2 py-1 rounded">
+                <View className="w-2 h-2 rounded-full bg-green-500 mr-1.5" />
+                <Text className="text-xs font-medium text-green-700">An toàn</Text>
+              </View>
+            ) : (
+              <View className="flex-row items-center bg-red-50 px-2 py-1 rounded">
+                <View className="w-2 h-2 rounded-full bg-red-500 mr-1.5" />
+                <Text className="text-xs font-medium text-red-700">Đang mất</Text>
+              </View>
+            )}
+          </View>
         </View>
 
-        {/* Status Badge */}
-        <View className={`px-3 py-1.5 rounded-full ${item.isLost ? 'bg-red-100' : 'bg-green-100'}`}>
-          <Text
-            className={`text-xs font-semibold ${item.isLost ? 'text-red-600' : 'text-green-600'}`}
+        {/* Right - Menu Button */}
+        {onMenuPress && (
+          <TouchableOpacity
+            onPress={e => {
+              e.stopPropagation();
+              onMenuPress();
+            }}
+            className="w-8 h-8 items-center justify-center"
           >
-            {item.isLost ? 'MẤT' : 'AN TOÀN'}
-          </Text>
-        </View>
+            <MoreVertical size={20} color="#9ca3af" />
+          </TouchableOpacity>
+        )}
       </View>
+
+      {/* Lost Message (if exists) */}
+      {item.status === 'lost' && item.lostMessage && (
+        <View className="px-3 pb-3 pt-1">
+          <View className="bg-red-50 border-l-2 border-red-400 p-2 rounded">
+            <Text className="text-xs text-red-700" numberOfLines={2}>
+              💬 {item.lostMessage}
+            </Text>
+          </View>
+        </View>
+      )}
     </AnimatedTouchable>
   );
 };

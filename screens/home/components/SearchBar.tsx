@@ -42,10 +42,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <View className="space-y-3 mb-6">
+    <View className="mb-4">
       {/* Search Input */}
       <View className="relative">
-        <View className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+        {/* Search Icon - Left */}
+        <View className="absolute left-4 top-0 bottom-0 justify-center z-10">
           <Search size={20} color="#9ca3af" />
         </View>
 
@@ -54,25 +55,29 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           onChangeText={handleSearch}
           placeholder={placeholder}
           placeholderTextColor="#9ca3af"
-          className="w-full pl-12 pr-20 py-3.5 rounded-2xl bg-gray-100 border border-gray-200 text-gray-900"
+          className="w-full h-12 pl-12 pr-24 rounded-2xl bg-gray-100 border border-gray-200 text-gray-900 text-base"
+          style={{ lineHeight: 20 }}
         />
 
         {/* Right buttons */}
-        <View className="absolute right-3 top-1/2 -translate-y-1/2 flex-row items-center gap-1">
+        <View className="absolute right-2 top-0 bottom-0 flex-row items-center gap-1">
           {query.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} className="p-2">
-              <X size={16} color="#9ca3af" />
+            <TouchableOpacity
+              onPress={clearSearch}
+              className="w-8 h-8 items-center justify-center rounded-lg active:bg-gray-200"
+            >
+              <X size={18} color="#9ca3af" />
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
             onPress={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-xl ${
-              showFilters || activeFilter !== 'all' ? 'bg-blue-100' : 'bg-transparent'
+            className={`w-8 h-8 items-center justify-center rounded-lg ${
+              showFilters || activeFilter !== 'all' ? 'bg-blue-100' : 'active:bg-gray-200'
             }`}
           >
             <SlidersHorizontal
-              size={16}
+              size={18}
               color={showFilters || activeFilter !== 'all' ? '#3b82f6' : '#9ca3af'}
             />
           </TouchableOpacity>
@@ -85,7 +90,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(200)}
           layout={Layout.springify()}
-          className="flex-row gap-2"
+          className="flex-row gap-2 mt-3"
         >
           <FilterChip
             label="Tất cả"

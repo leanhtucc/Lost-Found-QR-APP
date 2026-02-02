@@ -11,3 +11,7 @@ export const COLORS = {
   dark: '#1F2937',
   light: '#F9FAFB',
 };
+
+// Export other constants
+export * from './categories';
+export * from './environment';

@@ -3,17 +3,18 @@
  * Màn hình chính hiển thị danh sách tài sản của người dùng
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, Text, StatusBar } from 'react-native';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { View, ScrollView, Text, StatusBar, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
-import { Item, ItemCategory } from '@/types/item';
+import { Item, ItemCategory, DashboardData } from '@/types/item';
+import { itemsApi } from '@/services/items';
+import { useToast } from '@/contexts/ToastContext';
 import {
   Header,
-  HeroBanner,
-  StatsCard,
+  StatisticsCard,
   ScannerButton,
   SearchBar,
   ItemCard,
@@ -25,39 +26,7 @@ import {
 
 type HomeNavigationProp = StackNavigationProp<RootStackParamList>;
 
-// Mock data - sẽ thay bằng API call sau
-const MOCK_ITEMS: Item[] = [
-  {
-    id: 'QR001234',
-    name: 'Laptop Dell Vostro 14',
-    category: 'laptop',
-    isLost: false,
-    createdAt: new Date('2025-01-15'),
-  },
-  {
-    id: 'QR005678',
-    name: 'Ví da màu nâu',
-    category: 'wallet',
-    isLost: true,
-    createdAt: new Date('2025-01-20'),
-  },
-  {
-    id: 'QR009012',
-    name: 'Bộ chìa khóa nhà',
-    category: 'keys',
-    isLost: false,
-    createdAt: new Date('2025-01-22'),
-  },
-  {
-    id: 'QR003456',
-    name: 'iPhone 15 Pro Max',
-    category: 'phone',
-    isLost: false,
-    createdAt: new Date('2025-01-25'),
-  },
-];
-
-// Mock user data
+// Mock user data - sẽ thay bằng AuthContext sau
 const MOCK_USER = {
   fullName: 'Nguyễn Văn A',
   studentId: 'SV001234',
@@ -65,16 +34,54 @@ const MOCK_USER = {
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNavigationProp>();
+  const { showToast } = useToast();
 
   // State
-  const [items, setItems] = useState<Item[]>(MOCK_ITEMS);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterType>('all');
 
+  // Load dashboard data
+  const loadDashboardData = useCallback(
+    async (showLoader = true) => {
+      try {
+        if (showLoader) setLoading(true);
+
+        const data = await itemsApi.getDashboardData();
+        setDashboardData(data);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        showToast({
+          message: error instanceof Error ? error.message : 'Không thể tải dữ liệu',
+          type: 'error',
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [showToast]
+  );
+
+  // Initial load
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // Pull to refresh
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadDashboardData(false);
+  }, [loadDashboardData]);
+
   // Computed values
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
+    if (!dashboardData) return [];
+
+    return dashboardData.items.filter(item => {
       // Search filter
       const matchesSearch =
         searchQuery === '' ||
@@ -84,24 +91,36 @@ export const HomeScreen: React.FC = () => {
       // Status filter
       const matchesStatus =
         statusFilter === 'all' ||
-        (statusFilter === 'safe' && !item.isLost) ||
-        (statusFilter === 'lost' && item.isLost);
+        (statusFilter === 'safe' && item.status === 'safe') ||
+        (statusFilter === 'lost' && item.status === 'lost');
 
       return matchesSearch && matchesStatus;
     });
-  }, [items, searchQuery, statusFilter]);
+  }, [dashboardData, searchQuery, statusFilter]);
 
-  const safeCount = useMemo(() => items.filter(i => !i.isLost).length, [items]);
-  const lostCount = useMemo(() => items.filter(i => i.isLost).length, [items]);
+  // Get last added date
+  const lastAddedDate = useMemo(() => {
+    if (!dashboardData || dashboardData.items.length === 0) return undefined;
+
+    const sortedItems = [...dashboardData.items].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return sortedItems[0].createdAt;
+  }, [dashboardData]);
 
   // Handlers
-  const handleSelectItem = useCallback((id: string) => {
+  const handleSelectItem = useCallback((itemId: string) => {
     // TODO: Navigate to item detail screen
-    console.log('Selected item:', id);
+    console.log('Selected item:', itemId);
+  }, []);
+
+  const handleItemMenu = useCallback((itemId: string) => {
+    // TODO: Show item action menu (Edit, Delete, Report Lost, etc.)
+    console.log('Show menu for item:', itemId);
   }, []);
 
   const handleOpenScanner = useCallback(() => {
-    // TODO: Navigate to scanner screen
     navigation.navigate('Scan' as any);
   }, [navigation]);
 
@@ -115,16 +134,55 @@ export const HomeScreen: React.FC = () => {
     console.log('Open notifications');
   }, []);
 
-  const handleAddItem = useCallback((name: string, category: ItemCategory) => {
-    const newItem: Item = {
-      id: `QR${Date.now().toString().slice(-6)}`,
-      name,
-      category,
-      isLost: false,
-      createdAt: new Date(),
-    };
-    setItems(prev => [newItem, ...prev]);
-  }, []);
+  const handleAddItem = useCallback(
+    async (name: string, category: ItemCategory) => {
+      try {
+        setLoading(true);
+
+        await itemsApi.createItem({
+          name,
+          category,
+        });
+
+        showToast({
+          message: 'Thêm vật phẩm thành công!',
+          type: 'success',
+        });
+
+        // Reload dashboard data
+        await loadDashboardData(false);
+      } catch (error) {
+        console.error('Failed to add item:', error);
+        showToast({
+          message: error instanceof Error ? error.message : 'Không thể thêm vật phẩm',
+          type: 'error',
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [showToast, loadDashboardData]
+  );
+
+  // Loading state
+  if (loading && !dashboardData) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+        <Header
+          userName={MOCK_USER.fullName}
+          studentId={MOCK_USER.studentId}
+          notificationCount={0}
+          onNotificationPress={handleOpenNotifications}
+          onProfilePress={handleOpenProfile}
+        />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <Text className="mt-4 text-gray-500">Đang tải dữ liệu...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -142,49 +200,62 @@ export const HomeScreen: React.FC = () => {
       {/* Content */}
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#3b82f6']}
+            tintColor="#3b82f6"
+          />
+        }
       >
-        {/* Hero Banner */}
-        <HeroBanner safeCount={safeCount} lostCount={lostCount} />
-
-        {/* Stats Cards */}
-        <View className="flex-row gap-4 mb-6">
-          <StatsCard count={safeCount} label="An toàn" type="safe" delay={100} />
-          <StatsCard count={lostCount} label="Đang mất" type="lost" delay={150} />
-        </View>
+        {/* Statistics Card */}
+        {dashboardData && (
+          <StatisticsCard
+            safeCount={dashboardData.safeCount}
+            lostCount={dashboardData.lostCount}
+            totalCount={dashboardData.total}
+            lastAdded={lastAddedDate}
+          />
+        )}
 
         {/* Scanner Button */}
-        <ScannerButton onPress={handleOpenScanner} />
+        <View className="px-4 mt-2">
+          <ScannerButton onPress={handleOpenScanner} />
+        </View>
 
         {/* Search Bar */}
-        <SearchBar
-          onSearch={setSearchQuery}
-          onFilterChange={setStatusFilter}
-          placeholder="Tìm kiếm tài sản..."
-        />
+        <View className="px-4 mt-4">
+          <SearchBar
+            onSearch={setSearchQuery}
+            onFilterChange={setStatusFilter}
+            placeholder="Tìm kiếm tài sản..."
+          />
+        </View>
 
         {/* Items Section Header */}
-        <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center justify-between px-4 mt-6 mb-3">
           <Text className="font-bold text-lg text-gray-900">Tài sản của bạn</Text>
           <Text className="text-sm text-gray-500">
-            {filteredItems.length} / {items.length} món
+            {filteredItems.length} / {dashboardData?.total || 0} món
           </Text>
         </View>
 
         {/* Items List */}
         {filteredItems.length > 0 ? (
-          <View>
+          <View className="pb-6">
             {filteredItems.map((item, index) => (
               <ItemCard
                 key={item.id}
                 item={item}
                 index={index}
                 onPress={() => handleSelectItem(item.id)}
+                onMenuPress={() => handleItemMenu(item.id)}
               />
             ))}
           </View>
-        ) : items.length > 0 ? (
+        ) : dashboardData && dashboardData.total > 0 ? (
           <EmptyState type="no-results" />
         ) : (
           <EmptyState type="no-items" />
