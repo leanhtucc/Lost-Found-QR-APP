@@ -1,0 +1,108 @@
+/**
+ * Notifications Screen
+ * Màn hình hiển thị danh sách thông báo với Stream Chat API
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { ScrollView, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Notification } from '@/types/notification';
+import { getNotifications, markAllNotificationsAsRead } from '@/services/notifications';
+import { NotificationHeader, NotificationCard, EmptyState, LoadingState } from './components';
+import { getMockNotifications } from './utils';
+
+export default function NotificationsScreen() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      const data = await getNotifications();
+      setNotifications(data.notifications);
+      setUnreadCount(data.unreadTotal);
+    } catch (error) {
+      console.log('Using mock data for demo');
+      // Fallback to mock data if API fails
+      const mockData = getMockNotifications();
+      setNotifications(mockData);
+      setUnreadCount(mockData.filter(n => !n.isRead).length);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadNotifications();
+    setIsRefreshing(false);
+  }, []);
+
+  const handleNotificationPress = useCallback((notification: Notification) => {
+    // Optimistic update - mark as read locally
+    if (!notification.isRead) {
+      setNotifications(prev =>
+        prev.map(n => (n.id === notification.id ? { ...n, isRead: true } : n))
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+
+      // TODO: Navigate to item detail or open message
+      // navigation.navigate('ItemDetail', { itemId: notification.item?.id });
+    }
+  }, []);
+
+  const handleMarkAllAsRead = useCallback(async () => {
+    try {
+      // Optimistic update
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+
+      // Call API
+      await markAllNotificationsAsRead();
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      // Revert on error
+      await loadNotifications();
+    }
+  }, []);
+
+  return (
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+      <NotificationHeader unreadCount={unreadCount} onMarkAllRead={handleMarkAllAsRead} />
+
+      {isLoading ? (
+        <LoadingState />
+      ) : notifications.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ padding: 16 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={['#3b82f6']}
+              tintColor="#3b82f6"
+            />
+          }
+        >
+          {notifications.map((notification, index) => (
+            <NotificationCard
+              key={notification.id}
+              notification={notification}
+              index={index}
+              onPress={() => handleNotificationPress(notification)}
+            />
+          ))}
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  );
+}

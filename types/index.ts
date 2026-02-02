@@ -5,3 +5,4 @@
 
 // Item types
 export * from './item';
+export * from './notification';
