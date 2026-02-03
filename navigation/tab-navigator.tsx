@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, QrCode, PlusCircle, Package } from 'lucide-react-native';
+import { Home, Package, ScanLine, MessageCircle, User } from 'lucide-react-native';
 import { HomeScreen, ScanScreen, MyItemsScreen, ProfileScreen, ChatScreen } from '@screens/index';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -71,7 +71,7 @@ export const TabNavigator = () => {
         options={{
           tabBarLabel: 'Scan',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
-            <QrCode size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <ScanLine size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
@@ -81,7 +81,7 @@ export const TabNavigator = () => {
         options={{
           tabBarLabel: 'Chat',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
-            <Package size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <MessageCircle size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
@@ -91,7 +91,7 @@ export const TabNavigator = () => {
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
-            <PlusCircle size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <User size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
