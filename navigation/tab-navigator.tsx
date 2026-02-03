@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, QrCode, PlusCircle, Package } from 'lucide-react-native';
-import { HomeScreen, ScanScreen, RegisterScreen, MyItemsScreen } from '@screens/index';
+import { HomeScreen, ScanScreen, MyItemsScreen, ProfileScreen, ChatScreen } from '@screens/index';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
@@ -56,6 +56,16 @@ export const TabNavigator = () => {
         }}
       />
       <Tab.Screen
+        name="MyItems"
+        component={MyItemsScreen}
+        options={{
+          tabBarLabel: 'My Items',
+          tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
+            <Package size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Scan"
         component={ScanScreen}
         options={{
@@ -66,27 +76,22 @@ export const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Register"
-        component={RegisterScreen}
+        name="Chat"
+        component={ChatScreen}
         options={{
-          tabBarLabel: 'Register',
+          tabBarLabel: 'Chat',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
-            <PlusCircle
-              size={size}
-              color={color}
-              fill={focused ? color : 'none'}
-              strokeWidth={focused ? 2.5 : 2}
-            />
+            <Package size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
       <Tab.Screen
-        name="MyItems"
-        component={MyItemsScreen}
+        name="Profile"
+        component={ProfileScreen}
         options={{
-          tabBarLabel: 'My Items',
+          tabBarLabel: 'Profile',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
-            <Package size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <PlusCircle size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />

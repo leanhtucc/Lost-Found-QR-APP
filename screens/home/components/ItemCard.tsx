@@ -22,7 +22,7 @@ const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const ItemCard: React.FC<ItemCardProps> = ({ item, index, onPress, onMenuPress }) => {
   const categoryConfig = CATEGORY_CONFIG[item.category];
-  const categoryIcon = getCategoryIcon(item.category);
+  const CategoryIcon = getCategoryIcon(item.category);
   const categoryLabel = getCategoryLabel(item.category);
 
   // Format date
@@ -67,7 +67,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, index, onPress, onMenu
             <View
               className={`w-16 h-16 rounded-lg ${categoryConfig.bgColor} items-center justify-center`}
             >
-              <Text className="text-3xl">{categoryIcon}</Text>
+              <CategoryIcon size={32} color="#374151" />
             </View>
           )}
         </View>

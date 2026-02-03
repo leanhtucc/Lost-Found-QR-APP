@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { Shield, CheckCircle2, AlertCircle } from 'lucide-react-native';
+import { Shield, CheckCircle2, AlertTriangle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface StatisticsCardProps {
@@ -99,7 +99,7 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
                 lostCount > 0 ? 'bg-red-50' : 'bg-gray-50'
               }`}
             >
-              <AlertCircle size={24} color={lostCount > 0 ? '#ef4444' : '#9ca3af'} />
+              <AlertTriangle size={24} color={lostCount > 0 ? '#ef4444' : '#9ca3af'} />
             </View>
             <View className="flex-1">
               <Text className="text-2xl font-bold text-gray-900">{lostCount}</Text>
@@ -108,28 +108,6 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
           </View>
         </Animated.View>
       </View>
-
-      {/* Summary Footer */}
-      {(totalCount > 0 || daysSince !== null) && (
-        <Animated.View
-          entering={FadeInDown.duration(400).delay(200).springify()}
-          className="mt-3 px-2"
-        >
-          <View className="flex-row items-center justify-center gap-2">
-            <Text className="text-xs text-gray-500">
-              📊 Tổng: <Text className="font-semibold text-gray-700">{totalCount}</Text>
-            </Text>
-            {daysSince !== null && (
-              <>
-                <Text className="text-xs text-gray-300">•</Text>
-                <Text className="text-xs text-gray-500">
-                  Thêm: <Text className="font-semibold text-gray-700">{daysSince} ngày</Text>
-                </Text>
-              </>
-            )}
-          </View>
-        </Animated.View>
-      )}
     </View>
   );
 };

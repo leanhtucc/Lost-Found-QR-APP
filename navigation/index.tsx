@@ -10,7 +10,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import * as Linking from 'expo-linking';
 
 // Screens
-import { HomeScreen, ScanScreen, RegisterScreen, MyItemsScreen } from '@screens/index';
+import { HomeScreen, ScanScreen, MyItemsScreen } from '@screens/index';
 import { LoginScreen } from '@screens/auth/login';
 import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
 import { CodeVerifyScreen } from '@screens/auth/codeVerify';
@@ -157,7 +157,6 @@ export default function RootStack() {
         <Stack.Screen name="TabNavigator" component={TabNavigator} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Scan" component={ScanScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="MyItems" component={MyItemsScreen} />
       </Stack.Navigator>
     </NavigationContainer>

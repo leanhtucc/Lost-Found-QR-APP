@@ -11,6 +11,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
 import { Item, ItemCategory, DashboardData } from '@/types/item';
 import { itemsApi } from '@/services/items';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import {
   Header,
@@ -26,14 +27,9 @@ import {
 
 type HomeNavigationProp = StackNavigationProp<RootStackParamList>;
 
-// Mock user data - sẽ thay bằng AuthContext sau
-const MOCK_USER = {
-  fullName: 'Nguyễn Văn A',
-  studentId: 'SV001234',
-};
-
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNavigationProp>();
+  const { user } = useAuthContext();
   const { showToast } = useToast();
 
   // State
@@ -55,6 +51,7 @@ export const HomeScreen: React.FC = () => {
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
         showToast({
+          title: 'Lỗi',
           message: error instanceof Error ? error.message : 'Không thể tải dữ liệu',
           type: 'error',
         });
@@ -145,6 +142,7 @@ export const HomeScreen: React.FC = () => {
         });
 
         showToast({
+          title: 'Thành công',
           message: 'Thêm vật phẩm thành công!',
           type: 'success',
         });
@@ -154,6 +152,7 @@ export const HomeScreen: React.FC = () => {
       } catch (error) {
         console.error('Failed to add item:', error);
         showToast({
+          title: 'Lỗi',
           message: error instanceof Error ? error.message : 'Không thể thêm vật phẩm',
           type: 'error',
         });
@@ -170,8 +169,8 @@ export const HomeScreen: React.FC = () => {
       <SafeAreaView className="flex-1 bg-gray-50">
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         <Header
-          userName={MOCK_USER.fullName}
-          studentId={MOCK_USER.studentId}
+          userName={user?.displayName || 'User'}
+          studentId={user?.uid || ''}
           notificationCount={0}
           onNotificationPress={handleOpenNotifications}
           onProfilePress={handleOpenProfile}
@@ -190,9 +189,9 @@ export const HomeScreen: React.FC = () => {
 
       {/* Header */}
       <Header
-        userName={MOCK_USER.fullName}
-        studentId={MOCK_USER.studentId}
-        notificationCount={3}
+        userName={user?.displayName || 'User'}
+        studentId={user?.uid || ''}
+        notificationCount={0}
         onNotificationPress={handleOpenNotifications}
         onProfilePress={handleOpenProfile}
       />
