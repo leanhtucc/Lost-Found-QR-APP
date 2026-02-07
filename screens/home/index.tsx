@@ -107,10 +107,12 @@ export const HomeScreen: React.FC = () => {
   }, [dashboardData]);
 
   // Handlers
-  const handleSelectItem = useCallback((itemId: string) => {
-    // TODO: Navigate to item detail screen
-    console.log('Selected item:', itemId);
-  }, []);
+  const handleSelectItem = useCallback(
+    (itemId: string) => {
+      navigation.navigate('ItemDetails', { itemId });
+    },
+    [navigation]
+  );
 
   const handleItemMenu = useCallback((itemId: string) => {
     // TODO: Show item action menu (Edit, Delete, Report Lost, etc.)
@@ -122,14 +124,12 @@ export const HomeScreen: React.FC = () => {
   }, [navigation]);
 
   const handleOpenProfile = useCallback(() => {
-    // TODO: Navigate to profile screen
-    console.log('Open profile');
-  }, []);
+    navigation.navigate('Profile');
+  }, [navigation]);
 
   const handleOpenNotifications = useCallback(() => {
-    // TODO: Navigate to notifications screen
-    console.log('Open notifications');
-  }, []);
+    navigation.navigate('Notifications');
+  }, [navigation]);
 
   const handleAddItem = useCallback(
     async (name: string, category: ItemCategory) => {
@@ -171,6 +171,7 @@ export const HomeScreen: React.FC = () => {
         <Header
           userName={user?.displayName || 'User'}
           studentId={user?.uid || ''}
+          userAvatar={user?.photoURL}
           notificationCount={0}
           onNotificationPress={handleOpenNotifications}
           onProfilePress={handleOpenProfile}
@@ -191,6 +192,7 @@ export const HomeScreen: React.FC = () => {
       <Header
         userName={user?.displayName || 'User'}
         studentId={user?.uid || ''}
+        userAvatar={user?.photoURL}
         notificationCount={0}
         onNotificationPress={handleOpenNotifications}
         onProfilePress={handleOpenProfile}

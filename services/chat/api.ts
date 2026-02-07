@@ -3,13 +3,23 @@
  * Service xử lý các API liên quan đến chat
  */
 
-import { CreateChannelResponse, GetInboxResponse, CloseChannelResponse } from '@/types/chat';
+import {
+  CreateChannelResponse,
+  GetInboxResponse,
+  CloseChannelResponse,
+  Conversation,
+} from '@/types/chat';
 import { authStorage } from '@/storage/auth';
 
 const API_BASE = 'http://192.168.10.102:3000';
 
 const createHeaders = async (): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
+
+  if (!token) {
+    throw new Error('No access token found');
+  }
+
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,
@@ -47,8 +57,9 @@ export const createChannel = async (
 
 /**
  * Lấy danh sách hộp thư (inbox) của user
+ * Map sang Conversation format cho UI
  */
-export const getInbox = async (): Promise<GetInboxResponse['data']> => {
+export const getInbox = async (): Promise<{ total: number; channels: Conversation[] }> => {
   try {
     const url = `${API_BASE}/api/stream/channels`;
     const headers = await createHeaders();
@@ -62,11 +73,37 @@ export const getInbox = async (): Promise<GetInboxResponse['data']> => {
     }
 
     const result: GetInboxResponse = await response.json();
-    return result.data;
+
+    // Map InboxChannel to Conversation
+    const conversations: Conversation[] = result.data.channels.map(channel => ({
+      id: channel.id,
+      itemName: extractItemName(channel.id), // Extract from channel ID or metadata
+      userName: channel.receiver.name,
+      userAvatar: channel.receiver.image || channel.receiver.avatar,
+      lastMessage: channel.last_message || 'Chưa có tin nhắn',
+      lastMessageAt: channel.created_at || new Date().toISOString(),
+      unreadCount: channel.unread_count || 0,
+      isOnline: false, // TODO: Get from real-time presence
+    }));
+
+    return {
+      total: result.data.total,
+      channels: conversations,
+    };
   } catch (error) {
     console.error('Error fetching inbox:', error);
     throw error;
   }
+};
+
+/**
+ * Helper: Extract item name from channel ID
+ * Format: item-{itemId} or similar
+ */
+const extractItemName = (channelId: string): string => {
+  // TODO: Fetch item name from metadata or separate API call
+  // For now, return a placeholder
+  return 'Món đồ';
 };
 
 /**

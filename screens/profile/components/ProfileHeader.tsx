@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, User } from 'lucide-react-native';
@@ -12,10 +12,16 @@ import { ArrowLeft, User } from 'lucide-react-native';
 interface ProfileHeaderProps {
   userName: string;
   userEmail: string;
+  userAvatar?: string;
   onBack: () => void;
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, userEmail, onBack }) => {
+export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
+  userName,
+  userEmail,
+  userAvatar,
+  onBack,
+}) => {
   return (
     <LinearGradient
       colors={['#3b82f6', '#2563eb']}
@@ -43,8 +49,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userName, userEmai
       >
         <View className="flex-row items-center gap-4">
           {/* Avatar */}
-          <View className="w-20 h-20 rounded-full bg-white/20 items-center justify-center">
-            <User size={40} color="#ffffff" />
+          <View className="w-20 h-20 rounded-full bg-white/20 items-center justify-center overflow-hidden">
+            {userAvatar ? (
+              <Image source={{ uri: userAvatar }} className="w-full h-full" resizeMode="cover" />
+            ) : (
+              <User size={40} color="#ffffff" />
+            )}
           </View>
 
           {/* User Info */}

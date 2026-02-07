@@ -4,14 +4,16 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ScrollView, RefreshControl } from 'react-native';
+import { ScrollView, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Notification } from '@/types/notification';
 import { getNotifications, markAllNotificationsAsRead } from '@/services/notifications';
 import { NotificationHeader, NotificationCard, EmptyState, LoadingState } from './components';
 import { getMockNotifications } from './utils';
 
 export default function NotificationsScreen() {
+  const navigation = useNavigation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,8 +29,27 @@ export default function NotificationsScreen() {
       setNotifications(data.notifications);
       setUnreadCount(data.unreadTotal);
     } catch (error) {
-      console.log('Using mock data for demo');
+      console.error('Error loading notifications:', error);
+
+      // Kiểm tra nếu là lỗi authentication
+      if (error instanceof Error && error.message.includes('login again')) {
+        Alert.alert('Phiên đăng nhập hết hạn', 'Vui lòng đăng nhập lại để tiếp tục.', [
+          {
+            text: 'Đăng nhập',
+            onPress: () => {
+              // Navigate to login screen
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' as any }],
+              });
+            },
+          },
+        ]);
+        return;
+      }
+
       // Fallback to mock data if API fails
+      console.log('Using mock data for demo');
       const mockData = getMockNotifications();
       setNotifications(mockData);
       setUnreadCount(mockData.filter(n => !n.isRead).length);

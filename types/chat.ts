@@ -3,6 +3,18 @@
  * Định nghĩa các kiểu dữ liệu cho hệ thống chat
  */
 
+// UI Conversation Type for Chat List
+export interface Conversation {
+  id: string;
+  itemName: string;
+  userName: string;
+  userAvatar?: string;
+  lastMessage: string;
+  lastMessageAt: Date | string;
+  unreadCount: number;
+  isOnline: boolean;
+}
+
 export interface ChatChannel {
   id: string;
   type: string;

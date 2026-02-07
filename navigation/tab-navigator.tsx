@@ -1,7 +1,13 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Package, ScanLine, MessageCircle, User } from 'lucide-react-native';
-import { HomeScreen, ScanScreen, MyItemsScreen, ProfileScreen, ChatScreen } from '@screens/index';
+import {
+  HomeScreen,
+  ScanScreen,
+  MyItemsScreen,
+  ProfileScreen,
+  ChatListScreen,
+} from '@screens/index';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
@@ -70,6 +76,7 @@ export const TabNavigator = () => {
         component={ScanScreen}
         options={{
           tabBarLabel: 'Scan',
+          tabBarStyle: { display: 'none' }, // Ẩn tab bar khi ở màn scan
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
             <ScanLine size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
@@ -77,7 +84,7 @@ export const TabNavigator = () => {
       />
       <Tab.Screen
         name="Chat"
-        component={ChatScreen}
+        component={ChatListScreen}
         options={{
           tabBarLabel: 'Chat',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (

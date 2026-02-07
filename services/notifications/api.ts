@@ -10,15 +10,63 @@ import {
   ActivityMetadata,
 } from '@/types/notification';
 import { authStorage } from '@/storage/auth';
+import { authApi } from '@/services/auth';
 
 const API_BASE = 'http://192.168.10.102:3000';
 
 const createHeaders = async (): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
+
+  if (!token) {
+    throw new Error('No access token found. Please login again.');
+  }
+
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,
   };
+};
+
+/**
+ * Helper để tự động refresh token khi gặp 401
+ */
+const fetchWithAuth = async (url: string, options: RequestInit): Promise<Response> => {
+  let response = await fetch(url, options);
+
+  // Nếu gặp 401, thử refresh token và gọi lại
+  if (response.status === 401) {
+    console.log('Token expired, attempting to refresh...');
+
+    try {
+      const refreshToken = await authStorage.getRefreshToken();
+
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      // Refresh token
+      const refreshResponse = await authApi.refreshToken({ refreshToken });
+
+      if (refreshResponse.success && refreshResponse.data) {
+        // Token đã được lưu trong authApi.refreshToken
+        // Tạo headers mới và gọi lại request
+        const newHeaders = await createHeaders();
+        response = await fetch(url, {
+          ...options,
+          headers: newHeaders,
+        });
+      } else {
+        throw new Error('Failed to refresh token');
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      // Clear tokens và yêu cầu đăng nhập lại
+      await authStorage.clearTokens();
+      throw new Error('Session expired. Please login again.');
+    }
+  }
+
+  return response;
 };
 
 /**
@@ -29,7 +77,7 @@ export const updatePushToken = async (pushToken: string): Promise<void> => {
   try {
     const url = `${API_BASE}/api/auth/profile`;
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({ pushToken }),
@@ -54,7 +102,7 @@ export const getStreamToken = async (): Promise<StreamTokenResponse['data']> => 
   try {
     const url = `${API_BASE}/api/stream/token`;
     const headers = await createHeaders();
-    const response = await fetch(url, { method: 'GET', headers });
+    const response = await fetchWithAuth(url, { method: 'GET', headers });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -75,7 +123,7 @@ export const getNotifications = async (): Promise<NotificationsResponse['data']>
   try {
     const url = `${API_BASE}/api/stream/notifications`;
     const headers = await createHeaders();
-    const response = await fetch(url, { method: 'GET', headers });
+    const response = await fetchWithAuth(url, { method: 'GET', headers });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -96,7 +144,7 @@ export const markAllNotificationsAsRead = async (): Promise<void> => {
   try {
     const url = `${API_BASE}/api/stream/notifications/mark-read`;
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'POST',
       headers,
     });
@@ -133,7 +181,7 @@ export const logActivity = async (
       params.toString() ? `?${params}` : ''
     }`;
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'POST',
       headers,
     });

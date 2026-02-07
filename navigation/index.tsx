@@ -10,7 +10,16 @@ import { createStackNavigator } from '@react-navigation/stack';
 import * as Linking from 'expo-linking';
 
 // Screens
-import { HomeScreen, ScanScreen, MyItemsScreen } from '@screens/index';
+import {
+  HomeScreen,
+  ScanScreen,
+  MyItemsScreen,
+  ItemDetailScreen,
+  NotificationsScreen,
+  ProfileScreen,
+  ChatListScreen,
+  ChatDetailScreen,
+} from '@screens/index';
 import { LoginScreen } from '@screens/auth/login';
 import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
 import { CodeVerifyScreen } from '@screens/auth/codeVerify';
@@ -37,6 +46,13 @@ export type RootStackParamList = {
   EditItem: { itemId: string };
   Notifications: undefined;
   Help: undefined;
+  ChatList: undefined;
+  Chat: {
+    channelId: string;
+    itemName: string;
+    userName: string;
+    userAvatar?: string;
+  };
   // Auth screens
   Onboarding: undefined;
   Login: undefined;
@@ -158,6 +174,11 @@ export default function RootStack() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Scan" component={ScanScreen} />
         <Stack.Screen name="MyItems" component={MyItemsScreen} />
+        <Stack.Screen name="ItemDetails" component={ItemDetailScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="ChatList" component={ChatListScreen} />
+        <Stack.Screen name="Chat" component={ChatDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

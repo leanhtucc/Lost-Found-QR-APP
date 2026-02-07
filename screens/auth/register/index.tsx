@@ -26,9 +26,10 @@ export const RegisterScreen: React.FC = () => {
     displayName: string,
     email: string,
     password: string,
+    phoneNumber: string,
     photoURL?: string
   ) => {
-    const success = await register(displayName, email, password, photoURL);
+    const success = await register(displayName, email, password, phoneNumber, photoURL);
     if (success) {
       // Navigate to OTP verification screen
       navigateToCodeVerify(email);

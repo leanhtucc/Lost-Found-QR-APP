@@ -100,7 +100,8 @@ export default function ProfileScreen() {
       {/* Header */}
       <ProfileHeader
         userName={user?.displayName || 'User'}
-        userEmail={user?.uid || ''}
+        userEmail={user?.email || user?.uid || ''}
+        userAvatar={user?.photoURL}
         onBack={handleBack}
       />
 

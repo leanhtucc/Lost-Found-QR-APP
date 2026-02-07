@@ -12,6 +12,7 @@
  *   "email": "user@example.com",
  *   "password": "Password123",
  *   "displayName": "John Doe",
+ *   "phoneNumber": "0912345678",
  *   "photoURL": "https://example.com/avatar.jpg"
  * }
  */
@@ -19,6 +20,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   displayName: string;
+  phoneNumber?: string;
   photoURL?: string;
 }
 
