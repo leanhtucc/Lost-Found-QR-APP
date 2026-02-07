@@ -11,7 +11,6 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
-  withSequence,
   Easing,
   FadeIn,
   FadeOut,
@@ -23,342 +22,124 @@ interface ScannerOverlayProps {
   hasCodeInFrame: boolean;
 }
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SCANNER_SIZE = Math.min(SCREEN_WIDTH * 0.75, 300); // 75% width hoặc max 300
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCANNER_SIZE = Math.min(SCREEN_WIDTH * 0.8, 320);
 
 export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ isScanning, hasCodeInFrame }) => {
-  const scanLinePosition = useSharedValue(0);
-  const cornerPulse = useSharedValue(0);
+  const scanLinePosition = useSharedValue(0.1);
 
   useEffect(() => {
     if (isScanning && hasCodeInFrame) {
-      // Scanning line animation - only when code is detected
+      // Scanning line animation from 10% to 90%
+      scanLinePosition.value = 0.1;
       scanLinePosition.value = withRepeat(
-        withTiming(1, {
+        withTiming(0.9, {
           duration: 2000,
-          easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+          easing: Easing.linear,
         }),
         -1,
         true
       );
     } else {
-      scanLinePosition.value = withTiming(0, { duration: 200 });
-    }
-
-    if (isScanning) {
-      // Corner pulse animation
-      cornerPulse.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: 1000, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        false
-      );
-    } else {
-      cornerPulse.value = withTiming(0);
+      scanLinePosition.value = withTiming(0.1, { duration: 200 });
     }
   }, [isScanning, hasCodeInFrame]);
 
   const scanLineStyle = useAnimatedStyle(() => {
-    const scannerHeight = SCANNER_SIZE - 40; // Subtract padding
+    const scannerHeight = SCANNER_SIZE;
     return {
       transform: [
         {
           translateY: scanLinePosition.value * scannerHeight,
         },
       ],
-      opacity: interpolate(scanLinePosition.value, [0, 0.5, 1], [0.4, 1, 0.4]),
-    };
-  });
-
-  const cornerPulseStyle = useAnimatedStyle(() => {
-    return {
-      opacity: interpolate(cornerPulse.value, [0, 1], [0.8, 1]),
-      transform: [
-        {
-          scale: interpolate(cornerPulse.value, [0, 1], [1, 1.05]),
-        },
-      ],
+      opacity: interpolate(scanLinePosition.value, [0.1, 0.5, 0.9], [0.6, 1, 0.6]),
     };
   });
 
   return (
-    <View className="absolute inset-0 items-center justify-center">
+    <View style={{ position: 'absolute', top: -150, left: 0, right: 0, bottom: 0 }}>
       {/* Dark Overlay */}
       <View className="absolute inset-0 bg-black/80" />
 
       {/* Scanner Frame Container - Centered */}
-      <Animated.View
-        entering={FadeIn.duration(400)}
+      <View
         style={{
-          width: SCANNER_SIZE,
-          height: SCANNER_SIZE,
-          position: 'relative',
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        {/* Semi-transparent border */}
-        <View
+        <Animated.View
+          entering={FadeIn.duration(400)}
           style={{
-            position: 'absolute',
-            inset: 0,
-            borderWidth: 2,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
-            borderRadius: 24,
+            width: SCANNER_SIZE,
+            height: SCANNER_SIZE,
+            position: 'relative',
           }}
-        />
+        >
+          {/* Semi-transparent border */}
+          <View className="absolute inset-0 border border-white/15 rounded-3xl" />
 
-        {/* Corner Indicators with Pulse */}
-        {isScanning ? (
-          <>
+          {/* Corner Frames - Clean Design with Tailwind */}
+          {/* Top Left */}
+          <View className="absolute top-4 left-4 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-2xl" />
+          {/* Top Right */}
+          <View className="absolute top-4 right-4 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-2xl" />
+          {/* Bottom Left */}
+          <View className="absolute bottom-4 left-4 w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-2xl" />
+          {/* Bottom Right */}
+          <View className="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-2xl" />
+
+          {/* Scanning Line - Only show when QR code is detected */}
+          {isScanning && hasCodeInFrame && (
             <Animated.View
+              entering={FadeIn.duration(300)}
+              exiting={FadeOut.duration(300)}
               style={[
-                cornerPulseStyle,
+                scanLineStyle,
                 {
                   position: 'absolute',
-                  top: 0,
                   left: 0,
-                  width: 60,
-                  height: 60,
-                  borderTopWidth: 5,
-                  borderLeftWidth: 5,
-                  borderColor: '#3b82f6',
-                  borderTopLeftRadius: 20,
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                cornerPulseStyle,
-                {
-                  position: 'absolute',
-                  top: 0,
                   right: 0,
-                  width: 60,
-                  height: 60,
-                  borderTopWidth: 5,
-                  borderRightWidth: 5,
-                  borderColor: '#3b82f6',
-                  borderTopRightRadius: 20,
+                  height: 2,
                 },
               ]}
-            />
-            <Animated.View
-              style={[
-                cornerPulseStyle,
-                {
+            >
+              <LinearGradient
+                colors={[
+                  'rgba(59, 130, 246, 0)',
+                  'rgba(59, 130, 246, 0.4)',
+                  'rgba(59, 130, 246, 1)',
+                  'rgba(59, 130, 246, 0.4)',
+                  'rgba(59, 130, 246, 0)',
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="h-full rounded-sm"
+              />
+              {/* Glow effect */}
+              <View
+                style={{
                   position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  width: 60,
-                  height: 60,
-                  borderBottomWidth: 5,
-                  borderLeftWidth: 5,
-                  borderColor: '#3b82f6',
-                  borderBottomLeftRadius: 20,
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                cornerPulseStyle,
-                {
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  width: 60,
-                  height: 60,
-                  borderBottomWidth: 5,
-                  borderRightWidth: 5,
-                  borderColor: '#3b82f6',
-                  borderBottomRightRadius: 20,
-                },
-              ]}
-            />
-          </>
-        ) : (
-          <>
-            {/* Static corners when not scanning */}
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: 60,
-                height: 60,
-                borderTopWidth: 5,
-                borderLeftWidth: 5,
-                borderColor: '#6b7280',
-                borderTopLeftRadius: 20,
-              }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                width: 60,
-                height: 60,
-                borderTopWidth: 5,
-                borderRightWidth: 5,
-                borderColor: '#6b7280',
-                borderTopRightRadius: 20,
-              }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                width: 60,
-                height: 60,
-                borderBottomWidth: 5,
-                borderLeftWidth: 5,
-                borderColor: '#6b7280',
-                borderBottomLeftRadius: 20,
-              }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                width: 60,
-                height: 60,
-                borderBottomWidth: 5,
-                borderRightWidth: 5,
-                borderColor: '#6b7280',
-                borderBottomRightRadius: 20,
-              }}
-            />
-          </>
-        )}
-
-        {/* Scanning Line with Gradient - Only show when QR code is detected */}
-        {isScanning && hasCodeInFrame && (
-          <Animated.View
-            entering={FadeIn.duration(200)}
-            exiting={FadeOut.duration(200)}
-            style={[
-              scanLineStyle,
-              {
-                position: 'absolute',
-                left: 20,
-                right: 20,
-                height: 4,
-              },
-            ]}
-          >
-            <LinearGradient
-              colors={[
-                'rgba(59, 130, 246, 0)',
-                'rgba(59, 130, 246, 0.6)',
-                'rgba(59, 130, 246, 1)',
-                'rgba(59, 130, 246, 0.6)',
-                'rgba(59, 130, 246, 0)',
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                height: '100%',
-                borderRadius: 2,
-              }}
-            />
-            {/* Glow effect */}
-            <View
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundColor: '#3b82f6',
-                opacity: 0.5,
-                shadowColor: '#3b82f6',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 1,
-                shadowRadius: 20,
-                elevation: 12,
-              }}
-            />
-          </Animated.View>
-        )}
-
-        {/* Corner Glow effects when scanning */}
-        {isScanning && (
-          <>
-            <Animated.View
-              style={[
-                cornerPulseStyle,
-                {
-                  position: 'absolute',
-                  top: -8,
-                  left: -8,
-                  width: 76,
-                  height: 76,
-                  borderTopLeftRadius: 28,
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  left: '10%',
+                  right: '10%',
+                  top: -4,
+                  bottom: -4,
+                  backgroundColor: '#3b82f6',
+                  opacity: 0.4,
                   shadowColor: '#3b82f6',
                   shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.5,
+                  shadowOpacity: 0.8,
                   shadowRadius: 20,
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                cornerPulseStyle,
-                {
-                  position: 'absolute',
-                  top: -8,
-                  right: -8,
-                  width: 76,
-                  height: 76,
-                  borderTopRightRadius: 28,
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                  shadowColor: '#3b82f6',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.5,
-                  shadowRadius: 20,
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                cornerPulseStyle,
-                {
-                  position: 'absolute',
-                  bottom: -8,
-                  left: -8,
-                  width: 76,
-                  height: 76,
-                  borderBottomLeftRadius: 28,
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                  shadowColor: '#3b82f6',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.5,
-                  shadowRadius: 20,
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                cornerPulseStyle,
-                {
-                  position: 'absolute',
-                  bottom: -8,
-                  right: -8,
-                  width: 76,
-                  height: 76,
-                  borderBottomRightRadius: 28,
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                  shadowColor: '#3b82f6',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.5,
-                  shadowRadius: 20,
-                },
-              ]}
-            />
-          </>
-        )}
-      </Animated.View>
+                  elevation: 10,
+                  borderRadius: 10,
+                }}
+              />
+            </Animated.View>
+          )}
+        </Animated.View>
+      </View>
     </View>
   );
 };

@@ -4,9 +4,9 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
-import { Camera, QrCode, CheckCircle } from 'lucide-react-native';
+import { View, Text } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Camera } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface ScannerInstructionsProps {
@@ -21,48 +21,41 @@ export const ScannerInstructions: React.FC<ScannerInstructionsProps> = ({
   return (
     <Animated.View
       entering={FadeInUp.duration(400).delay(200)}
-      className="absolute bottom-24 left-0 right-0 items-center px-8"
+      className="absolute bottom-20 left-0 right-0 items-center px-6"
     >
       {scannedData ? (
-        // Success State with gradient
-        <Animated.View entering={FadeInDown.duration(300)}>
-          <LinearGradient
-            colors={['#10b981', '#059669']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.successContainer}
-          >
-            <View className="flex-row items-center mb-2">
-              <CheckCircle size={24} color="#ffffff" strokeWidth={2.5} />
-              <Text style={styles.successTitle}>Quét thành công!</Text>
-            </View>
-            <Text style={styles.successSubtitle}>Đang tải thông tin vật phẩm...</Text>
-          </LinearGradient>
-        </Animated.View>
+        // Success State
+        <View className="bg-green-500/90 backdrop-blur-xl rounded-2xl px-6 py-4 items-center">
+          <Text className="text-white text-lg font-bold mb-1">✓ Quét thành công!</Text>
+          <Text className="text-white/90 text-sm">Đang tải thông tin...</Text>
+        </View>
       ) : (
-        // Normal State with improved design
+        // Normal State
         <View className="items-center">
-          {/* Main instruction card */}
-          <View style={styles.instructionCard}>
-            <View className="flex-row items-center mb-3">
-              <QrCode size={24} color="#ffffff" strokeWidth={2} />
-              <Text style={styles.instructionTitle}>Quét mã QR</Text>
-            </View>
-            <Text style={styles.instructionText}>Đưa mã QR vào trong khung hình vuông</Text>
-            <Text style={styles.statusText}>
-              {isScanning ? '🔍 Đang quét...' : '📷 Chuẩn bị camera...'}
-            </Text>
-          </View>
+          {/* Main instruction text */}
+          <Text className="text-white text-lg font-semibold text-center mb-2 tracking-wide">
+            Đưa mã QR vào khung hình
+          </Text>
+          <Text className="text-white/60 text-sm font-medium text-center tracking-wide">
+            {isScanning ? 'Đang quét...' : 'Đang chuẩn bị camera...'}
+          </Text>
 
-          {/* Camera Icon Indicator with gradient */}
-          <Animated.View entering={FadeInUp.duration(500).delay(400)} className="mt-4">
+          {/* Camera Icon Indicator */}
+          <Animated.View entering={FadeInUp.duration(500).delay(400)} className="mt-6">
             <LinearGradient
               colors={['#3b82f6', '#2563eb']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.cameraIcon}
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              className="shadow-lg shadow-blue-500/40"
             >
-              <Camera size={28} color="#ffffff" strokeWidth={2.5} />
+              <Camera size={32} color="#ffffff" strokeWidth={2.5} />
             </LinearGradient>
           </Animated.View>
         </View>
@@ -70,78 +63,3 @@ export const ScannerInstructions: React.FC<ScannerInstructionsProps> = ({
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  successContainer: {
-    borderRadius: 20,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  successTitle: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginLeft: 8,
-    letterSpacing: 0.3,
-  },
-  successSubtitle: {
-    color: 'rgba(255, 255, 255, 0.95)',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  instructionCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    borderRadius: 20,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  instructionTitle: {
-    color: '#ffffff',
-    fontSize: 20,
-    fontWeight: '700',
-    marginLeft: 10,
-    letterSpacing: 0.5,
-  },
-  instructionText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 15,
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 8,
-  },
-  statusText: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-    letterSpacing: 0.3,
-  },
-  cameraIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#3b82f6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-});
