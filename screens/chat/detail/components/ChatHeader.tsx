@@ -1,16 +1,17 @@
 /**
  * Chat Header Component
- * Header với avatar, tên user, và action buttons
+ * Header với avatar, tên user, verified badge, và action buttons
  */
 
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { ArrowLeft, Phone, Video, MoreVertical } from 'lucide-react-native';
+import { ArrowLeft, Phone, Video, MoreVertical, BadgeCheck } from 'lucide-react-native';
 
 interface ChatHeaderProps {
   userName: string;
   itemName: string;
   isOnline: boolean;
+  isVerified?: boolean; // Verified status for badge
   avatarUrl?: string;
   onBack: () => void;
   onCallPress?: () => void;
@@ -22,6 +23,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   userName,
   itemName,
   isOnline,
+  isVerified = false,
   avatarUrl,
   onBack,
   onCallPress,
@@ -63,9 +65,13 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             </View>
 
             <View className="flex-1">
-              <Text className="font-semibold text-gray-900" numberOfLines={1}>
-                {userName}
-              </Text>
+              {/* Name with Verified Badge */}
+              <View className="flex-row items-center gap-1">
+                <Text className="font-semibold text-gray-900" numberOfLines={1}>
+                  {userName}
+                </Text>
+                {isVerified && <BadgeCheck size={16} color="#3b82f6" fill="#3b82f6" />}
+              </View>
               <View className="flex-row items-center gap-1">
                 {isOnline && <View className="w-1.5 h-1.5 rounded-full bg-green-500" />}
                 <Text className="text-xs text-gray-500" numberOfLines={1}>

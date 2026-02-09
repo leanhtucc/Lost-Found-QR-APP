@@ -3,6 +3,8 @@
  * Định nghĩa các type cho đồ vật trong ứng dụng
  */
 
+import { User } from '@/services/auth/types';
+
 // Item Categories
 export type ItemCategory =
   | 'electronics'
@@ -28,6 +30,7 @@ export interface Item {
   id: string; // UUID - Database ID
   itemId: string; // nanoid(16) - Unique ID cho QR
   ownerId: string; // User ID của chủ sở hữu
+  owner?: User; // Full owner info with trust metrics
   name: string; // Tên vật phẩm (max 100 chars)
   category: ItemCategory; // Danh mục
   description?: string; // Mô tả (max 500 chars)
@@ -92,9 +95,13 @@ export interface ScanItemSafeResponse {
     category: ItemCategory;
     status: 'safe';
     owner_info: {
+      memberId: string; // Changed from studentId
       display_name: string;
       avatar?: string;
+      trust_score: number; // Trust metrics
+      is_verified: boolean; // Verification badge
       joined_date: string;
+      total_returned?: number; // Items returned count
     };
   };
   action: 'info_only';
@@ -110,9 +117,13 @@ export interface ScanItemLostResponse {
     status: 'lost';
     lost_message: string;
     owner_info: {
+      memberId: string; // Changed from studentId
       display_name: string;
       avatar?: string;
+      trust_score: number; // Trust metrics
+      is_verified: boolean; // Verification badge
       joined_date: string;
+      total_returned?: number; // Items returned count
     };
   };
   action: 'open_chat';

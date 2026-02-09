@@ -2,6 +2,7 @@
  * Scan Screen
  * Màn hình quét QR code với camera
  * Sử dụng react-native-vision-camera để scan QR code
+ * Supports professional Lost & Found with memberId
  */
 
 import React, { useEffect, useState } from 'react';
@@ -27,11 +28,20 @@ export const ScanScreen: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Handle successful scan
-  const handleScanSuccess = (itemId: string) => {
-    console.log('Navigating to item:', itemId);
+  const handleScanSuccess = (result: { itemId: string; scanData?: any; isOwnItem: boolean }) => {
+    console.log('Scan result:', result);
 
-    // Navigate to item detail screen
-    navigation.replace('ItemDetails', { itemId });
+    // Navigate based on whether it's user's own item
+    if (result.isOwnItem) {
+      // Navigate to item detail screen for own items
+      navigation.replace('ItemDetails', { itemId: result.itemId });
+    } else if (result.scanData) {
+      // Navigate to found item screen for others' items
+      navigation.replace('FoundItem', { scanData: result.scanData });
+    } else {
+      // Fallback to item details
+      navigation.replace('ItemDetails', { itemId: result.itemId });
+    }
   };
 
   // Use QR scanner hook

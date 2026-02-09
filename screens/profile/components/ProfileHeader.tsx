@@ -1,18 +1,19 @@
 /**
  * Profile Header Component
- * Header với gradient background và profile card
+ * Modern cover image style header với verified badge
  */
 
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, User } from 'lucide-react-native';
+import { ArrowLeft, User, BadgeCheck } from 'lucide-react-native';
 
 interface ProfileHeaderProps {
   userName: string;
   userEmail: string;
   userAvatar?: string;
+  isVerified?: boolean;
   onBack: () => void;
 }
 
@@ -20,59 +21,63 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   userName,
   userEmail,
   userAvatar,
+  isVerified = false,
   onBack,
 }) => {
   return (
-    <LinearGradient
-      colors={['#3b82f6', '#2563eb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      className="pb-6"
-    >
-      {/* Header Bar */}
-      <View className="px-4 pt-3 pb-4">
-        <View className="flex-row items-center gap-4">
-          <TouchableOpacity
-            onPress={onBack}
-            className="w-10 h-10 rounded-full bg-white/20 items-center justify-center active:bg-white/30"
-          >
-            <ArrowLeft size={20} color="#ffffff" />
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-white">Tài khoản</Text>
+    <View className="relative">
+      {/* Cover Image Background */}
+      <LinearGradient
+        colors={['#4f46e5', '#6366f1', '#8b5cf6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="h-48"
+      >
+        {/* Header Bar */}
+        <View className="px-4 pt-3 pb-4">
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity
+              onPress={onBack}
+              className="w-10 h-10 rounded-full bg-white/20 items-center justify-center active:bg-white/30"
+            >
+              <ArrowLeft size={20} color="#ffffff" />
+            </TouchableOpacity>
+            <Text className="text-lg font-bold text-white">Tài khoản</Text>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
 
-      {/* Profile Card */}
+      {/* Profile Card with Avatar */}
       <Animated.View
         entering={FadeInDown.duration(400)}
-        className="mx-4 bg-white/10 backdrop-blur-lg rounded-2xl p-6"
+        className="mx-4 -mt-20 bg-white rounded-3xl p-6 shadow-lg"
       >
-        <View className="flex-row items-center gap-4">
-          {/* Avatar */}
-          <View className="w-20 h-20 rounded-full bg-white/20 items-center justify-center overflow-hidden">
+        {/* Avatar */}
+        <View className="items-center -mt-16 mb-4">
+          <View className="w-28 h-28 rounded-full bg-gray-100 items-center justify-center overflow-hidden border-4 border-white shadow-md">
             {userAvatar ? (
               <Image source={{ uri: userAvatar }} className="w-full h-full" resizeMode="cover" />
             ) : (
-              <User size={40} color="#ffffff" />
+              <User size={48} color="#6b7280" />
             )}
           </View>
+        </View>
 
-          {/* User Info */}
-          <View className="flex-1">
-            <Text className="text-xl font-bold text-white" numberOfLines={1}>
+        {/* User Info */}
+        <View className="items-center">
+          {/* Name with Verified Badge */}
+          <View className="flex-row items-center gap-2">
+            <Text className="text-2xl font-bold text-gray-900" numberOfLines={1}>
               {userName}
             </Text>
-            <Text className="text-white/80 text-sm mt-1" numberOfLines={1}>
-              {userEmail}
-            </Text>
-            <View className="flex-row items-center gap-2 mt-2">
-              <View className="px-3 py-1 rounded-full bg-white/20">
-                <Text className="text-xs font-semibold text-white">Sinh viên PTIT</Text>
-              </View>
-            </View>
+            {isVerified && <BadgeCheck size={24} color="#3b82f6" fill="#3b82f6" />}
           </View>
+
+          <Text className="text-gray-500 text-sm mt-2" numberOfLines={1}>
+            {userEmail}
+          </Text>
         </View>
       </Animated.View>
-    </LinearGradient>
+    </View>
   );
 };

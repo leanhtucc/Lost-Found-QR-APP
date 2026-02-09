@@ -1,6 +1,7 @@
 /**
  * Chat Screen
  * Màn hình chat 1-1 giữa owner và finder
+ * Supports verified badge display
  */
 
 import React, { useState } from 'react';
@@ -9,6 +10,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { ChatHeader, ChatMessages, ChatInput } from './components';
 import { ChatMessage } from './types';
+
+type ChatRouteParams = {
+  channelId: string;
+  itemName: string;
+  userName: string;
+  userAvatar?: string;
+  memberId?: string;
+  isVerified?: boolean; // Verified status of the other user
+};
 
 // Mock data
 const MOCK_MESSAGES: ChatMessage[] = [
@@ -58,9 +68,12 @@ export default function ChatScreen() {
   const route = useRoute();
   const navigation = useNavigation();
 
-  // TODO: Get from route params
-  const itemName = 'Ví da nâu';
-  const userName = 'Nguyễn Văn A';
+  // Get params from route
+  const params = (route.params as ChatRouteParams) || {};
+  const itemName = params.itemName || 'Đồ vật';
+  const userName = params.userName || 'Người dùng';
+  const userAvatar = params.userAvatar;
+  const isVerified = params.isVerified || false;
   const currentUserId = 'finder';
 
   const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
@@ -132,6 +145,8 @@ export default function ChatScreen() {
           userName={userName}
           itemName={itemName}
           isOnline={true}
+          isVerified={isVerified}
+          avatarUrl={userAvatar}
           onBack={handleBack}
           onCallPress={handleCall}
           onVideoPress={handleVideo}

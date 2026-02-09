@@ -1,6 +1,8 @@
 /**
  * Chat Types
  * Định nghĩa các kiểu dữ liệu cho hệ thống chat
+ * Uses Stream Chat SDK with memberId as primary identifier
+ * API Key: tbn8y285wevk
  */
 
 // UI Conversation Type for Chat List
@@ -13,6 +15,7 @@ export interface Conversation {
   lastMessageAt: Date | string;
   unreadCount: number;
   isOnline: boolean;
+  isVerified?: boolean; // Verified badge for chat participants
 }
 
 export interface ChatChannel {
@@ -26,10 +29,13 @@ export interface ChatChannel {
 }
 
 export interface ChatReceiver {
-  id: string;
+  id: string; // Uses memberId for identification
+  memberId?: string; // Explicit memberId field
   name: string;
   image?: string;
   avatar?: string;
+  isVerified?: boolean; // Verified status for badge display
+  trustScore?: number; // Trust score for display
 }
 
 export interface InboxChannel {

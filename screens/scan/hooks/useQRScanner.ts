@@ -1,12 +1,19 @@
 /**
  * useQRScanner Hook
- * Custom hook xử lý logic scan QR code
+ * Custom hook xử lý logic scan QR code với support cho memberId
  */
 
 import { useState, useCallback, useRef } from 'react';
 import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import * as Haptics from 'expo-haptics';
 import { itemsApi } from '@/services/items';
+import type { ScanItemResponse } from '@/types/item';
+
+interface ScanResult {
+  itemId: string;
+  scanData?: ScanItemResponse;
+  isOwnItem: boolean;
+}
 
 interface UseQRScannerReturn {
   device: any;
@@ -20,7 +27,7 @@ interface UseQRScannerReturn {
   resetScanner: () => void;
 }
 
-export const useQRScanner = (onScanSuccess: (itemId: string) => void): UseQRScannerReturn => {
+export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQRScannerReturn => {
   const [hasPermission, setHasPermission] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [hasCodeInFrame, setHasCodeInFrame] = useState(false);
@@ -87,8 +94,12 @@ export const useQRScanner = (onScanSuccess: (itemId: string) => void): UseQRScan
       // Extract item ID from QR code
       let itemId = decodedText;
 
-      // Handle deep link format: lostfoundqr://item/{id}
-      if (decodedText.includes('lostfoundqr://item/')) {
+      // Handle deep link format: lostfound://item/{id}
+      if (decodedText.includes('lostfound://item/')) {
+        itemId = decodedText.replace('lostfound://item/', '');
+      }
+      // Handle old format
+      else if (decodedText.includes('lostfoundqr://item/')) {
         itemId = decodedText.replace('lostfoundqr://item/', '');
       }
       // Handle URL format
@@ -99,16 +110,46 @@ export const useQRScanner = (onScanSuccess: (itemId: string) => void): UseQRScan
 
       setScannedData(itemId);
 
-      // Record scan event
-      recordScanEvent(itemId);
-
-      // Notify parent with delay for better UX
-      setTimeout(() => {
-        onScanSuccess(itemId);
-      }, 500);
+      // Fetch scan data from API to determine if it's user's own item
+      fetchScanData(itemId);
     },
     [onScanSuccess]
   );
+
+  // Fetch scan data and determine navigation
+  const fetchScanData = async (itemId: string) => {
+    try {
+      // TODO: Call actual scan API endpoint: /api/scan/:itemId
+      // For now, we'll use getItemById and check ownership
+      const item = await itemsApi.getItemById(itemId);
+
+      // Record scan event
+      await recordScanEvent(itemId);
+
+      // Determine if this is user's own item
+      // This should ideally be done by comparing user.memberId with item.ownerId
+      // But for now, we assume if we can fetch it, it's our item
+      const isOwnItem = true; // TODO: Compare with current user's memberId
+
+      // Notify parent with result
+      setTimeout(() => {
+        onScanSuccess({
+          itemId,
+          isOwnItem,
+          // scanData will be populated by actual scan API
+        });
+      }, 500);
+    } catch (err) {
+      console.error('Error fetching scan data:', err);
+      // On error, treat as own item and navigate to ItemDetails
+      setTimeout(() => {
+        onScanSuccess({
+          itemId,
+          isOwnItem: true,
+        });
+      }, 500);
+    }
+  };
 
   // Record scan event to backend
   const recordScanEvent = async (itemId: string) => {

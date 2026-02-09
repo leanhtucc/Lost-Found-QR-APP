@@ -1,11 +1,11 @@
-// App constants
-export const APP_NAME = 'Lost & Found QR';
-export const APP_VERSION = '1.0.0';
+// App constants - Professional Lost & Found
+export const APP_NAME = 'Lost & Found';
+export const APP_VERSION = '2.0.0';
 
-// Colors
+// Legacy Colors - Deprecated, use THEME from './theme' instead
 export const COLORS = {
-  primary: '#3B82F6',
-  secondary: '#10B981',
+  primary: '#4F46E5', // Updated to Indigo
+  secondary: '#10B981', // Emerald
   danger: '#EF4444',
   warning: '#F59E0B',
   dark: '#1F2937',
@@ -15,3 +15,4 @@ export const COLORS = {
 // Export other constants
 export * from './categories';
 export * from './environment';
+export * from './theme';

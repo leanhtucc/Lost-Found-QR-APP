@@ -51,6 +51,7 @@ export const ChatListScreen: React.FC = () => {
       itemName: conversation.itemName,
       userName: conversation.userName,
       userAvatar: conversation.userAvatar,
+      isVerified: conversation.isVerified, // Pass verified status
     });
   };
 

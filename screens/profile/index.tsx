@@ -1,6 +1,6 @@
 /**
  * Profile Screen
- * Màn hình profile với thông tin user và cài đặt
+ * Màn hình profile with trust metrics và thông tin user chuyên nghiệp
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -11,7 +11,14 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { authApi } from '@/services/auth';
 import { itemsApi } from '@/services/items';
 import type { Item } from '@/types/item';
-import { ProfileHeader, StatsCard, UserInfoCard, SettingsCard, LogoutButton } from './components';
+import {
+  ProfileHeader,
+  TrustMetricsCard,
+  StatsCard,
+  UserInfoCard,
+  SettingsCard,
+  LogoutButton,
+} from './components';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -97,11 +104,12 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      {/* Header */}
+      {/* Header with Cover & Verified Badge */}
       <ProfileHeader
         userName={user?.displayName || 'User'}
-        userEmail={user?.email || user?.uid || ''}
+        userEmail={user?.email || user?.memberId || user?.uid || ''}
         userAvatar={user?.photoURL}
+        isVerified={user?.isVerified}
         onBack={handleBack}
       />
 
@@ -109,23 +117,29 @@ export default function ProfileScreen() {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingVertical: 24, gap: 24 }}
+        contentContainerStyle={{ paddingVertical: 24, gap: 20 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#3b82f6']}
-            tintColor="#3b82f6"
+            colors={['#4f46e5']}
+            tintColor="#4f46e5"
           />
         }
       >
         {loading ? (
           <View className="items-center justify-center py-12">
-            <ActivityIndicator size="large" color="#3b82f6" />
+            <ActivityIndicator size="large" color="#4f46e5" />
             <Text className="text-gray-500 mt-4">Đang tải...</Text>
           </View>
         ) : (
           <>
+            {/* Trust Metrics - NEW */}
+            <TrustMetricsCard
+              trustScore={user?.trustScore || 0}
+              totalReturned={user?.totalReturned || 0}
+            />
+
             {/* Stats */}
             <StatsCard
               totalItems={stats.totalItems}
@@ -136,9 +150,11 @@ export default function ProfileScreen() {
             {/* User Info */}
             <UserInfoCard
               fullName={user?.displayName || 'N/A'}
-              studentId={user?.uid || 'N/A'}
+              memberId={user?.memberId || user?.uid || 'N/A'}
               email={user?.email || 'N/A'}
-              phone={user?.phoneNumber || 'N/A'}
+              phone={user?.phoneNumber || 'Chưa cập nhật'}
+              address={user?.address}
+              bio={user?.bio}
             />
 
             {/* Settings */}
@@ -149,8 +165,10 @@ export default function ProfileScreen() {
 
             {/* Footer */}
             <View className="py-4">
-              <Text className="text-center text-xs text-gray-400">PTIT Lost & Found v1.0.0</Text>
-              <Text className="text-center text-xs text-gray-400 mt-1">© 2024 Made with ❤️</Text>
+              <Text className="text-center text-xs text-gray-400">Lost & Found v2.0.0</Text>
+              <Text className="text-center text-xs text-gray-400 mt-1">
+                Professional Lost & Found Platform
+              </Text>
             </View>
           </>
         )}
