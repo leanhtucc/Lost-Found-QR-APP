@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as Sentry from '@sentry/react-native';
 import 'react-native-reanimated';
-
+import '@/styles/global.css';
 import RootStack from './navigation';
 import { AuthProvider } from '@contexts/AuthContext';
 import { ToastProvider } from '@contexts/ToastContext';
