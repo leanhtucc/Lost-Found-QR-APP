@@ -1,21 +1,27 @@
 import React, { useState } from 'react';
+import { ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useItems } from '@/contexts/ItemsContext';
 import { Item } from '@/types/item';
-import { AddItemModal } from '@/components/AddItemModal';
+import { useItemsFilter, StatusFilterType } from './hooks/useItemsFilter';
 import { MyItemsHeader } from './components/MyItemsHeader';
 import { SummaryCards } from './components/SummaryCards';
-import { SearchBar } from './components/SearchBar';
 import { CategoryFilter } from './components/CategoryFilter';
+import { SearchBar } from './components/SearchBar';
 import { ItemsList } from './components/ItemsList';
-import { useItemsFilter, StatusFilterType } from './hooks/useItemsFilter';
 
-interface MyItemsProps {
-  onSelectItem: (id: string) => void;
-}
+type RootStackParamList = {
+  ItemDetails: { itemId: string };
+  [key: string]: any;
+};
 
-export const MyItems: React.FC<MyItemsProps> = ({ onSelectItem }) => {
+type NavigationProp = StackNavigationProp<RootStackParamList>;
+
+export const MyItemsScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
   const { items } = useItems();
-  const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<Item['category'] | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
@@ -27,14 +33,20 @@ export const MyItems: React.FC<MyItemsProps> = ({ onSelectItem }) => {
     statusFilter,
   });
 
-  const handleAddClick = () => setShowAddModal(true);
-  const handleCloseModal = () => setShowAddModal(false);
+  const handleSelectItem = (itemId: string) => {
+    navigation.navigate('ItemDetails', { itemId });
+  };
+
+  const handleAddItem = () => {
+    // TODO: Navigate to add item screen or open modal
+    console.log('Add item');
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <MyItemsHeader totalItems={items.length} onAddClick={handleAddClick} />
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <MyItemsHeader totalItems={items.length} onAddClick={handleAddItem} />
 
-      <div className="container py-4 space-y-4">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <SummaryCards
           totalItems={items.length}
           safeCount={safeCount}
@@ -43,20 +55,20 @@ export const MyItems: React.FC<MyItemsProps> = ({ onSelectItem }) => {
           onStatusFilterChange={setStatusFilter}
         />
 
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
-
         <CategoryFilter selectedCategory={categoryFilter} onCategoryChange={setCategoryFilter} />
+
+        <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
         <ItemsList
           items={items}
           filteredItems={filteredItems}
           statusFilter={statusFilter}
-          onSelectItem={onSelectItem}
-          onAddClick={handleAddClick}
+          onSelectItem={handleSelectItem}
+          onAddClick={handleAddItem}
         />
-      </div>
-
-      <AddItemModal isOpen={showAddModal} onClose={handleCloseModal} />
-    </div>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
+
+export default MyItemsScreen;

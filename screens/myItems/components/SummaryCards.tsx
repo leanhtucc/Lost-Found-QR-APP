@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Package, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Package } from 'lucide-react-native';
 import { StatusFilterType } from '../hooks/useItemsFilter';
 
 interface SummaryCardsProps {
@@ -19,54 +19,45 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
   onStatusFilterChange,
 }) => {
   return (
-    <div className="grid grid-cols-3 gap-3">
-      <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        onClick={() => onStatusFilterChange('all')}
-        className={`card-elevated p-3 text-center transition-all ${
-          statusFilter === 'all' ? 'ring-2 ring-primary border-primary/30' : ''
+    <View className="flex-row px-4 pt-4 gap-3">
+      <TouchableOpacity
+        className={`flex-1 bg-white rounded-xl p-3 items-center border ${
+          statusFilter === 'all' ? 'border-blue-500 border-2' : 'border-gray-200'
         }`}
+        onPress={() => onStatusFilterChange('all')}
       >
-        <div className="w-10 h-10 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-2">
-          <Package className="w-5 h-5 text-primary" />
-        </div>
-        <p className="text-lg font-display font-bold text-foreground">{totalItems}</p>
-        <p className="text-xs text-muted-foreground">Tổng cộng</p>
-      </motion.button>
+        <View className="w-10 h-10 rounded-xl bg-blue-100 justify-center items-center mb-2">
+          <Package size={20} color="#3b82f6" />
+        </View>
+        <Text className="text-lg font-bold text-gray-900">{totalItems}</Text>
+        <Text className="text-xs text-gray-500 mt-0.5">Tổng cộng</Text>
+      </TouchableOpacity>
 
-      <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        onClick={() => onStatusFilterChange('safe')}
-        className={`card-elevated p-3 text-center transition-all ${
-          statusFilter === 'safe' ? 'ring-2 ring-success border-success/30' : ''
+      <TouchableOpacity
+        className={`flex-1 bg-white rounded-xl p-3 items-center border ${
+          statusFilter === 'safe' ? 'border-emerald-500 border-2' : 'border-gray-200'
         }`}
+        onPress={() => onStatusFilterChange('safe')}
       >
-        <div className="w-10 h-10 mx-auto rounded-xl bg-success/10 flex items-center justify-center mb-2">
-          <ShieldCheck className="w-5 h-5 text-success" />
-        </div>
-        <p className="text-lg font-display font-bold text-foreground">{safeCount}</p>
-        <p className="text-xs text-muted-foreground">An toàn</p>
-      </motion.button>
+        <View className="w-10 h-10 rounded-xl bg-emerald-100 justify-center items-center mb-2">
+          <Package size={20} color="#10b981" />
+        </View>
+        <Text className="text-lg font-bold text-gray-900">{safeCount}</Text>
+        <Text className="text-xs text-gray-500 mt-0.5">An toàn</Text>
+      </TouchableOpacity>
 
-      <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        onClick={() => onStatusFilterChange('lost')}
-        className={`card-elevated p-3 text-center transition-all ${
-          statusFilter === 'lost' ? 'ring-2 ring-destructive border-destructive/30' : ''
+      <TouchableOpacity
+        className={`flex-1 bg-white rounded-xl p-3 items-center border ${
+          statusFilter === 'lost' ? 'border-red-500 border-2' : 'border-gray-200'
         }`}
+        onPress={() => onStatusFilterChange('lost')}
       >
-        <div className="w-10 h-10 mx-auto rounded-xl bg-destructive/10 flex items-center justify-center mb-2">
-          <AlertTriangle className="w-5 h-5 text-destructive" />
-        </div>
-        <p className="text-lg font-display font-bold text-foreground">{lostCount}</p>
-        <p className="text-xs text-muted-foreground">Đang mất</p>
-      </motion.button>
-    </div>
+        <View className="w-10 h-10 rounded-xl bg-red-100 justify-center items-center mb-2">
+          <Package size={20} color="#ef4444" />
+        </View>
+        <Text className="text-lg font-bold text-gray-900">{lostCount}</Text>
+        <Text className="text-xs text-gray-500 mt-0.5">Đang mất</Text>
+      </TouchableOpacity>
+    </View>
   );
 };

@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Package, Filter, Plus } from 'lucide-react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Package, Filter, Plus } from 'lucide-react-native';
 
 interface EmptyStateProps {
   type: 'no-items' | 'no-results';
@@ -10,32 +10,30 @@ interface EmptyStateProps {
 export const EmptyState: React.FC<EmptyStateProps> = ({ type, onAddClick }) => {
   if (type === 'no-results') {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-secondary flex items-center justify-center">
-          <Filter className="w-10 h-10 text-muted-foreground" />
-        </div>
-        <p className="text-muted-foreground font-medium">Không tìm thấy kết quả</p>
-        <p className="text-sm text-muted-foreground mt-1">Thử thay đổi bộ lọc hoặc từ khóa</p>
-      </motion.div>
+      <View className="items-center py-16">
+        <View className="w-20 h-20 rounded-full bg-gray-100 justify-center items-center mb-4">
+          <Filter size={40} color="#9ca3af" />
+        </View>
+        <Text className="text-base font-semibold text-gray-500 mb-1">Không tìm thấy kết quả</Text>
+        <Text className="text-sm text-gray-400">Thử thay đổi bộ lọc hoặc từ khóa</Text>
+      </View>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-      <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-        <Package className="w-10 h-10 text-primary" />
-      </div>
-      <p className="font-medium text-foreground">Chưa có món đồ nào</p>
-      <p className="text-sm text-muted-foreground mt-1 mb-4">
-        Hãy thêm món đồ đầu tiên để bắt đầu bảo vệ tài sản
-      </p>
-      <button
-        onClick={onAddClick}
-        className="px-6 py-3 btn-gradient rounded-xl text-sm font-semibold"
+    <View className="items-center py-16">
+      <View className="w-20 h-20 rounded-full bg-blue-100 justify-center items-center mb-4">
+        <Package size={40} color="#3b82f6" />
+      </View>
+      <Text className="text-base font-semibold text-gray-900 mb-1">Chưa có món đồ nào</Text>
+      <Text className="text-sm text-gray-500 mb-4">Hãy thêm món đồ đầu tiên để bảo vệ tài sản</Text>
+      <TouchableOpacity
+        onPress={onAddClick}
+        className="bg-blue-500 px-6 py-3 rounded-xl flex-row items-center"
       >
-        <Plus className="w-4 h-4 inline mr-2" />
-        Thêm món đồ
-      </button>
-    </motion.div>
+        <Plus size={16} color="#fff" />
+        <Text className="text-sm font-semibold text-white ml-2">Thêm món đồ</Text>
+      </TouchableOpacity>
+    </View>
   );
 };

@@ -1,4 +1,4 @@
-import { Package, Laptop, Wallet, Key, Smartphone, Briefcase } from 'lucide-react';
+import { Package, Laptop, Wallet, Key, Smartphone, Briefcase } from 'lucide-react-native';
 import { Item } from '@/types/item';
 
 export const categoryOptions: {

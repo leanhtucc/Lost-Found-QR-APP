@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Item } from '@/types/item';
 import { categoryOptions } from '../constants/categories';
 
@@ -12,21 +13,27 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   onCategoryChange,
 }) => {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-      {categoryOptions.map(({ value, label, icon: Icon }) => (
-        <button
-          key={value}
-          onClick={() => onCategoryChange(value)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-            selectedCategory === value
-              ? 'bg-primary text-primary-foreground shadow-md'
-              : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
-          }`}
-        >
-          <Icon className="w-4 h-4" />
-          {label}
-        </button>
-      ))}
-    </div>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 py-3">
+      <View className="flex-row gap-2">
+        {categoryOptions.map(({ value, label, icon: Icon }) => (
+          <TouchableOpacity
+            key={value}
+            onPress={() => onCategoryChange(value)}
+            className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full ${
+              selectedCategory === value ? 'bg-blue-500' : 'bg-gray-100'
+            }`}
+          >
+            <Icon size={16} color={selectedCategory === value ? '#fff' : '#6b7280'} />
+            <Text
+              className={`text-sm font-medium ${
+                selectedCategory === value ? 'text-white' : 'text-gray-600'
+              }`}
+            >
+              {label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
   );
 };
