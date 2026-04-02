@@ -22,7 +22,7 @@ const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const ItemCard: React.FC<ItemCardProps> = ({ item, index, onPress, onMenuPress }) => {
   const categoryConfig = CATEGORY_CONFIG[item.category];
-  const categoryIcon = getCategoryIcon(item.category);
+  const CategoryIcon = getCategoryIcon(item.category);
   const categoryLabel = getCategoryLabel(item.category);
 
   // Format date
@@ -67,7 +67,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, index, onPress, onMenu
             <View
               className={`w-16 h-16 rounded-lg ${categoryConfig.bgColor} items-center justify-center`}
             >
-              <Text className="text-3xl">{categoryIcon}</Text>
+              <CategoryIcon size={32} color="#374151" />
             </View>
           )}
         </View>
@@ -81,12 +81,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, index, onPress, onMenu
 
           {/* Category & Date */}
           <View className="flex-row items-center mb-1">
-            <View className={`px-2 py-0.5 rounded ${categoryConfig.bgColor}`}>
-              <Text className={`text-xs font-medium ${categoryConfig.textColor}`}>
+            <View className={`px-2.5 py-1 rounded ${categoryConfig.bgColor}`}>
+              <Text className={`text-xs font-medium ${categoryConfig.textColor}`} numberOfLines={1}>
                 {categoryLabel}
               </Text>
             </View>
-            <Text className="text-xs text-gray-400 ml-2">• {formatDate(item.createdAt)}</Text>
+            <Text className="text-xs text-gray-400 ml-2" numberOfLines={1}>
+              • {formatDate(item.createdAt)}
+            </Text>
           </View>
 
           {/* Status Badge */}

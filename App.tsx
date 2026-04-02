@@ -5,11 +5,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as Sentry from '@sentry/react-native';
 import 'react-native-reanimated';
-
+import '@/styles/global.css';
 import RootStack from './navigation';
 import { AuthProvider } from '@contexts/AuthContext';
 import { ToastProvider } from '@contexts/ToastContext';
 import ENV from './constants/environment';
+import { ItemsProvider } from '@/contexts';
 
 /**
  * Initialize Sentry for error tracking and crash reporting
@@ -61,7 +62,8 @@ Sentry.init({
  * 3. KeyboardProvider: Advanced keyboard handling and smooth animations
  * 4. AuthProvider: Global authentication state management
  * 5. ToastProvider: Global toast notifications
- * 6. Sentry.wrap: Error boundary and crash reporting
+ * 6. ItemsProvider: Global items state management
+ * 7. Sentry.wrap: Error boundary and crash reporting
  */
 function App() {
   return (
@@ -70,8 +72,10 @@ function App() {
         <KeyboardProvider>
           <AuthProvider>
             <ToastProvider>
-              <RootStack />
-              <StatusBar style="light" />
+              <ItemsProvider>
+                <RootStack />
+                <StatusBar style="light" />
+              </ItemsProvider>
             </ToastProvider>
           </AuthProvider>
         </KeyboardProvider>

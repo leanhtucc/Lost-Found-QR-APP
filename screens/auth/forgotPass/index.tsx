@@ -4,9 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
@@ -15,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft } from 'lucide-react-native';
 import { useAuth } from '@hooks/useAuth';
 import { validateEmail } from '@services/auth';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 export const ForgotPasswordScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -93,81 +91,78 @@ export const ForgotPasswordScreen: React.FC = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAwareScrollView
         className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bottomOffset={20}
       >
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="flex-1 px-6 mt-14">
-            {/* Back Button */}
-            <TouchableOpacity
-              onPress={handleGoBack}
-              className="w-10 h-10 rounded-xl bg-gray-100 items-center justify-center mb-8"
-            >
-              <ChevronLeft size={24} color="#1f2937" />
-            </TouchableOpacity>
+        <View className="flex-1 px-6 mt-14">
+          {/* Back Button */}
+          <TouchableOpacity
+            onPress={handleGoBack}
+            className="w-10 h-10 rounded-xl bg-gray-100 items-center justify-center mb-8"
+          >
+            <ChevronLeft size={24} color="#1f2937" />
+          </TouchableOpacity>
 
-            {/* Title & Description */}
-            <View className="mb-10">
-              <Text className="text-3xl font-bold text-gray-900 mb-3">Quên mật khẩu?</Text>
-              <Text className="text-base text-gray-500 leading-6">
-                Nhập email đã đăng ký để nhận link đặt lại mật khẩu.
-              </Text>
-            </View>
-
-            {/* Email Input */}
-            <View className="mb-6">
-              <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
-              <TextInput
-                value={email}
-                onChangeText={text => {
-                  setEmail(text);
-                  if (error) setError('');
-                }}
-                placeholder="example@gmail.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                className="h-14 border border-gray-200 rounded-xl px-4 text-base text-gray-900 bg-gray-50"
-                placeholderTextColor="#9ca3af"
-              />
-              {error ? <Text className="text-red-500 text-sm mt-2">{error}</Text> : null}
-            </View>
-
-            {/* Password Reset Button */}
-            <TouchableOpacity
-              onPress={handlePasswordReset}
-              disabled={!isEmailValid || isLoading}
-              className={`h-14 rounded-full justify-center items-center mb-8 ${
-                isEmailValid && !isLoading ? 'bg-blue-600' : 'bg-blue-300'
-              }`}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text className="text-white text-center text-base font-semibold">
-                  Gửi link đặt lại mật khẩu
-                </Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Spacer */}
-            <View className="flex-1" />
-
-            {/* Create Account Link */}
-            <View className="flex-row justify-center pb-8">
-              <Text className="text-base text-gray-600">Chưa có tài khoản? </Text>
-              <TouchableOpacity onPress={navigateToRegister}>
-                <Text className="text-base font-semibold text-blue-600">Đăng ký ngay</Text>
-              </TouchableOpacity>
-            </View>
+          {/* Title & Description */}
+          <View className="mb-10">
+            <Text className="text-3xl font-bold text-gray-900 mb-3">Quên mật khẩu?</Text>
+            <Text className="text-base text-gray-500 leading-6">
+              Nhập email đã đăng ký để nhận link đặt lại mật khẩu.
+            </Text>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+          {/* Email Input */}
+          <View className="mb-6">
+            <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
+            <TextInput
+              value={email}
+              onChangeText={text => {
+                setEmail(text);
+                if (error) setError('');
+              }}
+              placeholder="example@gmail.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              className="h-14 border border-gray-200 rounded-xl px-4 text-base text-gray-900 bg-gray-50"
+              placeholderTextColor="#9ca3af"
+            />
+            {error ? <Text className="text-red-500 text-sm mt-2">{error}</Text> : null}
+          </View>
+
+          {/* Password Reset Button */}
+          <TouchableOpacity
+            onPress={handlePasswordReset}
+            disabled={!isEmailValid || isLoading}
+            className={`h-14 rounded-full justify-center items-center mb-8 ${
+              isEmailValid && !isLoading ? 'bg-blue-600' : 'bg-blue-300'
+            }`}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white text-center text-base font-semibold">
+                Gửi link đặt lại mật khẩu
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Spacer */}
+          <View className="flex-1" />
+
+          {/* Create Account Link */}
+          <View className="flex-row justify-center pb-8">
+            <Text className="text-base text-gray-600">Chưa có tài khoản? </Text>
+            <TouchableOpacity onPress={navigateToRegister}>
+              <Text className="text-base font-semibold text-blue-600">Đăng ký ngay</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

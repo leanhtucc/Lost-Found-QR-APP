@@ -11,6 +11,7 @@ import { logo } from '@assets';
 interface HeaderProps {
   userName?: string;
   studentId?: string;
+  userAvatar?: string;
   notificationCount?: number;
   onNotificationPress?: () => void;
   onProfilePress?: () => void;
@@ -19,6 +20,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   userName = 'Người dùng',
   studentId,
+  userAvatar,
   notificationCount = 0,
   onNotificationPress,
   onProfilePress,
@@ -33,7 +35,6 @@ export const Header: React.FC<HeaderProps> = ({
         <Image source={logo} className="w-10 h-10" resizeMode="contain" />
         <View>
           <Text className="font-bold text-gray-900">Xin chào, {firstName}!</Text>
-          {studentId && <Text className="text-sm text-gray-500">{studentId}</Text>}
         </View>
       </View>
 
@@ -57,9 +58,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Profile Button */}
         <TouchableOpacity
           onPress={onProfilePress}
-          className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center"
+          className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center overflow-hidden"
         >
-          <User size={20} color="#3b82f6" />
+          {userAvatar ? (
+            <Image source={{ uri: userAvatar }} className="w-full h-full" resizeMode="cover" />
+          ) : (
+            <User size={20} color="#3b82f6" />
+          )}
         </TouchableOpacity>
       </View>
     </View>

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@hooks/useAuth';
 import { useToast } from '@contexts/ToastContext';
 import { LoginForm } from './components/LoginForm';
 import { GoogleLoginButton } from '../components/GoogleLoginButton';
 import type { User } from '@services/auth/types';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 export const LoginScreen: React.FC = () => {
   const { isLoading, login, navigateToRegister, navigateToForgotPassword, navigateToMainApp } =
@@ -45,10 +46,12 @@ export const LoginScreen: React.FC = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bottomOffset={20}
       >
         <View className="flex-1 px-6 mt-14">
           {/* Welcome Text */}
@@ -81,7 +84,7 @@ export const LoginScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

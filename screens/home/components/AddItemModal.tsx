@@ -19,7 +19,7 @@ import { X, AlertCircle } from 'lucide-react-native';
 import Animated, { FadeIn, SlideInDown, FadeInDown } from 'react-native-reanimated';
 import { ItemCategory } from '@/types/item';
 import { itemsApi } from '@/services/items';
-import { CATEGORY_OPTIONS } from '@/constants/categories';
+import { CATEGORY_OPTIONS, CATEGORY_NAMES_VI, CATEGORY_EMOJI } from '@/constants/categories';
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -40,8 +40,12 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
 
+  console.log('🎯 [AddItemModal] Render - categories state:', categories);
+  console.log('🎯 [AddItemModal] Categories length:', categories.length);
+
   // Load categories from API when modal opens
   useEffect(() => {
+    console.log('👀 [AddItemModal] useEffect triggered - isOpen:', isOpen);
     if (isOpen) {
       loadCategories();
     }
@@ -49,15 +53,48 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
 
   const loadCategories = async () => {
     try {
+      console.log('🔄 [AddItemModal] Loading categories from API...');
       setLoadingCategories(true);
       setCategoryError(null);
 
       const apiCategories = await itemsApi.getCategories();
-      setCategories(apiCategories);
+      console.log('📦 [AddItemModal] API response:', apiCategories);
+      console.log('📊 [AddItemModal] API categories length:', apiCategories?.length);
+
+      // Transform API data (array of strings) to CategoryOption format
+      if (apiCategories && apiCategories.length > 0) {
+        // Check if API returns objects or strings
+        const firstItem = apiCategories[0];
+
+        if (typeof firstItem === 'string') {
+          // API returns array of strings, need to transform
+          console.log('🔄 [AddItemModal] Transforming string array to CategoryOption objects');
+          const stringCategories = apiCategories as string[];
+          const transformedCategories = stringCategories.map(categoryValue => ({
+            value: categoryValue as ItemCategory,
+            label: CATEGORY_NAMES_VI[categoryValue as ItemCategory] || categoryValue,
+            icon: CATEGORY_EMOJI[categoryValue as ItemCategory] || '📦',
+          }));
+          console.log('✅ [AddItemModal] Transformed categories:', transformedCategories);
+          setCategories(transformedCategories);
+        } else {
+          // API already returns correct format
+          console.log('✅ [AddItemModal] Using API categories as-is');
+          setCategories(apiCategories);
+        }
+      } else {
+        // API returned empty array, use local categories
+        console.log('⚠️ [AddItemModal] API returned empty, using local CATEGORY_OPTIONS');
+        console.log('📋 [AddItemModal] Local categories:', CATEGORY_OPTIONS);
+        setCategories(CATEGORY_OPTIONS);
+      }
+
+      console.log('✅ [AddItemModal] Categories loaded successfully');
     } catch (error) {
-      console.error('Failed to load categories:', error);
+      console.error('❌ [AddItemModal] Failed to load categories:', error);
       setCategoryError('Không thể tải danh mục');
       // Fallback to local categories
+      console.log('🔄 [AddItemModal] Fallback to local categories');
       setCategories(CATEGORY_OPTIONS);
     } finally {
       setLoadingCategories(false);
@@ -157,14 +194,14 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
                       <Text className="text-sm text-gray-500 mt-2">Đang tải danh mục...</Text>
                     </View>
                   ) : (
-                    <View className="flex-row flex-wrap gap-2.5">
+                    <View className="flex-row flex-wrap gap-2">
                       {categories.map(({ value, label, icon }, index) => {
                         const isSelected = category === value;
                         return (
                           <Animated.View
                             key={value}
                             entering={FadeInDown.duration(300).delay(250 + index * 30)}
-                            className="w-[31%]"
+                            style={{ width: '21.5%' }}
                           >
                             <TouchableOpacity
                               onPress={() => setCategory(value)}

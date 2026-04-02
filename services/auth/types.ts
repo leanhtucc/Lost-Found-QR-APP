@@ -12,6 +12,7 @@
  *   "email": "user@example.com",
  *   "password": "Password123",
  *   "displayName": "John Doe",
+ *   "phoneNumber": "0912345678",
  *   "photoURL": "https://example.com/avatar.jpg"
  * }
  */
@@ -19,6 +20,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   displayName: string;
+  phoneNumber?: string;
   photoURL?: string;
 }
 
@@ -97,16 +99,51 @@ export interface ApiResponse<T> {
 }
 
 /**
- * User data from API
+ * User Level/Tier based on trust score
+ */
+export type UserLevel = 'bronze' | 'silver' | 'gold' | 'platinum';
+
+/**
+ * User data from API - Professional Lost & Found
  */
 export interface User {
   id: string;
-  uid: string;
+  uid: string; // Firebase UID (legacy support)
+  memberId: string; // UUID - Primary identifier for professional users
   email: string;
   displayName: string;
   photoURL?: string;
-  totalReturned: number;
+  phoneNumber?: string;
+  address?: string; // User's address
+  bio?: string; // User biography/description
+  trustScore: number; // Trust score (0-100)
+  isVerified: boolean; // Verified account status
+  totalReturned: number; // Number of items successfully returned
   createdAt: string;
+  updatedAt?: string;
+}
+
+/**
+ * Get user level based on trust score
+ */
+export function getUserLevel(trustScore: number): UserLevel {
+  if (trustScore >= 90) return 'platinum';
+  if (trustScore >= 70) return 'gold';
+  if (trustScore >= 50) return 'silver';
+  return 'bronze';
+}
+
+/**
+ * Get level display info
+ */
+export function getLevelInfo(level: UserLevel): { label: string; color: string; icon: string } {
+  const levels = {
+    bronze: { label: 'Đồng', color: '#CD7F32', icon: 'award' },
+    silver: { label: 'Bạc', color: '#C0C0C0', icon: 'award' },
+    gold: { label: 'Vàng', color: '#FFD700', icon: 'award' },
+    platinum: { label: 'Bạch Kim', color: '#E5E4E2', icon: 'crown' },
+  };
+  return levels[level];
 }
 
 /**

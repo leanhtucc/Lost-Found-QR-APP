@@ -7,3 +7,5 @@ export * from './auth';
 export * from './upload';
 export * from './items';
 export * from './notifications';
+export * from './moderation';
+export * from './chat';

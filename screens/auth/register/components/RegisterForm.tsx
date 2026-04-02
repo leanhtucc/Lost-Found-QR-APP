@@ -6,7 +6,13 @@ import { validateEmail, validateDisplayName, validateConfirmPassword } from '@se
 import { AvatarPicker } from './AvatarPicker';
 
 interface RegisterFormProps {
-  onSubmit: (displayName: string, email: string, password: string, photoURL?: string) => void;
+  onSubmit: (
+    displayName: string,
+    email: string,
+    password: string,
+    phoneNumber: string,
+    photoURL?: string
+  ) => void;
   isLoading: boolean;
 }
 
@@ -39,11 +45,32 @@ const passwordRules: PasswordRule[] = [
   },
 ];
 
+// Phone number validation helper
+const validatePhoneNumber = (phone: string): { isValid: boolean; error?: string } => {
+  if (!phone || phone.trim().length === 0) {
+    return { isValid: false, error: 'Số điện thoại là bắt buộc' };
+  }
+
+  // Remove spaces and special characters
+  const cleanPhone = phone.replace(/[\s\-\.\(\)]/g, '');
+
+  // Vietnamese phone number pattern: starts with 0 and has 10 digits
+  // or starts with +84 and has 9-11 digits
+  const phoneRegex = /^(0[3|5|7|8|9]\d{8}|\+84[3|5|7|8|9]\d{8})$/;
+
+  if (!phoneRegex.test(cleanPhone)) {
+    return { isValid: false, error: 'Số điện thoại không hợp lệ (VD: 0912345678)' };
+  }
+
+  return { isValid: true };
+};
+
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading }) => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -72,6 +99,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
       newErrors.email = emailResult.error;
     }
 
+    const phoneResult = validatePhoneNumber(phoneNumber);
+    if (!phoneResult.isValid && phoneResult.error) {
+      newErrors.phoneNumber = phoneResult.error;
+    }
+
     // Check password rules
     if (!password) {
       newErrors.password = 'Mật khẩu là bắt buộc';
@@ -91,7 +123,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
   const handleSubmit = () => {
     if (validateForm()) {
-      onSubmit(displayName.trim(), email.trim(), password, photoUri || undefined);
+      onSubmit(
+        displayName.trim(),
+        email.trim(),
+        password,
+        phoneNumber.trim(),
+        photoUri || undefined
+      );
     }
   };
 
@@ -144,6 +182,24 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
         {errors.email && <Text className="text-red-500 text-xs mt-1">{errors.email}</Text>}
       </View>
 
+      {/* Phone Number Input */}
+      <View>
+        <Text className="text-sm font-medium text-gray-700 mb-2">Số điện thoại</Text>
+        <InputField
+          placeholder="0912345678"
+          value={phoneNumber}
+          onChangeText={text => {
+            setPhoneNumber(text);
+            clearError('phoneNumber');
+          }}
+          keyboardType="phone-pad"
+          className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4"
+        />
+        {errors.phoneNumber && (
+          <Text className="text-red-500 text-xs mt-1">{errors.phoneNumber}</Text>
+        )}
+      </View>
+
       {/* Password Input */}
       <View>
         <Text className="text-sm font-medium text-gray-700 mb-2">Mật khẩu</Text>
@@ -171,20 +227,24 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
         </View>
         {errors.password && <Text className="text-red-500 text-xs mt-1">{errors.password}</Text>}
 
-        {/* Password Requirements UI */}
-        <View className="mt-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
-          {passwordValidation.map(rule => (
-            <View key={rule.id} className="flex-row items-center mb-2 last:mb-0">
-              {rule.passed ? (
-                <CheckCircle2 size={18} color="#22c55e" />
-              ) : (
-                <Circle size={18} color="#9ca3af" />
-              )}
-              <Text className={`ml-2 text-sm ${rule.passed ? 'text-green-600' : 'text-gray-500'}`}>
-                {rule.label}
-              </Text>
-            </View>
-          ))}
+        {/* Password Requirements UI - More compact */}
+        <View className="mt-2 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
+          <View className="flex-row flex-wrap">
+            {passwordValidation.map(rule => (
+              <View key={rule.id} className="flex-row items-center mr-3 mb-1">
+                {rule.passed ? (
+                  <CheckCircle2 size={14} color="#22c55e" />
+                ) : (
+                  <Circle size={14} color="#9ca3af" />
+                )}
+                <Text
+                  className={`ml-1.5 text-[11px] ${rule.passed ? 'text-green-600' : 'text-gray-500'}`}
+                >
+                  {rule.label}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
 
@@ -216,18 +276,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
         {errors.confirmPassword && (
           <Text className="text-red-500 text-xs mt-1">{errors.confirmPassword}</Text>
         )}
-        {/* Show match indicator when both fields have content */}
+        {/* Show match indicator - compact */}
         {confirmPassword.length > 0 && password.length > 0 && (
-          <View className="flex-row items-center mt-2">
+          <View className="flex-row items-center mt-1.5 ml-1">
             {password === confirmPassword ? (
               <>
-                <CheckCircle2 size={16} color="#22c55e" />
-                <Text className="ml-1 text-sm text-green-600">Mật khẩu khớp</Text>
+                <CheckCircle2 size={14} color="#22c55e" />
+                <Text className="ml-1 text-[11px] text-green-600">Mật khẩu khớp</Text>
               </>
             ) : (
               <>
-                <Circle size={16} color="#ef4444" />
-                <Text className="ml-1 text-sm text-red-500">Mật khẩu không khớp</Text>
+                <Circle size={14} color="#ef4444" />
+                <Text className="ml-1 text-[11px] text-red-500">Mật khẩu không khớp</Text>
               </>
             )}
           </View>
@@ -236,7 +296,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
       {/* Submit Button */}
       <TouchableOpacity
-        className={`h-14 rounded-full justify-center items-center mt-2 ${
+        className={`h-14 rounded-full justify-center items-center mt-4 ${
           isLoading ? 'bg-blue-400' : 'bg-blue-600 active:bg-blue-700'
         }`}
         onPress={handleSubmit}

@@ -37,7 +37,7 @@ yarn-error.*
 .env.development
 .env.staging
 .env.production
-
+GEMINI.md
 # Security & Secrets
 *.pem
 *.key
@@ -56,6 +56,9 @@ secrets.json
 # generated native folders
 /ios
 /android
+
+# Generated SVG components (from SVGR)
+/assets/svgs/output/
 
 .env.local
 

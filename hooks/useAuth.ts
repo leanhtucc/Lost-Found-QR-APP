@@ -22,6 +22,7 @@ interface UseAuthReturn {
     displayName: string,
     email: string,
     password: string,
+    phoneNumber: string,
     photoURL?: string
   ) => Promise<boolean>;
   verifyEmail: (email: string, code: string) => Promise<boolean>;
@@ -121,6 +122,7 @@ export const useAuth = (): UseAuthReturn => {
       displayName: string,
       email: string,
       password: string,
+      phoneNumber: string,
       photoURL?: string
     ): Promise<boolean> => {
       setIsLoading(true);
@@ -131,6 +133,7 @@ export const useAuth = (): UseAuthReturn => {
           email,
           password,
           displayName,
+          phoneNumber,
           photoURL,
         });
 
