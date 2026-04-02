@@ -1,0 +1,18 @@
+#!/bin/sh
+
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+# Quy tắc: <loai-branch>/mo-ta-ngan
+# loai-branch: feature, fix, hotfix, refactor, chore
+BRANCH_REGEX="^(feature|fix|hotfix|refactor|chore)/[a-z0-9-]+$"
+
+if ! echo "$BRANCH_NAME" | grep -Eq "$BRANCH_REGEX"; then
+  echo "🚫 Tên nhánh '$BRANCH_NAME' không hợp lệ!"
+  echo "Tên branch phải theo dạng: <loai-branch>/mo-ta-ngan (ví dụ: feature/login-api, fix/navigation-bug)"
+  exit 1
+fi
+
+if [ "$BRANCH_NAME" = "main" ] || [ "$BRANCH_NAME" = "develop" ]; then
+ echo "🚫 Bạn không thể đẩy trực tiếp lên $BRANCH_NAME"
+ exit 1
+fi

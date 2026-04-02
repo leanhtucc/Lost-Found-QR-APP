@@ -4,17 +4,18 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
   Alert,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ChevronLeft } from 'lucide-react-native';
 import { RootStackParamList } from '@navigation/index';
 import { useAuth } from '@hooks/useAuth';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 const OTP_LENGTH = 6;
 const RESEND_COUNTDOWN = 30;
@@ -104,78 +105,84 @@ export const CodeVerifyScreen: React.FC = () => {
   const isOtpComplete = otp.every(digit => digit !== '');
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-white"
-    >
-      <View className="flex-1 px-6 pt-12">
-        {/* Back Button */}
-        <TouchableOpacity
-          onPress={handleGoBack}
-          className="w-10 h-10 rounded-xl bg-gray-100 items-center justify-center mb-8"
-        >
-          <ChevronLeft size={24} color="#1f2937" />
-        </TouchableOpacity>
+    <SafeAreaView className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <KeyboardAwareScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bottomOffset={20}
+      >
+        <View className="flex-1 px-6 pt-12">
+          {/* Back Button */}
+          <TouchableOpacity
+            onPress={handleGoBack}
+            className="w-10 h-10 rounded-xl bg-gray-100 items-center justify-center mb-8"
+          >
+            <ChevronLeft size={24} color="#1f2937" />
+          </TouchableOpacity>
 
-        {/* Title & Description */}
-        <View className="mb-10">
-          <Text className="text-3xl font-bold text-gray-900 mb-3">Xác thực OTP</Text>
-          <Text className="text-base text-gray-500 leading-6">
-            Nhập mã xác thực 6 chữ số đã được gửi đến email{' '}
-            <Text className="font-medium text-gray-700">{email}</Text>
-          </Text>
-        </View>
+          {/* Title & Description */}
+          <View className="mb-10">
+            <Text className="text-3xl font-bold text-gray-900 mb-3">Xác thực OTP</Text>
+            <Text className="text-base text-gray-500 leading-6">
+              Nhập mã xác thực 6 chữ số đã được gửi đến email{' '}
+              <Text className="font-medium text-gray-700">{email}</Text>
+            </Text>
+          </View>
 
-        {/* OTP Input Fields */}
-        <View className="flex-row justify-between mb-10">
-          {otp.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={ref => (inputRefs.current[index] = ref)}
-              value={digit}
-              onChangeText={value => handleOtpChange(value, index)}
-              onKeyPress={e => handleKeyPress(e, index)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectTextOnFocus
-              className={`w-12 h-14 border-2 rounded-xl text-center text-xl font-bold ${
-                digit
-                  ? 'border-blue-600 bg-blue-50 text-gray-900'
-                  : 'border-gray-200 bg-white text-gray-400'
-              }`}
-              placeholderTextColor="#d1d5db"
-            />
-          ))}
-        </View>
+          {/* OTP Input Fields */}
+          <View className="flex-row justify-between mb-10">
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={ref => (inputRefs.current[index] = ref)}
+                value={digit}
+                onChangeText={value => handleOtpChange(value, index)}
+                onKeyPress={e => handleKeyPress(e, index)}
+                keyboardType="number-pad"
+                maxLength={1}
+                selectTextOnFocus
+                className={`w-12 h-14 border-2 rounded-xl text-center text-xl font-bold ${
+                  digit
+                    ? 'border-blue-600 bg-blue-50 text-gray-900'
+                    : 'border-gray-200 bg-white text-gray-400'
+                }`}
+                placeholderTextColor="#d1d5db"
+              />
+            ))}
+          </View>
 
-        {/* Verify Button */}
-        <TouchableOpacity
-          onPress={handleVerify}
-          disabled={!isOtpComplete || isLoading}
-          className={`py-4 rounded-full mb-8 ${
-            isOtpComplete && !isLoading ? 'bg-blue-600' : 'bg-blue-300'
-          }`}
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            {isLoading ? 'Đang xác thực...' : 'Xác thực'}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Resend OTP */}
-        <View className="items-center">
-          {!canResend && (
-            <Text className="text-gray-500 text-base mb-2">Gửi lại mã sau {countdown}s</Text>
-          )}
-          <TouchableOpacity onPress={handleResendOtp} disabled={!canResend || isLoading}>
-            <Text
-              className={`text-base font-medium ${canResend ? 'text-blue-600' : 'text-gray-400'}`}
-            >
-              Gửi lại mã OTP
+          {/* Verify Button */}
+          <TouchableOpacity
+            onPress={handleVerify}
+            disabled={!isOtpComplete || isLoading}
+            className={`py-4 rounded-full mb-8 ${
+              isOtpComplete && !isLoading ? 'bg-blue-600' : 'bg-blue-300'
+            }`}
+          >
+            <Text className="text-white text-center text-lg font-semibold">
+              {isLoading ? 'Đang xác thực...' : 'Xác thực'}
             </Text>
           </TouchableOpacity>
+
+          {/* Resend OTP */}
+          <View className="items-center">
+            {!canResend && (
+              <Text className="text-gray-500 text-base mb-2">Gửi lại mã sau {countdown}s</Text>
+            )}
+            <TouchableOpacity onPress={handleResendOtp} disabled={!canResend || isLoading}>
+              <Text
+                className={`text-base font-medium ${canResend ? 'text-blue-600' : 'text-gray-400'}`}
+              >
+                Gửi lại mã OTP
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 };
 

@@ -1,53 +1,65 @@
 /**
- * Theme Constants
- * Professional Lost & Found Color Palette
- * Based on Indigo and Emerald colors
+ * FindBack / Obsidian — design tokens (dark, glassmorphism).
+ * Legacy THEME ramps kept for gradual migration; brand accents match marketing UI.
  */
 
+/** Core brand hex from design spec */
+export const FIND_BACK = {
+  primary: '#7C6AF6',
+  primaryDark: '#6B5AE8',
+  secondary: '#2ECC8B',
+  tertiary: '#F4845F',
+  neutral: '#0A0A0F',
+  surface: '#12121A',
+  surfaceElevated: '#1A1A24',
+  bodyText: '#E4E4E7',
+  mutedText: '#A0A0A8',
+  labelText: '#71717A',
+  borderGlass: 'rgba(255, 255, 255, 0.12)',
+  glassBackground: 'rgba(18, 18, 26, 0.72)',
+  danger: '#EF4444',
+} as const;
+
 export const THEME = {
-  // Primary Colors - Indigo
   primary: {
-    50: '#eef2ff',
-    100: '#e0e7ff',
-    200: '#c7d2fe',
-    300: '#a5b4fc',
-    400: '#818cf8',
-    500: '#6366f1',
-    600: '#4f46e5', // Main Primary
-    700: '#4338ca',
-    800: '#3730a3',
-    900: '#312e81',
+    50: '#f5f4ff',
+    100: '#ebe9fe',
+    200: '#d4d0fc',
+    300: '#b8b0fa',
+    400: '#978cf8',
+    500: '#7C6AF6',
+    600: '#6B5AE8',
+    700: '#5a4ad4',
+    800: '#4a3cb8',
+    900: '#3d3296',
   },
 
-  // Success Colors - Emerald
   success: {
-    50: '#ecfdf5',
-    100: '#d1fae5',
-    200: '#a7f3d0',
-    300: '#6ee7b7',
-    400: '#34d399',
-    500: '#10b981', // Main Success
-    600: '#059669',
-    700: '#047857',
-    800: '#065f46',
-    900: '#064e3b',
+    50: '#ecfdf8',
+    100: '#d1faec',
+    200: '#a7f3d9',
+    300: '#6ee7c2',
+    400: '#47d4a8',
+    500: '#2ECC8B',
+    600: '#26b37a',
+    700: '#1f9665',
+    800: '#1a7a54',
+    900: '#156347',
   },
 
-  // Warning Colors - Amber
   warning: {
-    50: '#fffbeb',
-    100: '#fef3c7',
-    200: '#fde68a',
-    300: '#fcd34d',
-    400: '#fbbf24',
-    500: '#f59e0b',
-    600: '#d97706',
-    700: '#b45309',
-    800: '#92400e',
-    900: '#78350f',
+    50: '#fff4f0',
+    100: '#ffe4d9',
+    200: '#fec6b3',
+    300: '#fca88d',
+    400: '#f89674',
+    500: '#F4845F',
+    600: '#e06d48',
+    700: '#c45a3a',
+    800: '#a24a30',
+    900: '#853d28',
   },
 
-  // Error Colors - Red
   error: {
     50: '#fef2f2',
     100: '#fee2e2',
@@ -61,91 +73,77 @@ export const THEME = {
     900: '#7f1d1d',
   },
 
-  // Neutral Colors
+  /** Dark neutrals for FindBack UI */
   neutral: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
+    50: '#fafafa',
+    100: '#f4f4f5',
+    200: '#e4e4e7',
+    300: '#d4d4d8',
+    400: '#a1a1aa',
+    500: '#71717a',
+    600: '#52525b',
+    700: '#3f3f46',
+    800: '#27272a',
+    900: '#0A0A0F',
   },
 };
 
-// Semantic Colors
 export const COLORS = {
-  // Primary
-  primary: THEME.primary[600],
-  primaryLight: THEME.primary[500],
-  primaryDark: THEME.primary[700],
+  primary: THEME.primary[500],
+  primaryLight: THEME.primary[400],
+  primaryDark: THEME.primary[600],
 
-  // Success
   success: THEME.success[500],
   successLight: THEME.success[400],
   successDark: THEME.success[600],
 
-  // Warning
   warning: THEME.warning[500],
   warningLight: THEME.warning[400],
   warningDark: THEME.warning[600],
 
-  // Error
   error: THEME.error[500],
   errorLight: THEME.error[400],
   errorDark: THEME.error[600],
 
-  // Trust Score Colors
-  trustGold: '#FFD700', // Gold for high trust
-  trustSilver: '#C0C0C0', // Silver for medium trust
-  trustBronze: '#CD7F32', // Bronze for low trust
+  trustGold: '#FFD700',
+  trustSilver: '#C0C0C0',
+  trustBronze: '#CD7F32',
 
-  // Background
-  background: '#ffffff',
-  backgroundSecondary: '#f9fafb',
+  background: FIND_BACK.neutral,
+  backgroundSecondary: FIND_BACK.surface,
+  surfaceElevated: FIND_BACK.surfaceElevated,
 
-  // Text
-  textPrimary: THEME.neutral[900],
-  textSecondary: THEME.neutral[600],
-  textTertiary: THEME.neutral[400],
+  textPrimary: '#FAFAFA',
+  textSecondary: FIND_BACK.mutedText,
+  textTertiary: FIND_BACK.labelText,
 
-  // Border
-  border: THEME.neutral[200],
-  borderLight: THEME.neutral[100],
+  border: 'rgba(255,255,255,0.12)',
+  borderLight: 'rgba(255,255,255,0.06)',
 
-  // Verified Badge
-  verified: '#3b82f6', // Blue for verified badge
-
-  // Online Status
+  verified: '#3b82f6',
   online: THEME.success[500],
 };
 
-// Export tailwind class mappings
 export const TAILWIND_CLASSES = {
-  // Primary
-  bgPrimary: 'bg-indigo-600',
-  bgPrimaryLight: 'bg-indigo-500',
-  bgPrimaryDark: 'bg-indigo-700',
-  textPrimary: 'text-indigo-600',
-  borderPrimary: 'border-indigo-600',
+  bgPrimary: 'bg-fb-primary',
+  bgPrimaryLight: 'bg-fb-primary/90',
+  bgPrimaryDark: 'bg-fb-primary-dark',
+  textPrimary: 'text-fb-primary',
+  borderPrimary: 'border-fb-primary',
 
-  // Success
-  bgSuccess: 'bg-emerald-500',
-  textSuccess: 'text-emerald-600',
-  borderSuccess: 'border-emerald-500',
+  bgSuccess: 'bg-fb-secondary',
+  textSuccess: 'text-fb-secondary',
+  borderSuccess: 'border-fb-secondary',
 
-  // Warning
-  bgWarning: 'bg-amber-500',
-  textWarning: 'text-amber-600',
-  borderWarning: 'border-amber-500',
+  bgWarning: 'bg-fb-tertiary',
+  textWarning: 'text-fb-tertiary',
+  borderWarning: 'border-fb-tertiary',
 
-  // Error
-  bgError: 'bg-red-500',
-  textError: 'text-red-600',
-  borderError: 'border-red-500',
+  bgError: 'bg-fb-danger',
+  textError: 'text-fb-danger',
+  borderError: 'border-fb-danger',
+
+  glassPanel: 'glass-panel',
 };
 
 export default COLORS;

@@ -1,3 +1,4 @@
+import { BottomTabBar } from '@/components/molecules/BottomTab';
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Package, ScanLine, MessageCircle, User } from 'lucide-react-native';
@@ -8,7 +9,6 @@ import {
   ProfileScreen,
   ChatListScreen,
 } from '@screens/index';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
 
@@ -19,31 +19,13 @@ interface TabBarIconProps {
 }
 
 export const TabNavigator = () => {
-  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
+      tabBar={props => <BottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2563eb',
-        tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: {
-          height: 70 + insets.bottom,
-          paddingBottom: 10 + insets.bottom,
-          paddingTop: 10,
-          backgroundColor: '#ffffff',
-          borderTopWidth: 1,
-          borderTopColor: '#f3f4f6',
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          marginTop: 4,
-        },
+        tabBarActiveTintColor: '#7C6AF6',
+        tabBarInactiveTintColor: '#A0A0A8',
       }}
     >
       <Tab.Screen

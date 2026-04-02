@@ -227,20 +227,24 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
         </View>
         {errors.password && <Text className="text-red-500 text-xs mt-1">{errors.password}</Text>}
 
-        {/* Password Requirements UI */}
-        <View className="mt-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
-          {passwordValidation.map(rule => (
-            <View key={rule.id} className="flex-row items-center mb-2 last:mb-0">
-              {rule.passed ? (
-                <CheckCircle2 size={18} color="#22c55e" />
-              ) : (
-                <Circle size={18} color="#9ca3af" />
-              )}
-              <Text className={`ml-2 text-sm ${rule.passed ? 'text-green-600' : 'text-gray-500'}`}>
-                {rule.label}
-              </Text>
-            </View>
-          ))}
+        {/* Password Requirements UI - More compact */}
+        <View className="mt-2 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
+          <View className="flex-row flex-wrap">
+            {passwordValidation.map(rule => (
+              <View key={rule.id} className="flex-row items-center mr-3 mb-1">
+                {rule.passed ? (
+                  <CheckCircle2 size={14} color="#22c55e" />
+                ) : (
+                  <Circle size={14} color="#9ca3af" />
+                )}
+                <Text
+                  className={`ml-1.5 text-[11px] ${rule.passed ? 'text-green-600' : 'text-gray-500'}`}
+                >
+                  {rule.label}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
 
@@ -272,18 +276,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
         {errors.confirmPassword && (
           <Text className="text-red-500 text-xs mt-1">{errors.confirmPassword}</Text>
         )}
-        {/* Show match indicator when both fields have content */}
+        {/* Show match indicator - compact */}
         {confirmPassword.length > 0 && password.length > 0 && (
-          <View className="flex-row items-center mt-2">
+          <View className="flex-row items-center mt-1.5 ml-1">
             {password === confirmPassword ? (
               <>
-                <CheckCircle2 size={16} color="#22c55e" />
-                <Text className="ml-1 text-sm text-green-600">Mật khẩu khớp</Text>
+                <CheckCircle2 size={14} color="#22c55e" />
+                <Text className="ml-1 text-[11px] text-green-600">Mật khẩu khớp</Text>
               </>
             ) : (
               <>
-                <Circle size={16} color="#ef4444" />
-                <Text className="ml-1 text-sm text-red-500">Mật khẩu không khớp</Text>
+                <Circle size={14} color="#ef4444" />
+                <Text className="ml-1 text-[11px] text-red-500">Mật khẩu không khớp</Text>
               </>
             )}
           </View>
@@ -292,7 +296,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
       {/* Submit Button */}
       <TouchableOpacity
-        className={`h-14 rounded-full justify-center items-center mt-2 ${
+        className={`h-14 rounded-full justify-center items-center mt-4 ${
           isLoading ? 'bg-blue-400' : 'bg-blue-600 active:bg-blue-700'
         }`}
         onPress={handleSubmit}

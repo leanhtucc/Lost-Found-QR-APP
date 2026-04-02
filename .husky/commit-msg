@@ -1,0 +1,13 @@
+#!/bin/sh
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Regex: <type>: mô tả ngắn gọn
+COMMIT_REGEX="^(feat|fix|refactor|chore|docs|test|style|perf):[ ]+.+"
+
+if ! echo "$COMMIT_MSG" | grep -Eq "$COMMIT_REGEX"; then
+  echo "🚫 Commit message không hợp lệ!"
+  echo "Cấu trúc: <type>: mô tả ngắn gọn (ví dụ: feat: add login API)"
+  exit 1
+fi

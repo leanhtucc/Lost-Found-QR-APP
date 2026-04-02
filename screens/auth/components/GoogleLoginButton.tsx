@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { useGoogleAuth } from '@hooks';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 
 interface GoogleLoginButtonProps {
   onSuccess?: (user: any, isNewUser: boolean) => void;
