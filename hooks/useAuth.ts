@@ -18,6 +18,7 @@ interface UseAuthReturn {
   error: string | null;
   // Auth functions
   login: (email: string, password: string) => Promise<boolean>;
+  firebaseVerify: (idToken: string) => Promise<boolean>;
   register: (
     displayName: string,
     email: string,
@@ -100,6 +101,44 @@ export const useAuth = (): UseAuthReturn => {
               response.message || 'Email hoặc mật khẩu không đúng.'
             );
           }
+          return false;
+        }
+      } catch (err) {
+        const errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        setError(errorMessage);
+        toast.error('Lỗi kết nối', errorMessage);
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [navigation, toast]
+  );
+
+  /**
+   * Verify Firebase authentication
+   * Sends Firebase ID Token to backend
+   */
+  const firebaseVerify = useCallback(
+    async (idToken: string): Promise<boolean> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await authApi.firebaseVerify({ idToken });
+
+        if (response.success) {
+          toast.success('Xác thực thành công', 'Chào mừng bạn đến với ứng dụng!');
+          setTimeout(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'TabNavigator' }],
+            });
+          }, 500);
+          return true;
+        } else {
+          setError(response.message || 'Xác thực thất bại.');
+          toast.error('Xác thực thất bại', response.message || 'Vui lòng thử lại.');
           return false;
         }
       } catch (err) {
@@ -360,6 +399,7 @@ export const useAuth = (): UseAuthReturn => {
     isLoading,
     error,
     login,
+    firebaseVerify,
     register,
     verifyEmail,
     resendVerification,

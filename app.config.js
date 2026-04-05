@@ -39,6 +39,8 @@ export default {
           iosUrlScheme: 'com.googleusercontent.apps.573454777935-0dqcumi7da5h5425d67cv6p4r2l7m7vu',
         },
       ],
+      '@react-native-firebase/app',
+      '@react-native-firebase/auth',
     ],
     extra: {
       apiUrl: process.env.API_URL || 'https://backend-api-8rw9.onrender.com',

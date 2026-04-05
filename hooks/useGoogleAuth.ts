@@ -114,7 +114,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
  * Check if user is currently signed in
  */
 export const checkGoogleSignIn = async () => {
-  const isSignedIn = await GoogleSignin.isSignedIn();
+  const isSignedIn = await GoogleSignin.signInSilently();
   if (isSignedIn) {
     const userInfo = await GoogleSignin.getCurrentUser();
     return userInfo;
