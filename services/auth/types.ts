@@ -55,6 +55,13 @@ export interface GoogleLoginRequest {
 }
 
 /**
+ * Firebase verify request body
+ */
+export interface FirebaseVerifyRequest {
+  idToken: string;
+}
+
+/**
  * Refresh token request body
  */
 export interface RefreshTokenRequest {
@@ -196,6 +203,15 @@ export interface GoogleLoginResponseData {
   refreshToken: string;
   user: User;
   isNewUser: boolean;
+}
+
+/**
+ * Firebase verify response data
+ */
+export interface FirebaseVerifyResponseData {
+  isNewUser: boolean;
+  user: User;
+  token: string;
 }
 
 /**

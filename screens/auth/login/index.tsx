@@ -4,48 +4,74 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@hooks/useAuth';
 import { useToast } from '@contexts/ToastContext';
 import { LoginForm } from './components/LoginForm';
-import { GoogleLoginButton } from '../components/GoogleLoginButton';
-import type { User } from '@services/auth/types';
+import { SocialLoginButtons } from '../components/SocialLoginButtons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
+import { useGoogleAuth } from '@hooks/useGoogleAuth';
 
 export const LoginScreen: React.FC = () => {
   const { isLoading, login, navigateToRegister, navigateToForgotPassword, navigateToMainApp } =
     useAuth();
   const toast = useToast();
-  const [rememberMe, setRememberMe] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  // Lấy hàm SignIn từ useGoogleAuth
+  const {
+    signInWithGoogle,
+    user: googleUser,
+    isNewUser: googleIsNewUser,
+    error: googleError,
+  } = useGoogleAuth();
+
+  React.useEffect(() => {
+    if (googleUser && googleIsNewUser !== null) {
+      if (googleIsNewUser) {
+        toast.success(
+          'Đăng ký thành công!',
+          `Chào mừng ${googleUser.displayName} đến với Lost & Found QR!`
+        );
+      } else {
+        toast.success(
+          'Đăng nhập thành công!',
+          `Chào mừng bạn quay lại, ${googleUser.displayName}!`
+        );
+      }
+      setTimeout(() => {
+        navigateToMainApp();
+      }, 500);
+    }
+  }, [googleUser, googleIsNewUser, navigateToMainApp, toast]);
+
+  React.useEffect(() => {
+    if (googleError) {
+      toast.error('Đăng nhập Google thất bại', googleError);
+    }
+  }, [googleError, toast]);
 
   const handleLogin = async (email: string, password: string) => {
+    setLoginError(null);
     const success = await login(email, password);
     if (success) {
       navigateToMainApp();
-    }
-  };
-
-  const handleGoogleSuccess = async (user: User, isNewUser: boolean) => {
-    // User đã được authenticate và tokens đã được lưu vào storage
-    // Show success message
-    if (isNewUser) {
-      toast.success(
-        'Đăng ký thành công!',
-        `Chào mừng ${user.displayName} đến với Lost & Found QR!`
-      );
     } else {
-      toast.success('Đăng nhập thành công!', `Chào mừng bạn quay lại, ${user.displayName}!`);
+      // Demo theo thiết kế Figma
+      setLoginError('Sai mật khẩu. Còn 2 lần thử.');
     }
-
-    // Navigate to main app after a short delay
-    setTimeout(() => {
-      navigateToMainApp();
-    }, 500);
-  };
-
-  const handleGoogleError = (error: string) => {
-    toast.error('Đăng nhập Google thất bại', error);
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <SafeAreaView className="flex-1 bg-[#0E0E13]" edges={['top', 'bottom']}>
+      <StatusBar barStyle="light-content" backgroundColor="#0E0E13" />
+
+      {/* Error Banner theo Figma (Chạy fixed ở Top) */}
+      {loginError && (
+        <View className="bg-[#EF4444] px-4 py-3 flex-row items-center justify-center">
+          <Text className="text-white text-sm font-medium">
+            ({'! '}) {loginError}
+          </Text>
+        </View>
+      )}
+
       <KeyboardAwareScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
@@ -53,15 +79,15 @@ export const LoginScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         bottomOffset={20}
       >
-        <View className="flex-1 px-6 mt-14">
-          {/* Welcome Text */}
-          <View className="mb-2">
-            <Text className="text-base text-gray-500">Chào mừng bạn quay trở lại!</Text>
-          </View>
-
-          {/* Title */}
-          <View className="mb-8">
-            <Text className="text-3xl font-bold text-gray-900">Đăng nhập</Text>
+        <ResponsiveContainer className="flex-1 px-6 mt-12 justify-center" variant="form">
+          {/* Titles */}
+          <View className="mb-10">
+            <Text className="text-[32px] font-bold text-white mb-2 tracking-tight">
+              Chào mừng trở lại
+            </Text>
+            <Text className="text-base text-[#A1A1AA] leading-6">
+              Đăng nhập để tiếp tục bảo vệ những món đồ giá trị của bạn.
+            </Text>
           </View>
 
           {/* Login Form */}
@@ -69,21 +95,19 @@ export const LoginScreen: React.FC = () => {
             onSubmit={handleLogin}
             isLoading={isLoading}
             onForgotPassword={navigateToForgotPassword}
-            rememberMe={rememberMe}
-            onRememberMeChange={setRememberMe}
           />
 
-          {/* Google Sign In */}
-          <GoogleLoginButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+          {/* Social Login */}
+          <SocialLoginButtons onGooglePress={signInWithGoogle} onApplePress={() => {}} />
 
           {/* Register Link */}
-          <View className="flex-row justify-center mt-8 mb-6">
-            <Text className="text-base text-gray-600">Bạn chưa có tài khoản? </Text>
+          <View className="flex-row justify-center mt-10 mb-4">
+            <Text className="text-sm font-medium text-[#A1A1AA]">Bạn chưa có tài khoản? </Text>
             <TouchableOpacity onPress={navigateToRegister}>
-              <Text className="text-base font-semibold text-blue-600">Đăng ký ngay</Text>
+              <Text className="text-sm font-bold text-[#7C6AF6]">Tham gia ngay</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ResponsiveContainer>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

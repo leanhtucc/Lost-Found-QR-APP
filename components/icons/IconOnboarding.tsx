@@ -12,14 +12,7 @@ import Svg, {
 /* SVGR has dropped some elements not supported by react-native-svg: div, filter */
 import type { SvgProps } from 'react-native-svg';
 const SvgIconOnboarding = (props: SvgProps) => (
-  <Svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
-    fill="none"
-    viewBox="0 0 390 416"
-    {...props}
-  >
+  <Svg width={24} height={24} fill="none" viewBox="0 0 390 416" {...props}>
     <G filter="url(#IconOnboarding_svg__a)">
       <Rect width={256} height={256} x={67} y={80} fill="#715FEA" fillOpacity={0.1} rx={128} />
     </G>
@@ -96,7 +89,6 @@ const SvgIconOnboarding = (props: SvgProps) => (
           fill="#fff"
           fillOpacity={0.01}
           rx={16}
-          shapeRendering="crispEdges"
           transform="rotate(4 135.62 139.691)"
         />
       </G>

@@ -28,9 +28,10 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (showLoader) setLoading(true);
       const data = await itemsApi.getDashboardData();
       setDashboardData(data);
-    } catch (error) {
-      console.error('Failed to load items:', error);
-      throw error;
+    } catch (error: any) {
+      if (error?.message !== 'No authentication token found') {
+        console.error('Failed to load items:', error);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

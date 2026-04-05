@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react-native';
-import { InputField } from '../../../../components/InputField';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Eye, EyeOff, User, Mail, Phone, Lock, CheckCircle2 } from 'lucide-react-native';
+import { AuthInput } from '../../../../components/atoms/AuthInput';
+import { Button } from '../../../../components/atoms/Button';
 import { validateEmail, validateDisplayName, validateConfirmPassword } from '@services/auth';
-import { AvatarPicker } from './AvatarPicker';
 
 interface RegisterFormProps {
   onSubmit: (
@@ -26,7 +26,7 @@ interface PasswordRule {
 const passwordRules: PasswordRule[] = [
   {
     id: 'length',
-    label: 'Độ dài từ 8-12 ký tự bao gồm cả chữ và số',
+    label: '8-12 ký tự, có chữ và số',
     isValid: (password: string) =>
       password.length >= 8 &&
       password.length <= 12 &&
@@ -35,33 +35,25 @@ const passwordRules: PasswordRule[] = [
   },
   {
     id: 'uppercase',
-    label: 'Chứa ít nhất một chữ in hoa',
+    label: 'Chữ in hoa',
     isValid: (password: string) => /[A-Z]/.test(password),
   },
   {
     id: 'number',
-    label: 'Chứa ít nhất một chữ số',
+    label: 'Chữ số',
     isValid: (password: string) => /\d/.test(password),
   },
 ];
 
-// Phone number validation helper
 const validatePhoneNumber = (phone: string): { isValid: boolean; error?: string } => {
   if (!phone || phone.trim().length === 0) {
     return { isValid: false, error: 'Số điện thoại là bắt buộc' };
   }
-
-  // Remove spaces and special characters
   const cleanPhone = phone.replace(/[\s\-\.\(\)]/g, '');
-
-  // Vietnamese phone number pattern: starts with 0 and has 10 digits
-  // or starts with +84 and has 9-11 digits
   const phoneRegex = /^(0[3|5|7|8|9]\d{8}|\+84[3|5|7|8|9]\d{8})$/;
-
   if (!phoneRegex.test(cleanPhone)) {
-    return { isValid: false, error: 'Số điện thoại không hợp lệ (VD: 0912345678)' };
+    return { isValid: false, error: 'Số điện thoại không hợp lệ' };
   }
-
   return { isValid: true };
 };
 
@@ -71,12 +63,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Calculate password validation status
   const passwordValidation = useMemo(() => {
     return passwordRules.map(rule => ({
       ...rule,
@@ -104,14 +93,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
       newErrors.phoneNumber = phoneResult.error;
     }
 
-    // Check password rules
     if (!password) {
       newErrors.password = 'Mật khẩu là bắt buộc';
     } else if (!allPasswordRulesPassed) {
       newErrors.password = 'Mật khẩu chưa đáp ứng đủ yêu cầu';
     }
 
-    // Check confirm password
     const confirmResult = validateConfirmPassword(password, confirmPassword);
     if (!confirmResult.isValid && confirmResult.error) {
       newErrors.confirmPassword = confirmResult.error;
@@ -123,13 +110,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
   const handleSubmit = () => {
     if (validateForm()) {
-      onSubmit(
-        displayName.trim(),
-        email.trim(),
-        password,
-        phoneNumber.trim(),
-        photoUri || undefined
-      );
+      onSubmit(displayName.trim(), email.trim(), password, phoneNumber.trim(), undefined);
     }
   };
 
@@ -143,171 +124,132 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
     }
   };
 
+  // Tính điểm đánh giá (0-3)
+  const strengthScore = passwordValidation.filter(r => r.passed).length;
+
   return (
     <View className="gap-5">
-      {/* Avatar Picker */}
-      <AvatarPicker value={photoUri} onChange={setPhotoUri} />
-
       {/* Display Name Input */}
-      <View>
-        <Text className="text-sm font-medium text-gray-700 mb-2">Họ và tên</Text>
-        <InputField
-          placeholder="Nhập họ và tên của bạn"
-          value={displayName}
-          onChangeText={text => {
-            setDisplayName(text);
-            clearError('displayName');
-          }}
-          className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4"
-        />
-        {errors.displayName && (
-          <Text className="text-red-500 text-xs mt-1">{errors.displayName}</Text>
-        )}
-      </View>
-
-      {/* Email Input */}
-      <View>
-        <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
-        <InputField
-          placeholder="example@gmail.com"
-          value={email}
-          onChangeText={text => {
-            setEmail(text);
-            clearError('email');
-          }}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4"
-        />
-        {errors.email && <Text className="text-red-500 text-xs mt-1">{errors.email}</Text>}
-      </View>
+      <AuthInput
+        label="Họ và tên"
+        placeholder="Nguyễn Văn A"
+        value={displayName}
+        onChangeText={text => {
+          setDisplayName(text);
+          clearError('displayName');
+        }}
+        leftIcon={<User size={20} color="#9CA3AF" />}
+        error={errors.displayName}
+      />
 
       {/* Phone Number Input */}
-      <View>
-        <Text className="text-sm font-medium text-gray-700 mb-2">Số điện thoại</Text>
-        <InputField
-          placeholder="0912345678"
-          value={phoneNumber}
-          onChangeText={text => {
-            setPhoneNumber(text);
-            clearError('phoneNumber');
-          }}
-          keyboardType="phone-pad"
-          className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4"
-        />
-        {errors.phoneNumber && (
-          <Text className="text-red-500 text-xs mt-1">{errors.phoneNumber}</Text>
-        )}
-      </View>
+      <AuthInput
+        label="Số điện thoại"
+        placeholder="0912345678"
+        value={phoneNumber}
+        onChangeText={text => {
+          setPhoneNumber(text);
+          clearError('phoneNumber');
+        }}
+        keyboardType="phone-pad"
+        leftIcon={<Phone size={20} color="#9CA3AF" />}
+        error={errors.phoneNumber}
+      />
+
+      {/* Email Input */}
+      <AuthInput
+        label="Email"
+        placeholder="example@gmail.com"
+        value={email}
+        onChangeText={text => {
+          setEmail(text);
+          clearError('email');
+        }}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        leftIcon={<Mail size={20} color="#9CA3AF" />}
+        error={errors.email}
+      />
 
       {/* Password Input */}
       <View>
-        <Text className="text-sm font-medium text-gray-700 mb-2">Mật khẩu</Text>
-        <View className="relative">
-          <InputField
-            secureTextEntry={!showPassword}
-            placeholder="••••••••"
-            value={password}
-            onChangeText={text => {
-              setPassword(text);
-              clearError('password');
-            }}
-            className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4 pr-12"
-          />
-          <TouchableOpacity
-            className="absolute right-4 top-4 z-10"
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? (
-              <EyeOff size={22} color="#9CA3AF" />
-            ) : (
-              <Eye size={22} color="#9CA3AF" />
-            )}
-          </TouchableOpacity>
-        </View>
-        {errors.password && <Text className="text-red-500 text-xs mt-1">{errors.password}</Text>}
+        <AuthInput
+          label="Mật khẩu"
+          placeholder="••••••••••••"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={text => {
+            setPassword(text);
+            clearError('password');
+          }}
+          leftIcon={<Lock size={20} color={errors.password ? '#ef4444' : '#9CA3AF'} />}
+          rightIcon={
+            showPassword ? <EyeOff size={20} color="#9CA3AF" /> : <Eye size={20} color="#9CA3AF" />
+          }
+          onRightIconPress={() => setShowPassword(!showPassword)}
+          error={errors.password}
+          className="mb-0"
+        />
 
-        {/* Password Requirements UI - More compact */}
-        <View className="mt-2 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
-          <View className="flex-row flex-wrap">
-            {passwordValidation.map(rule => (
-              <View key={rule.id} className="flex-row items-center mr-3 mb-1">
-                {rule.passed ? (
-                  <CheckCircle2 size={14} color="#22c55e" />
-                ) : (
-                  <Circle size={14} color="#9ca3af" />
-                )}
-                <Text
-                  className={`ml-1.5 text-[11px] ${rule.passed ? 'text-green-600' : 'text-gray-500'}`}
-                >
-                  {rule.label}
-                </Text>
-              </View>
-            ))}
-          </View>
+        {/* Password Strength Indicator */}
+        <View className="flex-row items-center gap-1 mt-3 mb-2">
+          {[1, 2, 3].map(index => (
+            <View
+              key={index}
+              className={`h-1 flex-1 rounded-full ${
+                index <= strengthScore
+                  ? strengthScore === 3
+                    ? 'bg-[#22c55e]'
+                    : 'bg-[#7C6AF6]'
+                  : 'bg-white/10'
+              }`}
+            />
+          ))}
+        </View>
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-xs font-semibold text-[#A1A1AA]">
+            {strengthScore === 0 ? 'Chưa nhập' : strengthScore < 3 ? 'Trung bình' : 'Mạnh'}
+          </Text>
+          <Text className="text-[10px] text-gray-500">Gợi ý: Thêm ký tự đặc biệt</Text>
         </View>
       </View>
 
       {/* Confirm Password Input */}
-      <View>
-        <Text className="text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu</Text>
-        <View className="relative">
-          <InputField
-            secureTextEntry={!showConfirmPassword}
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChangeText={text => {
-              setConfirmPassword(text);
-              clearError('confirmPassword');
-            }}
-            className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4 pr-12"
+      <AuthInput
+        label="Xác nhận mật khẩu"
+        placeholder="••••••••••••"
+        secureTextEntry={!showPassword}
+        value={confirmPassword}
+        onChangeText={text => {
+          setConfirmPassword(text);
+          clearError('confirmPassword');
+        }}
+        leftIcon={
+          <CheckCircle2
+            size={20}
+            color={
+              errors.confirmPassword
+                ? '#ef4444'
+                : confirmPassword && password === confirmPassword
+                  ? '#22c55e'
+                  : '#9CA3AF'
+            }
           />
-          <TouchableOpacity
-            className="absolute right-4 top-4 z-10"
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            {showConfirmPassword ? (
-              <EyeOff size={22} color="#9CA3AF" />
-            ) : (
-              <Eye size={22} color="#9CA3AF" />
-            )}
-          </TouchableOpacity>
-        </View>
-        {errors.confirmPassword && (
-          <Text className="text-red-500 text-xs mt-1">{errors.confirmPassword}</Text>
-        )}
-        {/* Show match indicator - compact */}
-        {confirmPassword.length > 0 && password.length > 0 && (
-          <View className="flex-row items-center mt-1.5 ml-1">
-            {password === confirmPassword ? (
-              <>
-                <CheckCircle2 size={14} color="#22c55e" />
-                <Text className="ml-1 text-[11px] text-green-600">Mật khẩu khớp</Text>
-              </>
-            ) : (
-              <>
-                <Circle size={14} color="#ef4444" />
-                <Text className="ml-1 text-[11px] text-red-500">Mật khẩu không khớp</Text>
-              </>
-            )}
-          </View>
-        )}
-      </View>
+        }
+        error={errors.confirmPassword}
+      />
 
-      {/* Submit Button */}
-      <TouchableOpacity
-        className={`h-14 rounded-full justify-center items-center mt-4 ${
-          isLoading ? 'bg-blue-400' : 'bg-blue-600 active:bg-blue-700'
-        }`}
-        onPress={handleSubmit}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text className="text-white text-base font-semibold">Tạo tài khoản</Text>
-        )}
-      </TouchableOpacity>
+      <View className="mt-4 mb-6">
+        <Button
+          variant="primary"
+          onPress={handleSubmit}
+          loading={isLoading}
+          style={{ minHeight: 56 }}
+          textClassName="text-white text-base font-bold"
+        >
+          Tiếp tục
+        </Button>
+      </View>
     </View>
   );
 };

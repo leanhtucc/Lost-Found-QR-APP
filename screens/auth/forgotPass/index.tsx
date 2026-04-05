@@ -13,6 +13,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useAuth } from '@hooks/useAuth';
 import { validateEmail } from '@services/auth';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
 
 export const ForgotPasswordScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -48,7 +49,7 @@ export const ForgotPasswordScreen: React.FC = () => {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-        <View className="flex-1 px-6 mt-14">
+        <ResponsiveContainer className="flex-1 px-6 mt-14 justify-center" variant="form">
           {/* Back Button */}
           <TouchableOpacity
             onPress={handleGoBack}
@@ -83,7 +84,7 @@ export const ForgotPasswordScreen: React.FC = () => {
               <Text className="text-white text-base font-semibold">Quay lại đăng nhập</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ResponsiveContainer>
       </SafeAreaView>
     );
   }
@@ -98,7 +99,7 @@ export const ForgotPasswordScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         bottomOffset={20}
       >
-        <View className="flex-1 px-6 mt-14">
+        <ResponsiveContainer className="flex-1 px-6 mt-14 justify-center" variant="form">
           {/* Back Button */}
           <TouchableOpacity
             onPress={handleGoBack}
@@ -161,7 +162,7 @@ export const ForgotPasswordScreen: React.FC = () => {
               <Text className="text-base font-semibold text-blue-600">Đăng ký ngay</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ResponsiveContainer>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

@@ -7,36 +7,43 @@ const { width } = Dimensions.get('window');
 interface DotIndicatorProps {
   data: SlideData[];
   scrollX: Animated.Value;
-  _currentIndex?: number;
   onDotPress: (index: number) => void;
 }
 
 export const DotIndicator: React.FC<DotIndicatorProps> = ({ data, scrollX, onDotPress }) => {
   return (
-    <View className="flex-row justify-center items-center mb-6 gap-2">
+    <View className="flex-row justify-center items-center gap-1.5 mb-5">
       {data.map((_, index) => {
         const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
 
+        // width, backgroundColor, opacity là Animated.Value → bắt buộc dùng inline style
         const dotWidth = scrollX.interpolate({
           inputRange,
-          outputRange: [8, 24, 8],
+          outputRange: [6, 20, 6],
+          extrapolate: 'clamp',
+        });
+
+        const backgroundColor = scrollX.interpolate({
+          inputRange,
+          outputRange: ['#48474D', '#715FEA', '#48474D'],
           extrapolate: 'clamp',
         });
 
         const opacity = scrollX.interpolate({
           inputRange,
-          outputRange: [0.3, 1, 0.3],
+          outputRange: [0.45, 1, 0.45],
           extrapolate: 'clamp',
         });
 
         return (
-          <TouchableOpacity key={index} onPress={() => onDotPress(index)}>
+          <TouchableOpacity
+            key={index}
+            onPress={() => onDotPress(index)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Animated.View
-              style={{
-                width: dotWidth,
-                opacity,
-              }}
-              className="h-2 rounded-full bg-blue-600"
+              className="h-1 rounded-sm"
+              style={{ width: dotWidth, backgroundColor, opacity }}
             />
           </TouchableOpacity>
         );

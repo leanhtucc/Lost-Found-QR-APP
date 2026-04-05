@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Eye, EyeOff, Square, CheckSquare } from 'lucide-react-native';
-import { InputField } from '../../../../components/InputField';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react-native';
+import { AuthInput } from '../../../../components/atoms/AuthInput';
+import { Button } from '../../../../components/atoms/Button';
 import { validateEmail } from '@services/auth';
 
 interface LoginFormProps {
@@ -12,13 +13,7 @@ interface LoginFormProps {
   onRememberMeChange?: (value: boolean) => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({
-  onSubmit,
-  isLoading,
-  onForgotPassword,
-  rememberMe = false,
-  onRememberMeChange,
-}) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, onForgotPassword }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +28,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
 
     if (!password) {
-      newErrors.password = 'Mật khẩu là bắt buộc';
+      newErrors.password = 'Mật khẩu không được để trống';
     }
 
     setErrors(newErrors);
@@ -55,83 +50,59 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <View className="gap-5">
       {/* Email Input */}
-      <View>
-        <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
-        <InputField
-          placeholder="example@gmail.com"
-          value={email}
-          onChangeText={text => {
-            setEmail(text);
-            clearError('email');
-          }}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4"
-        />
-        {errors.email && <Text className="text-red-500 text-xs mt-1">{errors.email}</Text>}
-      </View>
+      <AuthInput
+        label="Email"
+        placeholder="alex.guardian@findback.io"
+        value={email}
+        onChangeText={text => {
+          setEmail(text);
+          clearError('email');
+        }}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        leftIcon={<Mail size={20} color="#9CA3AF" />}
+        error={errors.email}
+      />
 
       {/* Password Input */}
       <View>
-        <Text className="text-sm font-medium text-gray-700 mb-2">Mật khẩu</Text>
-        <View className="relative">
-          <InputField
-            secureTextEntry={!showPassword}
-            placeholder="••••••••"
-            value={password}
-            onChangeText={text => {
-              setPassword(text);
-              clearError('password');
-            }}
-            className="h-14 rounded-xl bg-gray-50 border border-gray-200 px-4 pr-12"
-          />
-          <TouchableOpacity
-            className="absolute right-4 top-4 z-10"
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? (
-              <EyeOff size={22} color="#9CA3AF" />
-            ) : (
-              <Eye size={22} color="#9CA3AF" />
-            )}
-          </TouchableOpacity>
-        </View>
-        {errors.password && <Text className="text-red-500 text-xs mt-1">{errors.password}</Text>}
-      </View>
+        <AuthInput
+          label="Mật khẩu"
+          placeholder="••••••••••••"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={text => {
+            setPassword(text);
+            clearError('password');
+          }}
+          leftIcon={<Lock size={20} color={errors.password ? '#ef4444' : '#9CA3AF'} />}
+          rightIcon={
+            showPassword ? <EyeOff size={20} color="#9CA3AF" /> : <Eye size={20} color="#9CA3AF" />
+          }
+          onRightIconPress={() => setShowPassword(!showPassword)}
+          error={errors.password}
+        />
 
-      {/* Remember Me & Forgot Password Row */}
-      <View className="flex-row items-center justify-between">
-        <TouchableOpacity
-          className="flex-row items-center"
-          onPress={() => onRememberMeChange?.(!rememberMe)}
-        >
-          {rememberMe ? (
-            <CheckSquare size={20} color="#2563EB" />
-          ) : (
-            <Square size={20} color="#9CA3AF" />
-          )}
-          <Text className="text-sm text-gray-600 ml-2">Ghi nhớ đăng nhập</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={onForgotPassword}>
-          <Text className="text-sm font-medium text-blue-600">Quên mật khẩu?</Text>
+        {/* Quên mật khẩu được đặt ngay dưới ô nhập password */}
+        <TouchableOpacity onPress={onForgotPassword} className="self-end mt-2">
+          <Text className="text-sm font-medium text-[#A1A1AA] hover:text-white">
+            Quên mật khẩu?
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Submit Button */}
-      <TouchableOpacity
-        className={`h-14 rounded-full justify-center items-center mt-2 ${
-          isLoading ? 'bg-blue-400' : 'bg-blue-600 active:bg-blue-700'
-        }`}
-        onPress={handleSubmit}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text className="text-white text-base font-semibold">Đăng nhập</Text>
-        )}
-      </TouchableOpacity>
+      <View className="mt-4">
+        <Button
+          variant="primary"
+          onPress={handleSubmit}
+          loading={isLoading}
+          style={{ minHeight: 56 }}
+          textClassName="text-white text-base font-bold"
+        >
+          Đăng nhập
+        </Button>
+      </View>
     </View>
   );
 };

@@ -1,4 +1,3 @@
-/* eslint-disable import/namespace */
 import { logo } from '@/assets';
 import React from 'react';
 import { View, Text, Image } from 'react-native';

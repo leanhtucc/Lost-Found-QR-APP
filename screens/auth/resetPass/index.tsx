@@ -14,6 +14,7 @@ import { useAuth } from '@hooks/useAuth';
 import { validateConfirmPassword } from '@services/auth';
 import { RootStackParamList } from '@navigation/index';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
 
 type ResetPasswordRouteProp = RouteProp<RootStackParamList, 'ResetPassword'>;
 
@@ -116,7 +117,7 @@ export const ResetPasswordScreen: React.FC = () => {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-        <View className="flex-1 justify-center items-center px-6">
+        <ResponsiveContainer className="flex-1 justify-center items-center px-6" variant="form">
           <View className="w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-6">
             <Text className="text-4xl">✅</Text>
           </View>
@@ -135,7 +136,7 @@ export const ResetPasswordScreen: React.FC = () => {
           >
             <Text className="text-white text-base font-semibold">Đăng nhập ngay</Text>
           </TouchableOpacity>
-        </View>
+        </ResponsiveContainer>
       </SafeAreaView>
     );
   }
@@ -150,7 +151,7 @@ export const ResetPasswordScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         bottomOffset={20}
       >
-        <View className="flex-1 px-6 mt-14">
+        <ResponsiveContainer className="flex-1 px-6 mt-14 justify-center" variant="form">
           {/* Back Button */}
           <TouchableOpacity
             onPress={handleGoBack}
@@ -295,7 +296,7 @@ export const ResetPasswordScreen: React.FC = () => {
               <Text className="text-base font-semibold text-blue-600">Quay lại đăng nhập</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ResponsiveContainer>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

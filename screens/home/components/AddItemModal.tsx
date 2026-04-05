@@ -69,7 +69,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
         if (typeof firstItem === 'string') {
           // API returns array of strings, need to transform
           console.log('🔄 [AddItemModal] Transforming string array to CategoryOption objects');
-          const stringCategories = apiCategories as string[];
+          const stringCategories = apiCategories as unknown as string[];
           const transformedCategories = stringCategories.map(categoryValue => ({
             value: categoryValue as ItemCategory,
             label: CATEGORY_NAMES_VI[categoryValue as ItemCategory] || categoryValue,

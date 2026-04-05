@@ -37,14 +37,14 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess,
     if (user && isNewUser !== null) {
       onSuccess?.(user, isNewUser);
     }
-  }, [user, isNewUser]);
+  }, [user, isNewUser, onSuccess]);
 
   // Handle error
   React.useEffect(() => {
     if (error) {
       onError?.(error);
     }
-  }, [error]);
+  }, [error, onError]);
 
   return (
     <>

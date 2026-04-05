@@ -13,6 +13,7 @@ import {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   GoogleLoginRequest,
+  FirebaseVerifyRequest,
   ApiResponse,
   RegisterResponseData,
   LoginResponseData,
@@ -22,6 +23,7 @@ import {
   ForgotPasswordResponseData,
   ResetPasswordResponseData,
   GoogleLoginResponseData,
+  FirebaseVerifyResponseData,
   User,
 } from './types';
 import { authStorage } from '@storage/auth';
@@ -163,6 +165,28 @@ export const authApi = {
     // Store tokens and user on success
     if (response.success && response.data) {
       await authStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
+      await authStorage.saveUser(response.data.user);
+    }
+
+    return response;
+  },
+
+  /**
+   * Verify Firebase authentication
+   * Sends Firebase ID Token to backend after successful Firebase OTP/Login
+   */
+  async firebaseVerify(
+    data: FirebaseVerifyRequest
+  ): Promise<ApiResponse<FirebaseVerifyResponseData>> {
+    const response = await apiRequest<FirebaseVerifyResponseData>('/firebase-verify', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    // Store tokens and user on success
+    if (response.success && response.data) {
+      // Backend returns a single 'token' which acts as access/refresh token in this context
+      await authStorage.saveTokens(response.data.token, response.data.token);
       await authStorage.saveUser(response.data.user);
     }
 
