@@ -40,7 +40,7 @@ const variantShell: Record<AppButtonVariant, string> = {
   outlined: 'bg-transparent border border-white/30',
   inverted: 'bg-white',
   danger: 'bg-fb-danger',
-  success: '',
+  success: 'bg-fb-success',
 };
 
 const variantText: Record<AppButtonVariant, string> = {
@@ -101,7 +101,7 @@ const ButtonInner = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
 
   const outerClass = cn(shellBase, variant !== 'primary' && variantShell[variant], className);
 
-  if (variant === 'primary' || variant === 'success') {
+  if (variant === 'primary') {
     return (
       <Pressable
         ref={ref}
@@ -112,11 +112,7 @@ const ButtonInner = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
       >
         <View className="w-full overflow-hidden rounded-fb">
           <LinearGradient
-            colors={
-              variant === 'success'
-                ? ['#22c55e', '#16a34a', '#15803d']
-                : ['#978CF8', '#7C6AF6', '#6B5AE8']
-            }
+            colors={['#978CF8', '#7C6AF6', '#6B5AE8']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={gradientInnerStyle}

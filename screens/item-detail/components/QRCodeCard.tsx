@@ -4,12 +4,11 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import { Download } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 import ViewShot from 'react-native-view-shot';
 
 interface QRCodeCardProps {

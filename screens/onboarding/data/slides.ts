@@ -2,7 +2,7 @@
 // File .ts thuần — icon được lưu dưới dạng ComponentType để tránh JSX trong .ts
 import { ComponentType } from 'react';
 import { SvgProps } from 'react-native-svg';
-import { ArrowRight, Sparkles, Gift, LucideProps } from 'lucide-react-native';
+import { ArrowRight, LucideProps } from 'lucide-react-native';
 import { IconOnboarding, IconOnboarding1, IconOnboarding2 } from '@components/icons';
 
 export interface SlideData {

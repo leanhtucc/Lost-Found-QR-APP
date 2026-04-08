@@ -20,7 +20,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   displayName: string;
-  phoneNumber?: string;
+  phoneNumber: string;
   photoURL?: string;
 }
 
@@ -33,19 +33,23 @@ export interface LoginRequest {
 }
 
 /**
- * Verify email request body
+ * Verify OTP request body
  */
-export interface VerifyEmailRequest {
-  email: string;
+export interface VerifyOtpRequest {
+  phoneNumber: string;
   code: string;
 }
 
 /**
- * Resend verification request body
+ * Resend OTP request body
  */
-export interface ResendVerificationRequest {
-  email: string;
+export interface ResendOtpRequest {
+  phoneNumber: string;
 }
+
+// Backward-compatible aliases for existing imports
+export type VerifyEmailRequest = VerifyOtpRequest;
+export type ResendVerificationRequest = ResendOtpRequest;
 
 /**
  * Google login request body
@@ -170,15 +174,20 @@ export interface RegisterResponseData {
 }
 
 /**
- * Verify email response data
- * Note: Backend only returns tokens, user data must be fetched via /profile
+ * Verify OTP response data
+ * Some backends return `token`, others return access/refresh pair.
  */
-export interface VerifyEmailResponseData {
+export interface VerifyOtpResponseData {
   message: string;
-  accessToken: string;
-  refreshToken: string;
-  user?: User; // Optional - backend doesn't return user in verify-email
+  accessToken?: string;
+  refreshToken?: string;
+  token?: string;
+  user?: User;
+  isNewUser?: boolean;
 }
+
+// Backward-compatible alias for existing imports
+export type VerifyEmailResponseData = VerifyOtpResponseData;
 
 /**
  * Login response data
@@ -189,11 +198,14 @@ export interface LoginResponseData {
 }
 
 /**
- * Resend verification response data
+ * Resend OTP response data
  */
-export interface ResendVerificationResponseData {
+export interface ResendOtpResponseData {
   message: string;
 }
+
+// Backward-compatible alias for existing imports
+export type ResendVerificationResponseData = ResendOtpResponseData;
 
 /**
  * Google login response data

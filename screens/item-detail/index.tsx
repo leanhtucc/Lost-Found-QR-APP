@@ -19,11 +19,7 @@ export default function ItemDetailScreen() {
   const [item, setItem] = useState<Item | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadItem();
-  }, [itemId]);
-
-  const loadItem = async () => {
+  const loadItem = React.useCallback(async () => {
     try {
       const data = await itemsApi.getItemById(itemId);
       setItem(data);
@@ -34,7 +30,11 @@ export default function ItemDetailScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [itemId, navigation]);
+
+  useEffect(() => {
+    loadItem();
+  }, [loadItem]);
 
   const handleToggleLost = async () => {
     if (!item) return;

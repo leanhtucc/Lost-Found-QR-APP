@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Package, Smartphone, Laptop, Wallet, Key, Briefcase } from 'lucide-react';
-import { Item, ItemCategory } from '@/types/item';
+import { ItemCategory } from '@/types/item';
 
 interface AddItemModalProps {
   isOpen: boolean;

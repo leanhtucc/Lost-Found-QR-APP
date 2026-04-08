@@ -14,15 +14,7 @@ import Svg, {
 } from 'react-native-svg';
 /* SVGR has dropped some elements not supported by react-native-svg: div, filter */ import type { SvgProps } from 'react-native-svg';
 const SvgIconOnboarding1 = (props: SvgProps) => (
-  <Svg
-    xmlns="http://www.w3.org/2000/svg"
-    xmlnsXlink="http://www.w3.org/1999/xlink"
-    width={24}
-    height={24}
-    fill="none"
-    viewBox="0 0 418 418"
-    {...props}
-  >
+  <Svg width={24} height={24} fill="none" viewBox="0 0 418 418" {...props}>
     <G filter="url(#IconOnboarding1_svg__a)">
       <G clipPath="url(#IconOnboarding1_svg__b)">
         <Rect width={342} height={342} x={38} y={13} fill="#131319" rx={32} />
@@ -30,7 +22,6 @@ const SvgIconOnboarding1 = (props: SvgProps) => (
           fill="url(#IconOnboarding1_svg__c)"
           d="M0 0h342v342H0z"
           opacity={0.4}
-          style={{ mixBlendMode: 'luminosity' }}
           transform="translate(38 13)"
         />
         <Path fill="url(#IconOnboarding1_svg__d)" d="M38 13h342v342H38z" />
@@ -108,8 +99,10 @@ const SvgIconOnboarding1 = (props: SvgProps) => (
         <Stop stopColor="#ADA3FF" />
         <Stop offset={1} stopColor="#715FEA" />
       </LinearGradient>
-      <ClipPath id="IconOnboarding1_svg__g" transform="translate(-38 -233)">
-        <Rect width={294} height={74} x={62} y={257} rx={16} />
+      <ClipPath id="IconOnboarding1_svg__g">
+        <G transform="translate(-38 -233)">
+          <Rect width={294} height={74} x={62} y={257} rx={16} />
+        </G>
       </ClipPath>
       <ClipPath id="IconOnboarding1_svg__b">
         <Rect width={342} height={342} x={38} y={13} fill="#fff" rx={32} />

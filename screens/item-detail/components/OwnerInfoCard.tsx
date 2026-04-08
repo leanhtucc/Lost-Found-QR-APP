@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Star, Award, Package, User as UserIcon, BadgeCheck } from 'lucide-react-native';
 import type { User } from '@/services/auth/types';

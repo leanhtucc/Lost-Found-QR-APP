@@ -7,23 +7,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '@navigation/index';
 import { Notification } from '@/types/notification';
 import { getNotifications, markAllNotificationsAsRead } from '@/services/notifications';
 import { NotificationHeader, NotificationCard, EmptyState, LoadingState } from './components';
 import { getMockNotifications } from './utils';
 
+type NotificationNavigationProp = StackNavigationProp<RootStackParamList>;
+
 export default function NotificationsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NotificationNavigationProp>();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const data = await getNotifications();
       setNotifications(data.notifications);
@@ -40,7 +39,7 @@ export default function NotificationsScreen() {
               // Navigate to login screen
               navigation.reset({
                 index: 0,
-                routes: [{ name: 'Login' as any }],
+                routes: [{ name: 'Login' }],
               });
             },
           },
@@ -56,13 +55,16 @@ export default function NotificationsScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [navigation]);
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await loadNotifications();
     setIsRefreshing(false);
-  }, []);
+  }, [loadNotifications]);
 
   const handleNotificationPress = useCallback((notification: Notification) => {
     // Optimistic update - mark as read locally
@@ -90,7 +92,7 @@ export default function NotificationsScreen() {
       // Revert on error
       await loadNotifications();
     }
-  }, []);
+  }, [loadNotifications]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>

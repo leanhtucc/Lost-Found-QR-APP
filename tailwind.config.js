@@ -8,13 +8,6 @@ module.exports = {
     './lib/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
-    screens: {
-      // Mobile‑first breakpoints
-      sm: '380px', // điện thoại nhỏ
-      md: '480px', // điện thoại lớn / phablet
-      lg: '768px', // iPad, máy tính bảng dọc
-      xl: '1024px', // iPad Pro, máy tính bảng ngang
-    },
     extend: {
       colors: {
         border: 'hsl(var(--border))',

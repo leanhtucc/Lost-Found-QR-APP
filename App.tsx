@@ -4,13 +4,21 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as Sentry from '@sentry/react-native';
+import * as ExpoSplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import '@/styles/global.css';
 import RootStack from './navigation';
 import { AuthProvider } from '@contexts/AuthContext';
 import { ToastProvider } from '@contexts/ToastContext';
+// eslint-disable-next-line import/no-named-as-default
 import ENV from './constants/environment';
 import { ItemsProvider } from '@/contexts';
+
+// Giữ native splash screen cho đến khi app tự ẩn qua SplashScreen component
+// Phải gọi ở module level (trước khi render) để có hiệu lực
+ExpoSplashScreen.preventAutoHideAsync().catch(() => {
+  // Bỏ qua lỗi nếu splash screen đã bị ẩn trước đó
+});
 
 /**
  * Initialize Sentry for error tracking and crash reporting

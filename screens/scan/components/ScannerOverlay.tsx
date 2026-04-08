@@ -43,7 +43,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ isScanning, hasC
     } else {
       scanLinePosition.value = withTiming(0.1, { duration: 200 });
     }
-  }, [isScanning, hasCodeInFrame]);
+  }, [isScanning, hasCodeInFrame, scanLinePosition]);
 
   const scanLineStyle = useAnimatedStyle(() => {
     const scannerHeight = SCANNER_SIZE;

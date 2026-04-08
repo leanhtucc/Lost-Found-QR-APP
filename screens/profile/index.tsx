@@ -28,16 +28,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Load user items
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    await Promise.all([loadProfile(), loadItems()]);
-  };
-
-  const loadProfile = async () => {
+  const loadProfile = React.useCallback(async () => {
     try {
       const response = await authApi.getProfile();
       if (response.success && response.data) {
@@ -46,25 +37,37 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('Error loading profile:', error);
     }
-  };
+  }, [setUser]);
 
-  const loadItems = async () => {
+  const loadItems = React.useCallback(async (isRef = false) => {
     try {
-      if (!refreshing) setLoading(true);
+      if (!isRef) setLoading(true);
       const data = await itemsApi.getItems();
       setItems(data.items || []);
     } catch (error) {
       console.error('Error loading items:', error);
       Alert.alert('Lỗi', 'Không thể tải danh sách vật phẩm');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!isRef) setLoading(false);
+      if (isRef) setRefreshing(false);
     }
-  };
+  }, []);
+
+  const loadData = React.useCallback(
+    async (isRef = false) => {
+      await Promise.all([loadProfile(), loadItems(isRef)]);
+    },
+    [loadProfile, loadItems]
+  );
+
+  // Load user items
+  useEffect(() => {
+    loadData(false);
+  }, [loadData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await loadData(true);
   };
 
   // Calculate stats

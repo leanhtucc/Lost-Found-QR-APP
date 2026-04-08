@@ -3,15 +3,8 @@ import Svg, { G, Rect, Path, Defs, LinearGradient, Stop } from 'react-native-svg
 /* SVGR has dropped some elements not supported by react-native-svg: filter */
 import type { SvgProps } from 'react-native-svg';
 const SvgIconWelcome = (props: SvgProps) => (
-  <Svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
-    fill="none"
-    viewBox="0 0 172 172"
-    {...props}
-  >
-    <G filter="url(#IconWelcome_svg__a)">
+  <Svg width={24} height={24} fill="none" viewBox="0 0 172 172" {...props}>
+    <G>
       <Rect width={96} height={96} x={38} y={13} fill="#25252D" rx={16} />
       <Rect
         width={95}

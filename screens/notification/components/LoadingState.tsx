@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 export const LoadingState: React.FC = () => {

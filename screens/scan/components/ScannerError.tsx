@@ -4,10 +4,9 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AlertCircle, RefreshCw, Settings } from 'lucide-react-native';
-import { Linking } from 'react-native';
 
 interface ScannerErrorProps {
   error: string;

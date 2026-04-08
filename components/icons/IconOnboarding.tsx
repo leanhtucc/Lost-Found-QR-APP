@@ -280,15 +280,17 @@ const SvgIconOnboarding = (props: SvgProps) => (
         <Stop stopColor="#ADA3FF" />
         <Stop offset={1} stopColor="#715FEA" />
       </LinearGradient>
-      <ClipPath id="IconOnboarding_svg__f" transform="translate(-106.691 -119.691)">
-        <Rect
-          width={128}
-          height={128}
-          x={135.62}
-          y={139.691}
-          rx={16}
-          transform="rotate(4 135.62 139.691)"
-        />
+      <ClipPath id="IconOnboarding_svg__f">
+        <G transform="translate(-106.691 -119.691)">
+          <Rect
+            width={128}
+            height={128}
+            x={135.62}
+            y={139.691}
+            rx={16}
+            transform="rotate(4 135.62 139.691)"
+          />
+        </G>
       </ClipPath>
       <ClipPath id="IconOnboarding_svg__d">
         <Rect

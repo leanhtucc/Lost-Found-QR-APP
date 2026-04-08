@@ -1,0 +1,51 @@
+#!/bin/sh
+# Pre-commit hook to prevent committing sensitive files
+
+echo "🔍 Running pre-commit security checks..."
+
+# Check for env files
+if git diff --cached --name-only | grep -E '\.env$|\.env\.dev$|\.env\.production$'; then
+  echo "❌ ERROR: Attempting to commit environment files!"
+  echo "Please remove .env files from commit"
+  exit 1
+fi
+
+# Check for sensitive files
+if git diff --cached --name-only | grep -E '\.p12$|\.pem$|\.key$|service-account\.json$'; then
+  echo "❌ ERROR: Attempting to commit sensitive credential files!"
+  exit 1
+fi
+
+# Check for generated SVG components output (should not be committed)
+if git diff --cached --name-only | grep -E '^assets/svgs/output/'; then
+  echo "❌ ERROR: Attempting to commit generated SVG output (assets/svgs/output)."
+  echo "Run `npm run svgr` locally if needed, but do not stage generated outputs."
+  exit 1
+fi
+
+# Check for hardcoded secrets in staged files
+if git diff --cached | grep -iE 'API_KEY|SECRET|PASSWORD|FIREBASE_API_KEY' | grep -v 'EXAMPLE\|Template\|your-api-key\|process.env'; then
+  echo "⚠️  WARNING: Possible hardcoded secrets detected!"
+  echo "Please review your changes carefully"
+  # Uncomment to enforce:
+  # exit 1
+fi
+
+# Run type check
+echo "🔧 Running TypeScript type check..."
+npm run type-check
+if [ $? -ne 0 ]; then
+  echo "❌ Type check failed. Please fix TypeScript errors."
+  exit 1
+fi
+
+# Run linter
+echo "🔧 Running ESLint..."
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Linting failed. Please fix linting errors or run 'npm run lint:fix'"
+  exit 1
+fi
+
+echo "✅ All checks passed!"
+exit 0

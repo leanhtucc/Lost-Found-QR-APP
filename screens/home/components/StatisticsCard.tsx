@@ -22,20 +22,6 @@ export const StatisticsCard: React.FC<StatisticsCardProps> = ({
   totalCount,
   lastAdded,
 }) => {
-  // Calculate days since last added
-  const getDaysSinceLastAdded = () => {
-    if (!lastAdded) return null;
-
-    const lastAddedDate = new Date(lastAdded);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - lastAddedDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays;
-  };
-
-  const daysSince = getDaysSinceLastAdded();
-
   return (
     <View className="px-4 py-3">
       {/* Hero Banner với Gradient */}

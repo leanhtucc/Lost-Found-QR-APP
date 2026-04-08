@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
-import { Item, ItemCategory, DashboardData } from '@/types/item';
+import { ItemCategory, DashboardData } from '@/types/item';
 import { itemsApi } from '@/services/items';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';

@@ -38,7 +38,7 @@ export const TypingIndicator: React.FC = () => {
         -1
       );
     }, 300);
-  }, []);
+  }, [dot1, dot2, dot3]);
 
   const animatedStyle1 = useAnimatedStyle(() => ({
     transform: [{ translateY: dot1.value }],

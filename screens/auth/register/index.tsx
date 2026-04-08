@@ -12,6 +12,18 @@ import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
 
 type RegisterNavigationProp = StackNavigationProp<RootStackParamList>;
 
+const REGISTER_SCREEN_LOG_TAG = '[Auth:RegisterScreen]';
+
+const maskPhoneForLog = (phoneNumber: string): string => {
+  const digits = phoneNumber.replace(/\D/g, '');
+  if (digits.length < 3) return phoneNumber;
+  return `***${digits.slice(-3)}`;
+};
+
+const logRegisterScreen = (event: string, details?: Record<string, unknown>) => {
+  console.log(`${REGISTER_SCREEN_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
+};
+
 export const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<RegisterNavigationProp>();
   const { isLoading, register } = useAuth();
@@ -29,10 +41,48 @@ export const RegisterScreen: React.FC = () => {
     phoneNumber: string,
     photoURL?: string
   ) => {
-    const success = await register(displayName, email, password, phoneNumber, photoURL);
-    if (success) {
-      // Chuyển sang màn OTP, truyền số điện thoại để gửi SMS
-      navigation.navigate('CodeVerify', { phoneNumber });
+    const startedAt = Date.now();
+    const attemptId = `ui-reg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    logRegisterScreen('submit_register_pressed', {
+      attemptId,
+      displayNameLength: displayName.trim().length,
+      email,
+      phoneMasked: maskPhoneForLog(phoneNumber),
+      passwordLength: password.length,
+      hasPhotoURL: Boolean(photoURL),
+    });
+
+    try {
+      const success = await register(displayName, email, password, phoneNumber, photoURL);
+
+      logRegisterScreen('register_result_received', {
+        attemptId,
+        success,
+        durationMs: Date.now() - startedAt,
+      });
+
+      if (success) {
+        logRegisterScreen('navigate_to_code_verify', {
+          attemptId,
+          routeName: 'CodeVerify',
+          params: { phoneNumber },
+        });
+
+        // Chuyển sang màn OTP, truyền số điện thoại để gửi SMS
+        navigation.navigate('CodeVerify', { phoneNumber });
+      } else {
+        logRegisterScreen('stay_on_register_screen', {
+          attemptId,
+          reason: 'register_returned_false',
+        });
+      }
+    } catch (error) {
+      logRegisterScreen('register_submit_exception', {
+        attemptId,
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   };
 

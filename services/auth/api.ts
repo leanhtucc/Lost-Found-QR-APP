@@ -6,6 +6,8 @@
 import {
   RegisterRequest,
   LoginRequest,
+  VerifyOtpRequest,
+  ResendOtpRequest,
   VerifyEmailRequest,
   ResendVerificationRequest,
   RefreshTokenRequest,
@@ -17,6 +19,8 @@ import {
   ApiResponse,
   RegisterResponseData,
   LoginResponseData,
+  VerifyOtpResponseData,
+  ResendOtpResponseData,
   VerifyEmailResponseData,
   ResendVerificationResponseData,
   RefreshTokenResponseData,
@@ -31,6 +35,20 @@ import { getAuthApiUrl } from '@constants/environment';
 
 // Get API URL from environment
 const AUTH_BASE_URL = getAuthApiUrl();
+const AUTH_API_LOG_TAG = '[Auth:ApiService]';
+
+const normalizePhoneDigits = (phoneNumber: string): string => phoneNumber.replace(/\D/g, '');
+
+const maskPhoneForLog = (phoneNumber?: string): string => {
+  if (!phoneNumber) return '';
+  const digits = normalizePhoneDigits(phoneNumber);
+  if (digits.length < 3) return phoneNumber;
+  return `***${digits.slice(-3)}`;
+};
+
+const logAuthApi = (event: string, details?: Record<string, unknown>) => {
+  console.log(`${AUTH_API_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
+};
 
 /**
  * Helper function to make API requests
@@ -86,35 +104,92 @@ export const authApi = {
    * User will receive verification code via email
    */
   async register(data: RegisterRequest): Promise<ApiResponse<RegisterResponseData>> {
-    return apiRequest<RegisterResponseData>('/register', {
+    const requestId = `api-reg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const startedAt = Date.now();
+
+    logAuthApi('register_request_start', {
+      requestId,
+      endpoint: '/register',
+      email: data.email,
+      phoneMasked: maskPhoneForLog(data.phoneNumber),
+      displayNameLength: data.displayName?.length,
+      hasPhotoURL: Boolean(data.photoURL),
+      passwordLength: data.password?.length,
+    });
+
+    const response = await apiRequest<RegisterResponseData>('/register', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+
+    logAuthApi('register_request_result', {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      success: response.success,
+      message: response.message,
+      error: response.error,
+      hasData: Boolean(response.data),
+    });
+
+    return response;
   },
 
   /**
-   * Step 2: Verify email with code
+   * Step 2: Verify SMS OTP by phone number
    * Returns tokens on success
    */
-  async verifyEmail(data: VerifyEmailRequest): Promise<ApiResponse<VerifyEmailResponseData>> {
-    const response = await apiRequest<VerifyEmailResponseData>('/verify-email', {
+  async verifyOtp(data: VerifyOtpRequest): Promise<ApiResponse<VerifyOtpResponseData>> {
+    const requestId = `api-verify-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const startedAt = Date.now();
+
+    logAuthApi('verify_otp_request_start', {
+      requestId,
+      endpoint: '/verify-otp',
+      phoneMasked: maskPhoneForLog(data.phoneNumber),
+      codeLength: data.code?.length,
+    });
+
+    const response = await apiRequest<VerifyOtpResponseData>('/verify-otp', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+
+    logAuthApi('verify_otp_request_result', {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      success: response.success,
+      message: response.message,
+      error: response.error,
+      hasData: Boolean(response.data),
+      hasAccessToken: Boolean(response.data?.accessToken || response.data?.token),
+      hasRefreshToken: Boolean(response.data?.refreshToken || response.data?.token),
+      hasUser: Boolean(response.data?.user),
     });
 
     // Store tokens on success
     if (response.success && response.data) {
-      await authStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
+      const accessToken = response.data.accessToken || response.data.token;
+      const refreshToken = response.data.refreshToken || accessToken;
+
+      if (accessToken && refreshToken) {
+        await authStorage.saveTokens(accessToken, refreshToken);
+      }
+
       // Only save user if it exists in response
       if (response.data.user) {
         await authStorage.saveUser(response.data.user);
+        logAuthApi('verify_otp_user_saved', {
+          requestId,
+          userId: response.data.user.id,
+          phoneMasked: maskPhoneForLog(response.data.user.phoneNumber),
+        });
       } else {
         // If user is not in response, fetch profile to get user data
-        console.log('verifyEmail: user not in response, fetching profile...');
+        console.log('verifyOtp: user not in response, fetching profile...');
         try {
           await this.getProfile();
         } catch (profileError) {
-          console.warn('verifyEmail: failed to fetch profile:', profileError);
+          console.warn('verifyOtp: failed to fetch profile:', profileError);
         }
       }
     }
@@ -123,15 +198,48 @@ export const authApi = {
   },
 
   /**
-   * Resend verification code
+   * Backward-compatible wrapper for legacy callers.
+   */
+  async verifyEmail(data: VerifyEmailRequest): Promise<ApiResponse<VerifyEmailResponseData>> {
+    return this.verifyOtp(data);
+  },
+
+  /**
+   * Resend OTP by phone number
+   */
+  async resendOtp(data: ResendOtpRequest): Promise<ApiResponse<ResendOtpResponseData>> {
+    const requestId = `api-resend-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const startedAt = Date.now();
+
+    logAuthApi('resend_otp_request_start', {
+      requestId,
+      endpoint: '/resend-otp',
+      phoneMasked: maskPhoneForLog(data.phoneNumber),
+    });
+
+    const response = await apiRequest<ResendOtpResponseData>('/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    logAuthApi('resend_otp_request_result', {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      success: response.success,
+      message: response.message,
+      error: response.error,
+    });
+
+    return response;
+  },
+
+  /**
+   * Backward-compatible wrapper for legacy callers.
    */
   async resendVerification(
     data: ResendVerificationRequest
   ): Promise<ApiResponse<ResendVerificationResponseData>> {
-    return apiRequest<ResendVerificationResponseData>('/resend-verification', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return this.resendOtp(data);
   },
 
   /**

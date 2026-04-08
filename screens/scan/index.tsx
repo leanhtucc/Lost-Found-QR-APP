@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, StatusBar, BackHandler, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
@@ -67,18 +67,8 @@ export const ScanScreen: React.FC = () => {
     initCamera();
   }, [requestPermission]);
 
-  // Handle back button
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleClose();
-      return true;
-    });
-
-    return () => backHandler.remove();
-  }, []);
-
   // Handle close
-  const handleClose = () => {
+  const handleClose = React.useCallback(() => {
     if (isScanning) {
       Alert.alert('Đang quét mã', 'Bạn có muốn dừng quét mã QR?', [
         { text: 'Tiếp tục', style: 'cancel' },
@@ -91,7 +81,17 @@ export const ScanScreen: React.FC = () => {
     } else {
       navigation.goBack();
     }
-  };
+  }, [isScanning, navigation]);
+
+  // Handle back button
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleClose();
+      return true;
+    });
+
+    return () => backHandler.remove();
+  }, [handleClose]);
 
   // Handle retry after error
   const handleRetry = async () => {

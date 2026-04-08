@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Eye, EyeOff, User, Mail, Phone, Lock, CheckCircle2 } from 'lucide-react-native';
-import { AuthInput } from '../../../../components/atoms/AuthInput';
 import { Button } from '../../../../components/atoms/Button';
 import { validateEmail, validateDisplayName, validateConfirmPassword } from '@services/auth';
 
@@ -64,6 +63,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isDisplayNameFocused, setIsDisplayNameFocused] = useState(false);
+  const [isPhoneFocused, setIsPhoneFocused] = useState(false);
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const passwordValidation = useMemo(() => {
@@ -130,66 +134,165 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
   return (
     <View className="gap-5">
       {/* Display Name Input */}
-      <AuthInput
-        label="Họ và tên"
-        placeholder="Nguyễn Văn A"
-        value={displayName}
-        onChangeText={text => {
-          setDisplayName(text);
-          clearError('displayName');
-        }}
-        leftIcon={<User size={20} color="#9CA3AF" />}
-        error={errors.displayName}
-      />
+      <View className="w-full">
+        <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
+          Họ và tên
+        </Text>
+        <View
+          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+            errors.displayName
+              ? 'border-red-500'
+              : isDisplayNameFocused
+                ? 'border-[#7C6AF6]'
+                : 'border-transparent'
+          }`}
+        >
+          <View className="mr-4">
+            <User size={20} color={errors.displayName ? '#ef4444' : '#9CA3AF'} />
+          </View>
+          <TextInput
+            className="flex-1 text-white text-[15px] h-full"
+            placeholder="Nguyễn Văn A"
+            placeholderTextColor="#9CA3AF"
+            value={displayName}
+            onChangeText={text => {
+              setDisplayName(text);
+              clearError('displayName');
+            }}
+            onFocus={() => setIsDisplayNameFocused(true)}
+            onBlur={() => setIsDisplayNameFocused(false)}
+          />
+          <View className="ml-4 p-1" pointerEvents="none">
+            <View style={{ width: 20, height: 20 }} />
+          </View>
+        </View>
+        {errors.displayName ? (
+          <Text className="text-red-500 text-[13px] mt-2">{errors.displayName}</Text>
+        ) : null}
+      </View>
 
       {/* Phone Number Input */}
-      <AuthInput
-        label="Số điện thoại"
-        placeholder="0912345678"
-        value={phoneNumber}
-        onChangeText={text => {
-          setPhoneNumber(text);
-          clearError('phoneNumber');
-        }}
-        keyboardType="phone-pad"
-        leftIcon={<Phone size={20} color="#9CA3AF" />}
-        error={errors.phoneNumber}
-      />
+      <View className="w-full">
+        <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
+          Số điện thoại
+        </Text>
+        <View
+          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+            errors.phoneNumber
+              ? 'border-red-500'
+              : isPhoneFocused
+                ? 'border-[#7C6AF6]'
+                : 'border-transparent'
+          }`}
+        >
+          <View className="mr-4">
+            <Phone size={20} color={errors.phoneNumber ? '#ef4444' : '#9CA3AF'} />
+          </View>
+          <TextInput
+            className="flex-1 text-white text-[15px] h-full"
+            placeholder="0912345678"
+            placeholderTextColor="#9CA3AF"
+            value={phoneNumber}
+            onChangeText={text => {
+              setPhoneNumber(text);
+              clearError('phoneNumber');
+            }}
+            onFocus={() => setIsPhoneFocused(true)}
+            onBlur={() => setIsPhoneFocused(false)}
+            keyboardType="phone-pad"
+          />
+          <View className="ml-4 p-1" pointerEvents="none">
+            <View style={{ width: 20, height: 20 }} />
+          </View>
+        </View>
+        {errors.phoneNumber ? (
+          <Text className="text-red-500 text-[13px] mt-2">{errors.phoneNumber}</Text>
+        ) : null}
+      </View>
 
       {/* Email Input */}
-      <AuthInput
-        label="Email"
-        placeholder="example@gmail.com"
-        value={email}
-        onChangeText={text => {
-          setEmail(text);
-          clearError('email');
-        }}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        leftIcon={<Mail size={20} color="#9CA3AF" />}
-        error={errors.email}
-      />
+      <View className="w-full">
+        <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
+          Email
+        </Text>
+        <View
+          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+            errors.email
+              ? 'border-red-500'
+              : isEmailFocused
+                ? 'border-[#7C6AF6]'
+                : 'border-transparent'
+          }`}
+        >
+          <View className="mr-4">
+            <Mail size={20} color={errors.email ? '#ef4444' : '#9CA3AF'} />
+          </View>
+          <TextInput
+            className="flex-1 text-white text-[15px] h-full"
+            placeholder="example@gmail.com"
+            placeholderTextColor="#9CA3AF"
+            value={email}
+            onChangeText={text => {
+              setEmail(text);
+              clearError('email');
+            }}
+            onFocus={() => setIsEmailFocused(true)}
+            onBlur={() => setIsEmailFocused(false)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <View className="ml-4 p-1" pointerEvents="none">
+            <View style={{ width: 20, height: 20 }} />
+          </View>
+        </View>
+        {errors.email ? (
+          <Text className="text-red-500 text-[13px] mt-2">{errors.email}</Text>
+        ) : null}
+      </View>
 
       {/* Password Input */}
       <View>
-        <AuthInput
-          label="Mật khẩu"
-          placeholder="••••••••••••"
-          secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={text => {
-            setPassword(text);
-            clearError('password');
-          }}
-          leftIcon={<Lock size={20} color={errors.password ? '#ef4444' : '#9CA3AF'} />}
-          rightIcon={
-            showPassword ? <EyeOff size={20} color="#9CA3AF" /> : <Eye size={20} color="#9CA3AF" />
-          }
-          onRightIconPress={() => setShowPassword(!showPassword)}
-          error={errors.password}
-          className="mb-0"
-        />
+        <View className="w-full">
+          <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
+            Mật khẩu
+          </Text>
+          <View
+            className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+              errors.password
+                ? 'border-red-500'
+                : isPasswordFocused
+                  ? 'border-[#7C6AF6]'
+                  : 'border-transparent'
+            }`}
+          >
+            <View className="mr-4">
+              <Lock size={20} color={errors.password ? '#ef4444' : '#9CA3AF'} />
+            </View>
+            <TextInput
+              className="flex-1 text-white text-[15px] h-full"
+              placeholder="••••••••••••"
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={text => {
+                setPassword(text);
+                clearError('password');
+              }}
+              onFocus={() => setIsPasswordFocused(true)}
+              onBlur={() => setIsPasswordFocused(false)}
+            />
+            <TouchableOpacity className="ml-4 p-1" onPress={() => setShowPassword(!showPassword)}>
+              {showPassword ? (
+                <EyeOff size={20} color="#9CA3AF" />
+              ) : (
+                <Eye size={20} color="#9CA3AF" />
+              )}
+            </TouchableOpacity>
+          </View>
+          {errors.password ? (
+            <Text className="text-red-500 text-[13px] mt-2">{errors.password}</Text>
+          ) : null}
+        </View>
 
         {/* Password Strength Indicator */}
         <View className="flex-row items-center gap-1 mt-3 mb-2">
@@ -215,29 +318,52 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
       </View>
 
       {/* Confirm Password Input */}
-      <AuthInput
-        label="Xác nhận mật khẩu"
-        placeholder="••••••••••••"
-        secureTextEntry={!showPassword}
-        value={confirmPassword}
-        onChangeText={text => {
-          setConfirmPassword(text);
-          clearError('confirmPassword');
-        }}
-        leftIcon={
-          <CheckCircle2
-            size={20}
-            color={
-              errors.confirmPassword
-                ? '#ef4444'
-                : confirmPassword && password === confirmPassword
-                  ? '#22c55e'
-                  : '#9CA3AF'
-            }
+      <View className="w-full">
+        <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
+          Xác nhận mật khẩu
+        </Text>
+        <View
+          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+            errors.confirmPassword
+              ? 'border-red-500'
+              : isConfirmPasswordFocused
+                ? 'border-[#7C6AF6]'
+                : 'border-transparent'
+          }`}
+        >
+          <View className="mr-4">
+            <CheckCircle2
+              size={20}
+              color={
+                errors.confirmPassword
+                  ? '#ef4444'
+                  : confirmPassword && password === confirmPassword
+                    ? '#22c55e'
+                    : '#9CA3AF'
+              }
+            />
+          </View>
+          <TextInput
+            className="flex-1 text-white text-[15px] h-full"
+            placeholder="••••••••••••"
+            placeholderTextColor="#9CA3AF"
+            secureTextEntry={!showPassword}
+            value={confirmPassword}
+            onChangeText={text => {
+              setConfirmPassword(text);
+              clearError('confirmPassword');
+            }}
+            onFocus={() => setIsConfirmPasswordFocused(true)}
+            onBlur={() => setIsConfirmPasswordFocused(false)}
           />
-        }
-        error={errors.confirmPassword}
-      />
+          <View className="ml-4 p-1" pointerEvents="none">
+            <View style={{ width: 20, height: 20 }} />
+          </View>
+        </View>
+        {errors.confirmPassword ? (
+          <Text className="text-red-500 text-[13px] mt-2">{errors.confirmPassword}</Text>
+        ) : null}
+      </View>
 
       <View className="mt-4 mb-6">
         <Button

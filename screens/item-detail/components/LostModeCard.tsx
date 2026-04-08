@@ -50,6 +50,7 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
     try {
       await onUpdateMessage(lostMessage);
       Alert.alert('Thành công', 'Đã cập nhật lời nhắn');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể cập nhật lời nhắn');
     } finally {

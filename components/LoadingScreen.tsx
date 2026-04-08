@@ -1,7 +1,7 @@
 import { CustomText as Text } from '@/components/ui/CustomText';
 import colors from '@/constants/colors';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { IconLogoOnboarding } from './icons';
+import { IconLogoLoadingApp } from './icons';
 
 interface LoadingScreenProps {
   textDisplay: string;
@@ -10,7 +10,7 @@ interface LoadingScreenProps {
 export default function LoadingScreen({ textDisplay }: LoadingScreenProps) {
   return (
     <View style={styles.loadingContainer}>
-      <IconLogoOnboarding width={100} height={100} style={{ marginBottom: 16 }} />
+      <IconLogoLoadingApp width={100} height={100} style={{ marginBottom: 16 }} />
       <ActivityIndicator size="large" color={colors.orange} />
       <Text style={styles.loadingText}>{textDisplay}</Text>
     </View>

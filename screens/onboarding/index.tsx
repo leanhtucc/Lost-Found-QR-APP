@@ -15,7 +15,6 @@ import { RootStackParamList } from '@navigation/index';
 import { Button } from '@components/atoms/Button';
 import { SlideItem } from './components/SlideItem';
 import { DotIndicator } from './components/DotIndicator';
-import { SplashScreen } from './components/SplashScreen';
 import { slides } from './data/slides';
 import { appStorage } from '@storage/app';
 import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
@@ -27,6 +26,7 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
+import { SplashScreen } from './SplashScreen';
 
 type OnboardingNavigationProp = StackNavigationProp<RootStackParamList>;
 

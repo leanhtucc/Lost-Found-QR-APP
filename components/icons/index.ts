@@ -4,3 +4,5 @@ export { default as IconOnboarding2 } from './IconOnboarding2';
 export { default as IconWelcome } from './IconWelcome';
 export { default as IconLogoApp } from './IconLogoApp';
 export { default as IconLogoOnboarding } from './IconLogoOnboarding';
+export { default as IconLogoLoadingApp } from './IconLogoLoadingApp';
+export { default as ImageOtpPhoneNumber } from './ImageOtpPhoneNumber';

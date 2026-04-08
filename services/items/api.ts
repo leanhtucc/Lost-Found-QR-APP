@@ -58,7 +58,7 @@ export const itemsApi = {
    * Lấy danh sách categories từ backend
    * GET /api/items/categories
    */
-  async getCategories(): Promise<Array<{ value: ItemCategory; label: string; icon: string }>> {
+  async getCategories(): Promise<{ value: ItemCategory; label: string; icon: string }[]> {
     const url = `${getItemsApiUrl()}/categories`;
     const headers = await createHeaders();
 
@@ -72,7 +72,7 @@ export const itemsApi = {
       throw new Error(error.message || 'Failed to fetch categories');
     }
 
-    const data: ItemApiResponse<Array<{ value: ItemCategory; label: string; icon: string }>> =
+    const data: ItemApiResponse<{ value: ItemCategory; label: string; icon: string }[]> =
       await response.json();
 
     if (!data.success || !data.data) {

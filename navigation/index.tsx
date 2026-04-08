@@ -23,7 +23,7 @@ import {
 } from '@screens/index';
 import { LoginScreen } from '@screens/auth/login';
 import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
-import { CodeVerifyScreen } from '@screens/auth/codeVerify';
+import { CodeVerifyScreen } from '@screens/auth/codeVerify/index';
 import { ForgotPasswordScreen } from '@screens/auth/forgotPass';
 import { ResetPasswordScreen } from '@screens/auth/resetPass';
 import { CongratulationScreen } from '@screens/auth/congratulation';
@@ -68,6 +68,16 @@ export type RootStackParamList = {
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
+
+const AUTH_ROUTE_NAMES: (keyof RootStackParamList)[] = [
+  'Onboarding',
+  'Login',
+  'AuthRegister',
+  'CodeVerify',
+  'ForgotPassword',
+  'ResetPassword',
+  'Congratulation',
+];
 
 // Deep linking configuration - Professional Lost & Found
 const linking: LinkingOptions<RootStackParamList> = {
@@ -135,6 +145,7 @@ export default function RootStack() {
   const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [isNavReady, setIsNavReady] = useState(false);
 
   // Check onboarding status on mount
   useEffect(() => {
@@ -143,7 +154,6 @@ export default function RootStack() {
         const completed = await appStorage.isOnboardingCompleted();
         setHasCompletedOnboarding(completed);
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error('Error checking onboarding status:', error);
       } finally {
         setIsCheckingOnboarding(false);
@@ -161,6 +171,41 @@ export default function RootStack() {
     return hasCompletedOnboarding ? 'Login' : 'Onboarding';
   };
 
+  // Keep navigation state in sync with auth state changes
+  useEffect(() => {
+    if (!isNavReady || authLoading || isCheckingOnboarding || !navigationRef.current) {
+      return;
+    }
+
+    const currentRouteName = navigationRef.current.getCurrentRoute()?.name as
+      | keyof RootStackParamList
+      | undefined;
+    const isCurrentAuthRoute = currentRouteName
+      ? AUTH_ROUTE_NAMES.includes(currentRouteName)
+      : false;
+
+    if (isAuthenticated) {
+      if (!currentRouteName || isCurrentAuthRoute) {
+        navigationRef.current.reset({
+          index: 0,
+          routes: [{ name: 'TabNavigator' }],
+        });
+      }
+      return;
+    }
+
+    const unauthTargetRoute: keyof RootStackParamList = hasCompletedOnboarding
+      ? 'Login'
+      : 'Onboarding';
+
+    if (!currentRouteName || !isCurrentAuthRoute) {
+      navigationRef.current.reset({
+        index: 0,
+        routes: [{ name: unauthTargetRoute }],
+      });
+    }
+  }, [isAuthenticated, hasCompletedOnboarding, authLoading, isCheckingOnboarding, isNavReady]);
+
   // Show loading while checking auth and onboarding status
   if (authLoading || isCheckingOnboarding) {
     return (
@@ -173,7 +218,7 @@ export default function RootStack() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} linking={linking}>
+    <NavigationContainer ref={navigationRef} linking={linking} onReady={() => setIsNavReady(true)}>
       <Stack.Navigator initialRouteName={getInitialRoute()} screenOptions={screenOptions}>
         {/* Auth Screens */}
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />

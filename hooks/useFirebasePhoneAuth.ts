@@ -1,39 +1,68 @@
 /**
  * useFirebasePhoneAuth Hook
- * Quản lý toàn bộ luồng xác thực số điện thoại qua Firebase OTP
- * Sử dụng @react-native-firebase/auth native SDK
- *
- * Luồng: sendOtp → user nhập mã → verifyOtp (confirm) → lấy idToken → gọi backend /firebase-verify
+ * Legacy hook name kept for compatibility.
+ * Current implementation uses backend SMS OTP endpoints:
+ * register (already sends OTP) -> verify-otp -> resend-otp.
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { Alert } from 'react-native';
-import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
-import { firebasePhoneAuth, normalizePhoneNumber } from '@services/firebase';
 import { authApi } from '@services/auth';
 import { useToast } from '@contexts/ToastContext';
+import { useAuthContext } from '@contexts/AuthContext';
 
 type AuthNavigationProp = StackNavigationProp<RootStackParamList>;
+
+const MOCK_TEST_PHONE_LOCAL = '0398624656';
+const MOCK_TEST_OTP = '123456';
+const OTP_HOOK_LOG_TAG = '[Auth:OtpHook]';
+
+const normalizePhoneDigits = (phoneNumber: string): string => phoneNumber.replace(/\D/g, '');
+
+const maskPhoneForLog = (phoneNumber: string): string => {
+  const digits = normalizePhoneDigits(phoneNumber);
+  if (digits.length < 3) return phoneNumber;
+  return `***${digits.slice(-3)}`;
+};
+
+const serializeError = (error: unknown) => {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+  return { message: String(error) };
+};
+
+const logOtpHook = (event: string, details?: Record<string, unknown>) => {
+  console.log(`${OTP_HOOK_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
+};
+
+const isMockTestPhone = (phoneNumber: string): boolean => {
+  const digits = normalizePhoneDigits(phoneNumber);
+  return digits === MOCK_TEST_PHONE_LOCAL || digits === `84${MOCK_TEST_PHONE_LOCAL.slice(1)}`;
+};
 
 interface UseFirebasePhoneAuthReturn {
   /** Đang loading (gửi OTP hoặc verify) */
   isLoading: boolean;
   /** Thông báo lỗi hiện tại */
   error: string | null;
-  /** Số điện thoại đã chuẩn hóa (+84...) */
+  /** Số điện thoại dùng cho xác minh OTP */
   normalizedPhone: string | null;
 
   /**
-   * Bước 1: Gửi mã OTP đến số điện thoại
-   * Gọi sau khi đăng ký thành công + chuyển sang màn CodeVerify
+   * Bước 1: Thiết lập số điện thoại cho phiên OTP hiện tại.
+   * OTP đã được backend gửi ngay sau bước register.
    */
   sendOtp: (phoneNumber: string) => Promise<boolean>;
 
   /**
-   * Bước 2: Xác thực mã OTP + gửi idToken lên backend
+   * Bước 2: Xác thực mã OTP với backend
    * Gọi khi user nhập đủ 6 số và bấm "Xác nhận"
    */
   verifyOtpAndAuthenticate: (otpCode: string) => Promise<boolean>;
@@ -50,14 +79,13 @@ interface UseFirebasePhoneAuthReturn {
 export const useFirebasePhoneAuth = (): UseFirebasePhoneAuthReturn => {
   const navigation = useNavigation<AuthNavigationProp>();
   const toast = useToast();
+  const { setAuthenticated, setUser, updateLastActivity } = useAuthContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [normalizedPhone, setNormalizedPhone] = useState<string | null>(null);
 
-  // Lưu confirmation object từ Firebase SDK (dùng ref để tránh re-render)
-  const confirmationRef = useRef<FirebaseAuthTypes.ConfirmationResult | null>(null);
-  // Lưu số điện thoại gốc để resend
+  // Lưu số điện thoại cho luồng resend/verify
   const phoneRef = useRef<string>('');
 
   const clearError = useCallback(() => {
@@ -65,50 +93,83 @@ export const useFirebasePhoneAuth = (): UseFirebasePhoneAuthReturn => {
   }, []);
 
   /**
-   * Bước 1: Gửi OTP qua Firebase native SDK
+   * Bước 1: Chỉ thiết lập số điện thoại cho bước verify.
+   * OTP đã được gửi từ backend ngay tại bước đăng ký.
    */
   const sendOtp = useCallback(
     async (phoneNumber: string): Promise<boolean> => {
-      setIsLoading(true);
+      const startedAt = Date.now();
+      const requestId = `otp-send-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      logOtpHook('send_otp_start', {
+        requestId,
+        phoneMasked: maskPhoneForLog(phoneNumber),
+      });
+
       setError(null);
 
       try {
-        // Lưu số gốc để resend
         phoneRef.current = phoneNumber;
-        const normalized = normalizePhoneNumber(phoneNumber);
-        setNormalizedPhone(normalized);
+        setNormalizedPhone(phoneNumber);
 
-        const result = await firebasePhoneAuth.sendOtp(phoneNumber);
+        logOtpHook('send_otp_context_ready', {
+          requestId,
+          storedPhoneMasked: maskPhoneForLog(phoneRef.current),
+          normalizedPhone: phoneNumber,
+        });
 
-        if (result.success && result.confirmation) {
-          // Lưu confirmation object vào ref
-          confirmationRef.current = result.confirmation;
-          toast.success('Đã gửi mã OTP', result.message);
-          return true;
-        } else {
-          setError(result.message);
-          toast.error('Gửi OTP thất bại', result.message);
-          return false;
+        if (isMockTestPhone(phoneNumber)) {
+          logOtpHook('send_otp_mock_mode', {
+            requestId,
+            phoneMasked: maskPhoneForLog(phoneNumber),
+            mockCode: MOCK_TEST_OTP,
+          });
+          toast.success('Chế độ test OTP', `Mã test: ${MOCK_TEST_OTP}`);
         }
+
+        logOtpHook('send_otp_success', {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          isMockPhone: isMockTestPhone(phoneNumber),
+        });
+
+        return true;
       } catch (err) {
-        const errorMessage = 'Không thể gửi mã OTP. Vui lòng thử lại.';
+        logOtpHook('send_otp_exception', {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          exception: serializeError(err),
+        });
+
+        const errorMessage = 'Không thể khởi tạo xác thực OTP. Vui lòng thử lại.';
         setError(errorMessage);
         toast.error('Lỗi', errorMessage);
         return false;
-      } finally {
-        setIsLoading(false);
       }
     },
     [toast]
   );
 
   /**
-   * Bước 2: Xác thực OTP → Lấy idToken → Gọi backend /firebase-verify
+   * Bước 2: Xác thực OTP với backend /verify-otp
    */
   const verifyOtpAndAuthenticate = useCallback(
     async (otpCode: string): Promise<boolean> => {
-      if (!confirmationRef.current) {
-        setError('Phiên xác thực không hợp lệ. Vui lòng gửi lại mã OTP.');
+      const startedAt = Date.now();
+      const requestId = `otp-verify-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      logOtpHook('verify_otp_start', {
+        requestId,
+        phoneMasked: maskPhoneForLog(phoneRef.current),
+        otpLength: otpCode.length,
+      });
+
+      if (!phoneRef.current) {
+        logOtpHook('verify_otp_invalid_session', {
+          requestId,
+          reason: 'missing_phone_in_ref',
+        });
+        setError('Phiên xác thực không hợp lệ. Vui lòng quay lại đăng ký.');
         return false;
       }
 
@@ -116,73 +177,208 @@ export const useFirebasePhoneAuth = (): UseFirebasePhoneAuthReturn => {
       setError(null);
 
       try {
-        // Bước 2a: Xác thực OTP với Firebase native SDK
-        const otpResult = await firebasePhoneAuth.verifyOtp(confirmationRef.current, otpCode);
+        if (isMockTestPhone(phoneRef.current)) {
+          logOtpHook('verify_otp_mock_mode', {
+            requestId,
+            phoneMasked: maskPhoneForLog(phoneRef.current),
+            providedCodeLength: otpCode.length,
+          });
 
-        if (!otpResult.success || !otpResult.idToken) {
-          setError(otpResult.message);
-          toast.error('Xác thực thất bại', otpResult.message);
-          return false;
-        }
-
-        // Bước 2b: Gửi idToken lên backend để lấy JWT Server Token
-        const backendResult = await authApi.firebaseVerify({
-          idToken: otpResult.idToken,
-        });
-
-        if (backendResult.success && backendResult.data) {
-          const { isNewUser, user } = backendResult.data;
-
-          if (isNewUser) {
-            toast.success(
-              'Chào mừng!',
-              `Tài khoản mới đã được tạo cho ${user.phoneNumber || user.displayName}`
-            );
-          } else {
-            toast.success(
-              'Xác thực thành công',
-              `Chào mừng ${user.displayName || 'bạn'} quay trở lại!`
-            );
+          if (otpCode !== MOCK_TEST_OTP) {
+            const errorMessage = `Mã OTP test không đúng. Dùng mã ${MOCK_TEST_OTP}.`;
+            logOtpHook('verify_otp_mock_fail', {
+              requestId,
+              expectedCode: MOCK_TEST_OTP,
+              providedCode: otpCode,
+            });
+            setError(errorMessage);
+            toast.error('Xác thực thất bại', errorMessage);
+            return false;
           }
 
-          // Chuyển sang màn Congratulation
+          logOtpHook('verify_otp_mock_success', {
+            requestId,
+            durationMs: Date.now() - startedAt,
+            nextStep: 'navigate_tab_navigator',
+          });
+
+          setAuthenticated(true);
+          await updateLastActivity();
+
+          toast.success('Xác thực thành công', 'Đăng nhập test thành công.');
+
           setTimeout(() => {
             navigation.reset({
               index: 0,
-              routes: [{ name: 'Congratulation' }],
+              routes: [{ name: 'TabNavigator' }],
             });
           }, 500);
 
           return true;
-        } else {
-          const errorMessage = backendResult.message || 'Xác thực với server thất bại.';
+        }
+
+        logOtpHook('verify_otp_api_request', {
+          requestId,
+          endpoint: '/verify-otp',
+          phoneMasked: maskPhoneForLog(phoneRef.current),
+        });
+
+        const result = await authApi.verifyOtp({
+          phoneNumber: phoneRef.current,
+          code: otpCode,
+        });
+
+        logOtpHook('verify_otp_api_response', {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          success: result.success,
+          message: result.message,
+          error: result.error,
+          hasData: Boolean(result.data),
+        });
+
+        if (!result.success) {
+          const errorMessage = result.message || 'Mã OTP không hợp lệ.';
           setError(errorMessage);
-          toast.error('Lỗi xác thực', errorMessage);
+          toast.error('Xác thực thất bại', errorMessage);
           return false;
         }
+
+        if (result.data?.user) {
+          setUser(result.data.user);
+        } else {
+          const profileResponse = await authApi.getProfile();
+          if (profileResponse.success && profileResponse.data) {
+            setUser(profileResponse.data);
+          }
+        }
+
+        setAuthenticated(true);
+        await updateLastActivity();
+
+        toast.success('Xác thực thành công', 'Chào mừng bạn đến với ứng dụng!');
+
+        logOtpHook('verify_otp_success_navigate', {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          destination: 'TabNavigator',
+        });
+
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'TabNavigator' }],
+          });
+        }, 500);
+
+        return true;
       } catch (err) {
+        logOtpHook('verify_otp_exception', {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          exception: serializeError(err),
+        });
+
         const errorMessage = 'Không thể hoàn tất xác thực. Vui lòng thử lại.';
         setError(errorMessage);
         toast.error('Lỗi kết nối', errorMessage);
         return false;
       } finally {
         setIsLoading(false);
+        logOtpHook('verify_otp_finish', {
+          requestId,
+          totalDurationMs: Date.now() - startedAt,
+          isLoadingSetTo: false,
+        });
       }
     },
-    [navigation, toast]
+    [navigation, setAuthenticated, setUser, toast, updateLastActivity]
   );
 
   /**
    * Gửi lại mã OTP
    */
   const resendOtp = useCallback(async (): Promise<boolean> => {
+    const startedAt = Date.now();
+    const requestId = `otp-resend-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    logOtpHook('resend_otp_start', {
+      requestId,
+      phoneMasked: maskPhoneForLog(phoneRef.current),
+    });
+
     if (!phoneRef.current) {
+      logOtpHook('resend_otp_invalid_session', {
+        requestId,
+        reason: 'missing_phone_in_ref',
+      });
       setError('Không tìm thấy số điện thoại. Vui lòng quay lại.');
       return false;
     }
 
-    return sendOtp(phoneRef.current);
-  }, [sendOtp]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (isMockTestPhone(phoneRef.current)) {
+        logOtpHook('resend_otp_mock_mode', {
+          requestId,
+          phoneMasked: maskPhoneForLog(phoneRef.current),
+          mockCode: MOCK_TEST_OTP,
+        });
+        toast.success('Đã gửi lại OTP', `Mã test: ${MOCK_TEST_OTP}`);
+        return true;
+      }
+
+      logOtpHook('resend_otp_api_request', {
+        requestId,
+        endpoint: '/resend-otp',
+        phoneMasked: maskPhoneForLog(phoneRef.current),
+      });
+
+      const response = await authApi.resendOtp({ phoneNumber: phoneRef.current });
+
+      logOtpHook('resend_otp_api_response', {
+        requestId,
+        durationMs: Date.now() - startedAt,
+        success: response.success,
+        message: response.message,
+        error: response.error,
+      });
+
+      if (!response.success) {
+        const errorMessage = response.message || 'Không thể gửi lại mã OTP. Vui lòng thử lại.';
+        setError(errorMessage);
+        toast.error('Gửi lại thất bại', errorMessage);
+        return false;
+      }
+
+      toast.success('Đã gửi lại OTP', 'Vui lòng kiểm tra tin nhắn SMS của bạn.');
+      logOtpHook('resend_otp_success', {
+        requestId,
+        durationMs: Date.now() - startedAt,
+      });
+      return true;
+    } catch (err) {
+      logOtpHook('resend_otp_exception', {
+        requestId,
+        durationMs: Date.now() - startedAt,
+        exception: serializeError(err),
+      });
+
+      const errorMessage = 'Không thể gửi lại OTP. Vui lòng thử lại.';
+      setError(errorMessage);
+      toast.error('Lỗi kết nối', errorMessage);
+      return false;
+    } finally {
+      setIsLoading(false);
+      logOtpHook('resend_otp_finish', {
+        requestId,
+        totalDurationMs: Date.now() - startedAt,
+        isLoadingSetTo: false,
+      });
+    }
+  }, [toast]);
 
   return {
     isLoading,

@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import * as Haptics from 'expo-haptics';
 import { itemsApi } from '@/services/items';
 import type { ScanItemResponse } from '@/types/item';
@@ -43,7 +43,7 @@ export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQR
     try {
       const permission = await Camera.requestCameraPermission();
 
-      if (permission === 'granted' || permission === 'authorized') {
+      if (permission === 'granted' || (permission as string) === 'authorized') {
         setHasPermission(true);
         setError(null);
       } else {
@@ -55,6 +55,54 @@ export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQR
       setError('Không thể yêu cầu quyền camera');
     }
   }, []);
+
+  // Record scan event to backend
+  const recordScanEvent = useCallback(async (itemId: string) => {
+    try {
+      // TODO: Call API to record scan event
+      console.log('Scan event recorded for item:', itemId);
+    } catch (err) {
+      console.error('Error recording scan:', err);
+    }
+  }, []);
+
+  // Fetch scan data and determine navigation
+  const fetchScanData = useCallback(
+    async (itemId: string) => {
+      try {
+        // TODO: Call actual scan API endpoint: /api/scan/:itemId
+        // For now, we'll use getItemById and check ownership
+        await itemsApi.getItemById(itemId);
+
+        // Record scan event
+        await recordScanEvent(itemId);
+
+        // Determine if this is user's own item
+        // This should ideally be done by comparing user.memberId with item.ownerId
+        // But for now, we assume if we can fetch it, it's our item
+        const isOwnItem = true; // TODO: Compare with current user's memberId
+
+        // Notify parent with result
+        setTimeout(() => {
+          onScanSuccess({
+            itemId,
+            isOwnItem,
+            // scanData will be populated by actual scan API
+          });
+        }, 500);
+      } catch (err) {
+        console.error('Error fetching scan data:', err);
+        // On error, treat as own item and navigate to ItemDetails
+        setTimeout(() => {
+          onScanSuccess({
+            itemId,
+            isOwnItem: true,
+          });
+        }, 500);
+      }
+    },
+    [recordScanEvent, onScanSuccess]
+  );
 
   // Handle scanned QR code
   const handleCodeScanned = useCallback(
@@ -113,53 +161,8 @@ export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQR
       // Fetch scan data from API to determine if it's user's own item
       fetchScanData(itemId);
     },
-    [onScanSuccess]
+    [fetchScanData]
   );
-
-  // Fetch scan data and determine navigation
-  const fetchScanData = async (itemId: string) => {
-    try {
-      // TODO: Call actual scan API endpoint: /api/scan/:itemId
-      // For now, we'll use getItemById and check ownership
-      const item = await itemsApi.getItemById(itemId);
-
-      // Record scan event
-      await recordScanEvent(itemId);
-
-      // Determine if this is user's own item
-      // This should ideally be done by comparing user.memberId with item.ownerId
-      // But for now, we assume if we can fetch it, it's our item
-      const isOwnItem = true; // TODO: Compare with current user's memberId
-
-      // Notify parent with result
-      setTimeout(() => {
-        onScanSuccess({
-          itemId,
-          isOwnItem,
-          // scanData will be populated by actual scan API
-        });
-      }, 500);
-    } catch (err) {
-      console.error('Error fetching scan data:', err);
-      // On error, treat as own item and navigate to ItemDetails
-      setTimeout(() => {
-        onScanSuccess({
-          itemId,
-          isOwnItem: true,
-        });
-      }, 500);
-    }
-  };
-
-  // Record scan event to backend
-  const recordScanEvent = async (itemId: string) => {
-    try {
-      // TODO: Call API to record scan event
-      console.log('Scan event recorded for item:', itemId);
-    } catch (err) {
-      console.error('Error recording scan:', err);
-    }
-  };
 
   // Reset scanner state
   const resetScanner = useCallback(() => {

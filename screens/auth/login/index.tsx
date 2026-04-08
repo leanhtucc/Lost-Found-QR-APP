@@ -102,7 +102,7 @@ export const LoginScreen: React.FC = () => {
 
           {/* Register Link */}
           <View className="flex-row justify-center mt-10 mb-4">
-            <Text className="text-sm font-medium text-[#A1A1AA]">Bạn chưa có tài khoản? </Text>
+            <Text className="text-sm font-medium text-[#A1A1AA]">Bạn chưa có tài khoản?</Text>
             <TouchableOpacity onPress={navigateToRegister}>
               <Text className="text-sm font-bold text-[#7C6AF6]">Tham gia ngay</Text>
             </TouchableOpacity>

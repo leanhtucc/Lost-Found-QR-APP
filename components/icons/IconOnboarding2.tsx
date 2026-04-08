@@ -13,15 +13,7 @@ import Svg, {
 /* SVGR has dropped some elements not supported by react-native-svg: div, filter */
 import type { SvgProps } from 'react-native-svg';
 const SvgIconOnboarding2 = (props: SvgProps) => (
-  <Svg
-    xmlns="http://www.w3.org/2000/svg"
-    xmlnsXlink="http://www.w3.org/1999/xlink"
-    width={24}
-    height={24}
-    fill="none"
-    viewBox="0 0 454 401"
-    {...props}
-  >
+  <Svg width={24} height={24} fill="none" viewBox="0 0 454 401" {...props}>
     <G filter="url(#IconOnboarding2_svg__a)">
       <Rect width={326} height={273} x={64} y={64} fill="#ADA3FF" fillOpacity={0.05} rx={136.5} />
     </G>
@@ -35,7 +27,6 @@ const SvgIconOnboarding2 = (props: SvgProps) => (
           fill="#fff"
           fillOpacity={0.01}
           rx={16}
-          shapeRendering="crispEdges"
           transform="rotate(-4 90.382 81.858)"
         />
         <Path
@@ -47,9 +38,6 @@ const SvgIconOnboarding2 = (props: SvgProps) => (
           fill="#fff"
           fillOpacity={0.2}
           d="M0 0h254.001v254.001H0z"
-          style={{
-            mixBlendMode: 'saturation',
-          }}
           transform="rotate(-4 1231.06 -1267.993)"
         />
       </G>
@@ -61,7 +49,6 @@ const SvgIconOnboarding2 = (props: SvgProps) => (
         stroke="#48474D"
         strokeOpacity={0.2}
         rx={15.5}
-        shapeRendering="crispEdges"
         transform="rotate(-4 90.916 82.322)"
       />
     </G>
@@ -75,7 +62,6 @@ const SvgIconOnboarding2 = (props: SvgProps) => (
         fill="#25252D"
         fillOpacity={0.6}
         rx={16}
-        shapeRendering="crispEdges"
       />
       <Rect
         width={80.23}
@@ -85,7 +71,6 @@ const SvgIconOnboarding2 = (props: SvgProps) => (
         stroke="#70FFBA"
         strokeOpacity={0.2}
         rx={15.5}
-        shapeRendering="crispEdges"
       />
       <Path
         fill="#70FFBA"
@@ -135,11 +120,15 @@ const SvgIconOnboarding2 = (props: SvgProps) => (
       />
     </G>
     <Defs>
-      <ClipPath id="IconOnboarding2_svg__e" transform="translate(-267.772 -18.618)">
-        <Rect width={81.23} height={84.5} x={297.772} y={48.618} rx={16} />
+      <ClipPath id="IconOnboarding2_svg__e">
+        <G transform="translate(-267.772 -18.618)">
+          <Rect width={81.23} height={84.5} x={297.772} y={48.618} rx={16} />
+        </G>
       </ClipPath>
-      <ClipPath id="IconOnboarding2_svg__g" transform="translate(-63.002 -266.618)">
-        <Rect width={179.11} height={58} x={83.002} y={286.618} rx={12} />
+      <ClipPath id="IconOnboarding2_svg__g">
+        <G transform="translate(-63.002 -266.618)">
+          <Rect width={179.11} height={58} x={83.002} y={286.618} rx={12} />
+        </G>
       </ClipPath>
       <ClipPath id="IconOnboarding2_svg__c">
         <Rect

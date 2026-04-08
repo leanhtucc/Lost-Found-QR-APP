@@ -10,8 +10,8 @@ import { authStorage } from '@storage/auth';
 import { authApi } from '@services/auth';
 import { User } from '@services/auth/types';
 
-// Session timeout in milliseconds (30 minutes = 30 * 60 * 1000)
-const SESSION_TIMEOUT = 30 * 60 * 1000;
+// Session timeout in milliseconds (7 days)
+const SESSION_TIMEOUT = 7 * 24 * 60 * 60 * 1000;
 
 // Storage key for last activity
 const LAST_ACTIVITY_KEY = 'auth_last_activity';
@@ -103,7 +103,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Check if session expired
       const sessionExpired = await checkSessionExpired();
       if (sessionExpired) {
-        // eslint-disable-next-line no-console
         console.log('Session expired, logging out...');
         await logout();
         return false;
@@ -155,7 +154,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isAuthenticated) {
           const sessionExpired = await checkSessionExpired();
           if (sessionExpired) {
-            // eslint-disable-next-line no-console
             console.log('Session expired while in background, logging out...');
             await logout();
           } else {
