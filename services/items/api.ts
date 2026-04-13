@@ -17,6 +17,7 @@ import {
 } from '@/types';
 import { getApiUrl } from '@constants/environment';
 import { authStorage } from '@storage/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Base URL cho Items API

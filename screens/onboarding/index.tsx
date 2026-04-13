@@ -7,17 +7,17 @@ import {
   Animated as RNAnimated,
   StatusBar,
   ViewToken,
+  Dimensions,
 } from 'react-native';
+import Constants from 'expo-constants';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
-import { Button } from '@components/atoms/Button';
 import { SlideItem } from './components/SlideItem';
 import { DotIndicator } from './components/DotIndicator';
 import { slides } from './data/slides';
 import { appStorage } from '@storage/app';
-import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
 import { IconLogoOnboarding } from '@components/icons';
 import Animated, {
   useSharedValue,
@@ -38,6 +38,10 @@ interface ViewableItemsChanged {
 export const OnboardingScreen: React.FC = () => {
   const navigation = useNavigation<OnboardingNavigationProp>();
   const insets = useSafeAreaInsets();
+  const screenHeight = Dimensions.get('window').height;
+  const screenWidth = Dimensions.get('window').width;
+  const isCompactHeight = screenHeight < 700;
+  const pageWidth = Math.max(screenWidth - 48, 280);
 
   // State
   const [showSplash, setShowSplash] = useState(true);
@@ -126,21 +130,28 @@ export const OnboardingScreen: React.FC = () => {
   const renderedButtonIcon = ButtonIcon ? <ButtonIcon {...(buttonIconProps ?? {})} /> : undefined;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0E0E13' }}>
-      <Animated.View style={[{ flex: 1, backgroundColor: '#0E0E13' }, enterAnimatedStyle]}>
-        <SafeAreaView className="flex-1 bg-[#0E0E13]" edges={['top', 'bottom']}>
-          <StatusBar barStyle="light-content" backgroundColor="#0E0E13" />
-          <ResponsiveContainer className="flex-1" variant="form">
+    <View style={{ flex: 1, backgroundColor: '#0F0F17' }}>
+      <Animated.View style={[{ flex: 1, backgroundColor: '#0F0F17' }, enterAnimatedStyle]}>
+        <SafeAreaView className="flex-1 bg-[#0F0F17]" edges={['top', 'bottom']}>
+          <StatusBar barStyle="light-content" backgroundColor="#0F0F17" />
+          <View
+            className="flex-1 px-6"
+            style={{
+              paddingTop: Math.max(Constants.statusBarHeight * 0.08, 2),
+            }}
+          >
             {/* ── Header: Logo FindBack + Skip ── */}
-            <View className="flex-row items-center justify-between px-5 py-3">
+            <View
+              className={`flex-row items-center justify-between ${isCompactHeight ? 'mt-2' : 'mt-4'}`}
+            >
               <View className="flex-row items-center gap-[7px]">
                 <IconLogoOnboarding width={32} height={32} />
                 <Text className="text-[#F9F5FD] text-base font-bold tracking-[0.1px]">
                   FindBack
                 </Text>
               </View>
-              <TouchableOpacity onPress={handleSkip} className="py-1 px-1.5" activeOpacity={0.6}>
-                <Text className="text-[#ACAAB1] text-sm font-medium">Skip</Text>
+              <TouchableOpacity onPress={handleSkip} className="px-1.5 py-1" activeOpacity={0.6}>
+                <Text className="text-sm font-medium text-gray-400">Skip</Text>
               </TouchableOpacity>
             </View>
 
@@ -150,7 +161,13 @@ export const OnboardingScreen: React.FC = () => {
                 ref={flatListRef}
                 data={slides}
                 renderItem={({ item, index }) => (
-                  <SlideItem item={item} index={index} scrollX={scrollX} />
+                  <SlideItem
+                    item={item}
+                    index={index}
+                    scrollX={scrollX}
+                    isCompactHeight={isCompactHeight}
+                    pageWidth={pageWidth}
+                  />
                 )}
                 keyExtractor={item => item.id}
                 horizontal
@@ -167,26 +184,43 @@ export const OnboardingScreen: React.FC = () => {
             </View>
 
             {/* ── Bottom: Dots + CTA ── */}
-            <View className="px-4 pt-1" style={{ paddingBottom: Math.max(insets.bottom, 20) }}>
-              <DotIndicator data={slides} scrollX={scrollX} onDotPress={handleDotPress} />
+            <View className="mt-auto">
+              <DotIndicator
+                data={slides}
+                scrollX={scrollX}
+                onDotPress={handleDotPress}
+                isCompactHeight={isCompactHeight}
+                pageWidth={pageWidth}
+              />
 
               {/* Design Spell: spring scale bọc ngoài Button — scale là Animated.Value bắt buộc inline */}
-              <RNAnimated.View style={{ transform: [{ scale: buttonScale }] }}>
-                {/* style → tăng minHeight; textClassName → text trắng sáng; rightIcon → icon từ slides.ts */}
-                <Button
-                  variant="primary"
+              <RNAnimated.View
+                style={{ transform: [{ scale: buttonScale }] }}
+                className={isCompactHeight ? 'mb-6' : 'mb-10'}
+              >
+                <TouchableOpacity
                   onPress={handleNext}
                   onPressIn={onPressIn}
                   onPressOut={onPressOut}
-                  style={{ minHeight: 64 }}
-                  textClassName="text-white text-[17px] font-bold tracking-[0.3px]"
-                  rightIcon={renderedButtonIcon}
+                  activeOpacity={0.9}
+                  className="h-14 w-full flex-row items-center justify-center rounded-2xl bg-[#6C63FF]"
                 >
-                  {buttonLabel}
-                </Button>
+                  <Text
+                    className={
+                      isCompactHeight
+                        ? 'text-base font-bold tracking-[0.2px] text-white'
+                        : 'text-lg font-bold tracking-[0.3px] text-white'
+                    }
+                  >
+                    {buttonLabel}
+                  </Text>
+                  {renderedButtonIcon ? <View className="ml-2">{renderedButtonIcon}</View> : null}
+                </TouchableOpacity>
               </RNAnimated.View>
+
+              <View style={{ height: Math.max(insets.bottom - 6, 0) }} />
             </View>
-          </ResponsiveContainer>
+          </View>
         </SafeAreaView>
       </Animated.View>
       {showSplash && (

@@ -223,7 +223,13 @@ export interface GoogleLoginResponseData {
 export interface FirebaseVerifyResponseData {
   isNewUser: boolean;
   user: User;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
+  // Backward compatibility for legacy payloads that still nest tokens.
+  token?: {
+    accessToken?: string;
+    refreshToken?: string;
+  };
 }
 
 /**

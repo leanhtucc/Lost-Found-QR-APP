@@ -4,10 +4,10 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { ChevronLeft, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react-native';
 import { useAuth } from '@hooks/useAuth';
@@ -115,24 +115,24 @@ export const ResetPasswordScreen: React.FC = () => {
   // Success state
   if (isSuccess) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
-        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <SafeAreaView className="flex-1 bg-[#0E0E13]" edges={['top', 'bottom']}>
+        <StatusBar barStyle="light-content" backgroundColor="#0E0E13" />
         <ResponsiveContainer className="flex-1 justify-center items-center px-6" variant="form">
-          <View className="w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-6">
+          <View className="w-20 h-20 rounded-full bg-[#5EF1AC]/20 items-center justify-center mb-6">
             <Text className="text-4xl">✅</Text>
           </View>
 
-          <Text className="text-2xl font-bold text-gray-900 text-center mb-4">
+          <Text className="text-2xl font-bold text-white text-center mb-4">
             Đặt lại mật khẩu thành công!
           </Text>
 
-          <Text className="text-base text-gray-500 text-center leading-6 mb-8">
+          <Text className="text-base text-[#A1A1AA] text-center leading-6 mb-8">
             Bạn có thể đăng nhập với mật khẩu mới ngay bây giờ.
           </Text>
 
           <TouchableOpacity
             onPress={navigateToLogin}
-            className="bg-blue-600 py-4 px-8 rounded-full"
+            className="bg-[#7C6AF6] py-4 px-8 rounded-full"
           >
             <Text className="text-white text-base font-semibold">Đăng nhập ngay</Text>
           </TouchableOpacity>
@@ -142,8 +142,8 @@ export const ResetPasswordScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <SafeAreaView className="flex-1 bg-[#0E0E13]" edges={['top', 'bottom']}>
+      <StatusBar barStyle="light-content" backgroundColor="#0E0E13" />
       <KeyboardAwareScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
@@ -155,22 +155,22 @@ export const ResetPasswordScreen: React.FC = () => {
           {/* Back Button */}
           <TouchableOpacity
             onPress={handleGoBack}
-            className="w-10 h-10 rounded-xl bg-gray-100 items-center justify-center mb-8"
+            className="w-10 h-10 rounded-xl bg-[#1A1A24] items-center justify-center mb-8"
           >
-            <ChevronLeft size={24} color="#1f2937" />
+            <ChevronLeft size={24} color="#FFFFFF" />
           </TouchableOpacity>
 
           {/* Title & Description */}
           <View className="mb-8">
-            <Text className="text-3xl font-bold text-gray-900 mb-3">Đặt lại mật khẩu</Text>
-            <Text className="text-base text-gray-500 leading-6">
+            <Text className="text-3xl font-bold text-white mb-3">Đặt lại mật khẩu</Text>
+            <Text className="text-base text-[#A1A1AA] leading-6">
               Nhập mật khẩu mới cho tài khoản của bạn.
             </Text>
           </View>
 
           {/* New Password Input */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-gray-700 mb-2">Mật khẩu mới</Text>
+            <Text className="text-sm font-medium text-[#A1A1AA] mb-2">Mật khẩu mới</Text>
             <View className="relative">
               <TextInput
                 value={newPassword}
@@ -181,8 +181,8 @@ export const ResetPasswordScreen: React.FC = () => {
                 placeholder="••••••••"
                 secureTextEntry={!showNewPassword}
                 autoCapitalize="none"
-                className="h-14 border border-gray-200 rounded-xl px-4 pr-12 text-base text-gray-900 bg-gray-50"
-                placeholderTextColor="#9ca3af"
+                className="h-14 border border-[#303046] rounded-xl px-4 pr-12 text-base text-white bg-[#101221]"
+                placeholderTextColor="#6B7280"
               />
               <TouchableOpacity
                 onPress={() => setShowNewPassword(!showNewPassword)}
@@ -200,18 +200,18 @@ export const ResetPasswordScreen: React.FC = () => {
             )}
 
             {/* Password Requirements - More compact */}
-            <View className="mt-2 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
+            <View className="mt-2 bg-[#1A1A24] rounded-xl p-3 border border-[#303046]">
               <View className="flex-row flex-wrap">
                 {passwordValidation.map(rule => (
                   <View key={rule.id} className="flex-row items-center mr-3 mb-1">
                     {rule.passed ? (
-                      <CheckCircle2 size={14} color="#22c55e" />
+                      <CheckCircle2 size={14} color="#5EF1AC" />
                     ) : (
-                      <Circle size={14} color="#9ca3af" />
+                      <Circle size={14} color="#6B7280" />
                     )}
                     <Text
                       className={`ml-1.5 text-[11px] ${
-                        rule.passed ? 'text-green-600' : 'text-gray-500'
+                        rule.passed ? 'text-[#5EF1AC]' : 'text-[#A1A1AA]'
                       }`}
                     >
                       {rule.label}
@@ -224,7 +224,7 @@ export const ResetPasswordScreen: React.FC = () => {
 
           {/* Confirm Password Input */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu</Text>
+            <Text className="text-sm font-medium text-[#A1A1AA] mb-2">Xác nhận mật khẩu</Text>
             <View className="relative">
               <TextInput
                 value={confirmPassword}
@@ -235,8 +235,8 @@ export const ResetPasswordScreen: React.FC = () => {
                 placeholder="••••••••"
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
-                className="h-14 border border-gray-200 rounded-xl px-4 pr-12 text-base text-gray-900 bg-gray-50"
-                placeholderTextColor="#9ca3af"
+                className="h-14 border border-[#303046] rounded-xl px-4 pr-12 text-base text-white bg-[#101221]"
+                placeholderTextColor="#6B7280"
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -257,12 +257,12 @@ export const ResetPasswordScreen: React.FC = () => {
               <View className="flex-row items-center mt-1.5 ml-1">
                 {newPassword === confirmPassword ? (
                   <>
-                    <CheckCircle2 size={14} color="#22c55e" />
-                    <Text className="ml-1 text-[11px] text-green-600">Mật khẩu khớp</Text>
+                    <CheckCircle2 size={14} color="#5EF1AC" />
+                    <Text className="ml-1 text-[11px] text-[#5EF1AC]">Mật khẩu khớp</Text>
                   </>
                 ) : (
                   <>
-                    <Circle size={14} color="#ef4444" />
+                    <Circle size={14} color="#EF4444" />
                     <Text className="ml-1 text-[11px] text-red-500">Mật khẩu không khớp</Text>
                   </>
                 )}
@@ -275,7 +275,7 @@ export const ResetPasswordScreen: React.FC = () => {
             onPress={handleResetPassword}
             disabled={!isFormValid || isLoading}
             className={`h-14 rounded-full justify-center items-center mb-8 ${
-              isFormValid && !isLoading ? 'bg-blue-600' : 'bg-blue-300'
+              isFormValid && !isLoading ? 'bg-[#7C6AF6]' : 'bg-[#7C6AF6]/40'
             }`}
           >
             {isLoading ? (
@@ -293,7 +293,7 @@ export const ResetPasswordScreen: React.FC = () => {
           {/* Back to Login Link */}
           <View className="flex-row justify-center pb-8">
             <TouchableOpacity onPress={navigateToLogin}>
-              <Text className="text-base font-semibold text-blue-600">Quay lại đăng nhập</Text>
+              <Text className="text-base font-semibold text-[#7C6AF6]">Quay lại đăng nhập</Text>
             </TouchableOpacity>
           </View>
         </ResponsiveContainer>

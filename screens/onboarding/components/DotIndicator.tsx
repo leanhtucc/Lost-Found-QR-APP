@@ -1,20 +1,28 @@
 import React from 'react';
-import { View, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { View, TouchableOpacity, Animated } from 'react-native';
 import { SlideData } from '../data/slides';
-
-const { width } = Dimensions.get('window');
 
 interface DotIndicatorProps {
   data: SlideData[];
   scrollX: Animated.Value;
   onDotPress: (index: number) => void;
+  isCompactHeight?: boolean;
+  pageWidth: number;
 }
 
-export const DotIndicator: React.FC<DotIndicatorProps> = ({ data, scrollX, onDotPress }) => {
+export const DotIndicator: React.FC<DotIndicatorProps> = ({
+  data,
+  scrollX,
+  onDotPress,
+  isCompactHeight = false,
+  pageWidth,
+}) => {
   return (
-    <View className="flex-row justify-center items-center gap-1.5 mb-5">
+    <View
+      className={`flex-row items-center justify-center gap-2 ${isCompactHeight ? 'my-5' : 'my-8'}`}
+    >
       {data.map((_, index) => {
-        const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
+        const inputRange = [(index - 1) * pageWidth, index * pageWidth, (index + 1) * pageWidth];
 
         // width, backgroundColor, opacity là Animated.Value → bắt buộc dùng inline style
         const dotWidth = scrollX.interpolate({
@@ -42,7 +50,7 @@ export const DotIndicator: React.FC<DotIndicatorProps> = ({ data, scrollX, onDot
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Animated.View
-              className="h-1 rounded-sm"
+              className="h-1.5 rounded-full"
               style={{ width: dotWidth, backgroundColor, opacity }}
             />
           </TouchableOpacity>

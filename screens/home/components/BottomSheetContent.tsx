@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Item } from '@/types/item';
 import { HomeItemCard } from './HomeItemCard';
 import { Plus } from 'lucide-react-native';
-
 interface BottomSheetContentProps {
   items: Item[];
   onSelectItem: (itemId: string) => void;

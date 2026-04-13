@@ -484,31 +484,6 @@ export const CodeVerifyScreen: React.FC = () => {
           )}
         </Animated.View>
 
-        {smsAvailable && otpSent && (
-          <Animated.View entering={FadeInDown.delay(300).springify()} className="items-center mb-5">
-            <TouchableOpacity
-              onPress={handleOpenSms}
-              disabled={isSmsLoading}
-              activeOpacity={0.75}
-              className="flex-row items-center gap-2 py-3 px-5 rounded-2xl border border-[#2A2A3A] bg-[#14141F]"
-              accessibilityLabel="Mở ứng dụng SMS để xem mã"
-            >
-              <MessageSquare size={16} color={isSmsLoading ? '#555' : '#B39CFF'} />
-              <Text
-                className={cn(
-                  'text-sm font-medium',
-                  isSmsLoading ? 'text-[#555]' : 'text-[#B39CFF]'
-                )}
-              >
-                {isSmsLoading ? 'Đang mở...' : 'Xem tin nhắn SMS'}
-              </Text>
-            </TouchableOpacity>
-            <Text className="text-[11px] text-[#555] mt-2 text-center">
-              Mở nhanh inbox SMS để tìm mã OTP
-            </Text>
-          </Animated.View>
-        )}
-
         <Animated.View
           style={[
             glowWrapStyle,

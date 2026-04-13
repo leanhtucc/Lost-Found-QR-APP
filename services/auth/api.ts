@@ -50,6 +50,59 @@ const logAuthApi = (event: string, details?: Record<string, unknown>) => {
   console.log(`${AUTH_API_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
 };
 
+interface LegacyTokenPair {
+  accessToken?: string;
+  refreshToken?: string;
+}
+
+type AuthTokenPayload = {
+  accessToken?: string;
+  refreshToken?: string;
+  token?: string | LegacyTokenPair;
+};
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
+
+const extractAuthTokens = (
+  payload?: AuthTokenPayload
+): { accessToken: string; refreshToken: string } | null => {
+  if (!payload) return null;
+
+  if (isNonEmptyString(payload.accessToken) && isNonEmptyString(payload.refreshToken)) {
+    return {
+      accessToken: payload.accessToken,
+      refreshToken: payload.refreshToken,
+    };
+  }
+
+  if (payload.token && typeof payload.token === 'object') {
+    const tokenPayload = payload.token as LegacyTokenPair;
+    if (isNonEmptyString(tokenPayload.accessToken) && isNonEmptyString(tokenPayload.refreshToken)) {
+      return {
+        accessToken: tokenPayload.accessToken,
+        refreshToken: tokenPayload.refreshToken,
+      };
+    }
+  }
+
+  if (isNonEmptyString(payload.token)) {
+    return {
+      accessToken: payload.token,
+      refreshToken: isNonEmptyString(payload.refreshToken) ? payload.refreshToken : payload.token,
+    };
+  }
+
+  return null;
+};
+
+const withInvalidAuthPayload = <T>(response: ApiResponse<T>, message: string): ApiResponse<T> => ({
+  ...response,
+  success: false,
+  message,
+  error: 'INVALID_AUTH_PAYLOAD',
+});
+
 /**
  * Helper function to make API requests
  */
@@ -154,6 +207,8 @@ export const authApi = {
       body: JSON.stringify(data),
     });
 
+    const extractedTokens = extractAuthTokens(response.data);
+
     logAuthApi('verify_otp_request_result', {
       requestId,
       durationMs: Date.now() - startedAt,
@@ -161,19 +216,26 @@ export const authApi = {
       message: response.message,
       error: response.error,
       hasData: Boolean(response.data),
-      hasAccessToken: Boolean(response.data?.accessToken || response.data?.token),
-      hasRefreshToken: Boolean(response.data?.refreshToken || response.data?.token),
+      hasAccessToken: Boolean(extractedTokens?.accessToken),
+      hasRefreshToken: Boolean(extractedTokens?.refreshToken),
       hasUser: Boolean(response.data?.user),
     });
 
     // Store tokens on success
     if (response.success && response.data) {
-      const accessToken = response.data.accessToken || response.data.token;
-      const refreshToken = response.data.refreshToken || accessToken;
-
-      if (accessToken && refreshToken) {
-        await authStorage.saveTokens(accessToken, refreshToken);
+      if (!extractedTokens) {
+        logAuthApi('verify_otp_tokens_missing', {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          responseDataKeys: Object.keys(response.data),
+        });
+        return withInvalidAuthPayload(
+          response,
+          'Thiếu access token hoặc refresh token từ phản hồi verify OTP.'
+        );
       }
+
+      await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
 
       // Only save user if it exists in response
       if (response.data.user) {
@@ -254,7 +316,12 @@ export const authApi = {
 
     // Store tokens on success
     if (response.success && response.data) {
-      await authStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
+      const extractedTokens = extractAuthTokens(response.data);
+      if (!extractedTokens) {
+        return withInvalidAuthPayload(response, 'Thiếu access token hoặc refresh token từ login.');
+      }
+
+      await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
     }
 
     return response;
@@ -272,7 +339,15 @@ export const authApi = {
 
     // Store tokens and user on success
     if (response.success && response.data) {
-      await authStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
+      const extractedTokens = extractAuthTokens(response.data);
+      if (!extractedTokens) {
+        return withInvalidAuthPayload(
+          response,
+          'Thiếu access token hoặc refresh token từ Google login.'
+        );
+      }
+
+      await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
       await authStorage.saveUser(response.data.user);
     }
 
@@ -293,8 +368,15 @@ export const authApi = {
 
     // Store tokens and user on success
     if (response.success && response.data) {
-      // Backend returns a single 'token' which acts as access/refresh token in this context
-      await authStorage.saveTokens(response.data.token, response.data.token);
+      const extractedTokens = extractAuthTokens(response.data);
+      if (!extractedTokens) {
+        return withInvalidAuthPayload(
+          response,
+          'Thiếu access token hoặc refresh token từ phản hồi firebase-verify.'
+        );
+      }
+
+      await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
       await authStorage.saveUser(response.data.user);
     }
 
@@ -312,7 +394,15 @@ export const authApi = {
 
     // Update stored tokens on success
     if (response.success && response.data) {
-      await authStorage.saveTokens(response.data.accessToken, response.data.refreshToken);
+      const extractedTokens = extractAuthTokens(response.data);
+      if (!extractedTokens) {
+        return withInvalidAuthPayload(
+          response,
+          'Thiếu access token hoặc refresh token từ refresh.'
+        );
+      }
+
+      await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
     }
 
     return response;

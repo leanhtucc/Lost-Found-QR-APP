@@ -11,6 +11,7 @@ import { RootStackParamList } from '@navigation/index';
 import { authApi } from '@services/auth';
 import { useToast } from '@contexts/ToastContext';
 import { useAuthContext } from '@contexts/AuthContext';
+import { normalizePhoneNumber } from '@services/firebase/phoneAuth';
 
 type AuthNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -223,11 +224,13 @@ export const useAuth = (): UseAuthReturn => {
       const requestId = `reg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const startedAt = Date.now();
 
+      const normalizedPhone = normalizePhoneNumber(phoneNumber);
+
       logRegisterFlow('register_start', {
         requestId,
         displayNameLength: displayName.trim().length,
         email,
-        phoneMasked: maskPhoneForLog(phoneNumber),
+        phoneMasked: maskPhoneForLog(normalizedPhone),
         passwordLength: password.length,
         hasPhotoURL: Boolean(photoURL),
       });
@@ -240,7 +243,7 @@ export const useAuth = (): UseAuthReturn => {
           email,
           password,
           displayName,
-          phoneNumber,
+          phoneNumber: normalizedPhone,
           photoURL,
         });
 
@@ -258,12 +261,12 @@ export const useAuth = (): UseAuthReturn => {
             requestId,
             durationMs: Date.now() - startedAt,
             nextStep: 'navigate_to_code_verify',
-            phoneMasked: maskPhoneForLog(phoneNumber),
+            phoneMasked: maskPhoneForLog(normalizedPhone),
           });
           return true;
         } else {
           const shouldBypassForMockPhone =
-            isMockTestPhone(phoneNumber) &&
+            isMockTestPhone(normalizedPhone) &&
             /(đã được đăng ký|already|exists|duplicate)/i.test(
               `${response.message || ''} ${response.error || ''}`
             );
@@ -274,13 +277,13 @@ export const useAuth = (): UseAuthReturn => {
             message: response.message,
             error: response.error,
             shouldBypassForMockPhone,
-            isMockPhone: isMockTestPhone(phoneNumber),
+            isMockPhone: isMockTestPhone(normalizedPhone),
           });
 
           if (shouldBypassForMockPhone) {
             logRegisterFlow('register_mock_bypass_enabled', {
               requestId,
-              phoneMasked: maskPhoneForLog(phoneNumber),
+              phoneMasked: maskPhoneForLog(normalizedPhone),
               reason: 'phone_exists_in_backend_and_mock_mode_enabled',
             });
             toast.success('Chế độ test OTP', 'Bỏ qua bước đăng ký, dùng mã test 123456 ở màn OTP.');
@@ -328,11 +331,12 @@ export const useAuth = (): UseAuthReturn => {
    */
   const verifyOtp = useCallback(
     async (phoneNumber: string, code: string): Promise<boolean> => {
+      const normalizedPhone = normalizePhoneNumber(phoneNumber);
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await authApi.verifyOtp({ phoneNumber, code });
+        const response = await authApi.verifyOtp({ phoneNumber: normalizedPhone, code });
 
         if (response.success) {
           if (response.data?.user) {
@@ -383,11 +387,12 @@ export const useAuth = (): UseAuthReturn => {
    * Resend OTP code
    */
   const resendOtp = useCallback(async (phoneNumber: string): Promise<boolean> => {
+    const normalizedPhone = normalizePhoneNumber(phoneNumber);
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await authApi.resendOtp({ phoneNumber });
+      const response = await authApi.resendOtp({ phoneNumber: normalizedPhone });
 
       if (response.success) {
         Alert.alert('Thành công', 'Mã OTP mới đã được gửi đến số điện thoại của bạn.');
