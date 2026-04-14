@@ -192,10 +192,10 @@ Mỗi file < 200 dòng ✅
 
 ### Colors
 
-- Primary: `#3b82f6` (blue-500)
-- Success: `#10b981` (green-500)
-- Danger: `#ef4444` (red-500)
-- Gray: `#6b7280` (gray-500)
+- Primary: `FIND_BACK.primary`
+- Success: `FIND_BACK.secondary`
+- Danger: `FIND_BACK.danger`
+- Gray: `FIND_BACK.labelText`
 
 ### Border Radius
 
@@ -207,7 +207,7 @@ Mỗi file < 200 dòng ✅
 
 ```css
 shadow-sm: {
-  shadowColor: "#000",
+  shadowColor: "black",
   shadowOffset: { width: 0, height: 1 },
   shadowOpacity: 0.05,
   shadowRadius: 2,

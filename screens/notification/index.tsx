@@ -11,6 +11,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
 import { Notification } from '@/types/notification';
 import { getNotifications, markAllNotificationsAsRead } from '@/services/notifications';
+import { FIND_BACK } from '@constants/theme';
 import { NotificationHeader, NotificationCard, EmptyState, LoadingState } from './components';
 import { getMockNotifications } from './utils';
 
@@ -111,8 +112,8 @@ export default function NotificationsScreen() {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={['#3b82f6']}
-              tintColor="#3b82f6"
+              colors={[FIND_BACK.primary]}
+              tintColor={FIND_BACK.primary}
             />
           }
         >

@@ -1,86 +1,108 @@
 /**
  * User Info Card Component
- * Hiển thị thông tin cá nhân của user - Professional style
+ * Section Tài khoản theo Figma
  */
 
 import React from 'react';
-import { View, Text } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { User, CreditCard, Mail, Phone, MapPin, FileText } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { ChevronRight, Lock, Shield, User } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface UserInfoCardProps {
-  fullName: string;
-  memberId: string; // Changed from studentId
-  email: string;
-  phone: string;
-  address?: string;
-  bio?: string;
+  isVerified: boolean;
+  onPersonalInfoPress: () => void;
+  onChangePasswordPress: () => void;
+  onKycPress: () => void;
 }
 
-interface InfoRowProps {
-  icon: React.ComponentType<{ size: number; color: string }>;
+interface AccountRowProps {
+  icon: LucideIcon;
   label: string;
-  value: string;
+  borderTop?: boolean;
+  onPress: () => void;
+  rightContent?: React.ReactNode;
 }
 
-const InfoRow: React.FC<InfoRowProps> = ({ icon: Icon, label, value }) => (
-  <View className="flex-row items-center gap-4">
-    <View className="w-12 h-12 rounded-2xl bg-indigo-50 items-center justify-center">
-      <Icon size={22} color="#4f46e5" />
-    </View>
-    <View className="flex-1">
-      <Text className="text-xs text-gray-500 font-medium">{label}</Text>
-      <Text className="font-semibold text-gray-900 mt-1" numberOfLines={2}>
-        {value}
-      </Text>
-    </View>
-  </View>
-);
+function AccountRow({
+  icon: Icon,
+  label,
+  borderTop = false,
+  onPress,
+  rightContent,
+}: AccountRowProps) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.75}
+      onPress={onPress}
+      className={`flex-row items-center justify-between px-4 py-4 ${borderTop ? 'border-t border-fb-border-subtle' : ''}`}
+    >
+      <View className="flex-row items-center gap-4">
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated">
+          <Icon size={18} color={FIND_BACK.mutedText} />
+        </View>
+        <Text className="text-base font-medium text-fb-content">{label}</Text>
+      </View>
+      {rightContent}
+    </TouchableOpacity>
+  );
+}
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({
-  fullName,
-  memberId,
-  email,
-  phone,
-  address,
-  bio,
+  isVerified,
+  onPersonalInfoPress,
+  onChangePasswordPress,
+  onKycPress,
 }) => {
   return (
-    <Animated.View
-      entering={FadeInDown.duration(400).delay(250)}
-      className="mx-4 bg-white rounded-3xl p-6 shadow-sm"
-    >
-      <Text className="text-lg font-bold text-gray-900 mb-5">Thông tin cá nhân</Text>
-
-      <View className="space-y-5">
-        <InfoRow icon={User} label="Họ và tên" value={fullName} />
-
-        <View className="h-px bg-gray-100" />
-
-        <InfoRow icon={CreditCard} label="Mã thành viên" value={memberId} />
-
-        <View className="h-px bg-gray-100" />
-
-        <InfoRow icon={Mail} label="Email" value={email} />
-
-        <View className="h-px bg-gray-100" />
-
-        <InfoRow icon={Phone} label="Số điện thoại" value={phone || 'Chưa cập nhật'} />
-
-        {address && (
-          <>
-            <View className="h-px bg-gray-100" />
-            <InfoRow icon={MapPin} label="Địa chỉ" value={address} />
-          </>
-        )}
-
-        {bio && (
-          <>
-            <View className="h-px bg-gray-100" />
-            <InfoRow icon={FileText} label="Giới thiệu" value={bio} />
-          </>
-        )}
+    <View className="mt-8 gap-3">
+      <View className="px-2">
+        <Text className="text-[13px] font-bold uppercase tracking-[1.3px] text-fb-muted">
+          Tài khoản
+        </Text>
       </View>
-    </Animated.View>
+
+      <View className="overflow-hidden rounded-3xl bg-fb-surface">
+        <AccountRow
+          icon={User}
+          label="Thông tin cá nhân"
+          onPress={onPersonalInfoPress}
+          rightContent={<ChevronRight size={16} color={FIND_BACK.mutedText} />}
+        />
+
+        <AccountRow
+          icon={Lock}
+          label="Đổi mật khẩu"
+          borderTop
+          onPress={onChangePasswordPress}
+          rightContent={<ChevronRight size={16} color={FIND_BACK.mutedText} />}
+        />
+
+        <AccountRow
+          icon={Shield}
+          label="Xác minh danh tính KYC"
+          borderTop
+          onPress={onKycPress}
+          rightContent={
+            <View className="flex-row items-center gap-2">
+              <View
+                className={`rounded-full border px-2 py-1 ${
+                  isVerified
+                    ? 'border-fb-secondary/20 bg-fb-secondary/10'
+                    : 'border-fb-danger/20 bg-fb-danger/10'
+                }`}
+              >
+                <Text
+                  className={`text-[10px] font-bold ${isVerified ? 'text-fb-secondary' : 'text-fb-danger'}`}
+                >
+                  {isVerified ? 'Đã xác minh' : 'Chưa xác minh'}
+                </Text>
+              </View>
+              <ChevronRight size={16} color={FIND_BACK.mutedText} />
+            </View>
+          }
+        />
+      </View>
+    </View>
   );
 };

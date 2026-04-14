@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { ArrowLeft, Phone, Video, MoreVertical, BadgeCheck } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface ChatHeaderProps {
   userName: string;
@@ -40,7 +41,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             onPress={onBack}
             className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
           >
-            <ArrowLeft size={20} color="#111827" />
+            <ArrowLeft size={20} color={FIND_BACK.neutral} />
           </TouchableOpacity>
 
           {/* User Info */}
@@ -70,7 +71,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 <Text className="font-semibold text-gray-900" numberOfLines={1}>
                   {userName}
                 </Text>
-                {isVerified && <BadgeCheck size={16} color="#3b82f6" fill="#3b82f6" />}
+                {isVerified && (
+                  <BadgeCheck size={16} color={FIND_BACK.info} fill={FIND_BACK.info} />
+                )}
               </View>
               <View className="flex-row items-center gap-1">
                 {isOnline && <View className="w-1.5 h-1.5 rounded-full bg-green-500" />}
@@ -88,7 +91,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 onPress={onCallPress}
                 className="w-9 h-9 rounded-full items-center justify-center active:bg-gray-100"
               >
-                <Phone size={18} color="#6b7280" />
+                <Phone size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
             )}
             {onVideoPress && (
@@ -96,7 +99,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 onPress={onVideoPress}
                 className="w-9 h-9 rounded-full items-center justify-center active:bg-gray-100"
               >
-                <Video size={18} color="#6b7280" />
+                <Video size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
             )}
             {onMorePress && (
@@ -104,7 +107,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 onPress={onMorePress}
                 className="w-9 h-9 rounded-full items-center justify-center active:bg-gray-100"
               >
-                <MoreVertical size={18} color="#6b7280" />
+                <MoreVertical size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
             )}
           </View>

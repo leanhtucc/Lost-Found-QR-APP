@@ -31,10 +31,8 @@ import {
   User,
 } from './types';
 import { authStorage } from '@storage/auth';
-import { getAuthApiUrl } from '@constants/environment';
+import { buildAuthUrl } from '@services/shared/url';
 
-// Get API URL from environment
-const AUTH_BASE_URL = getAuthApiUrl();
 const AUTH_API_LOG_TAG = '[Auth:ApiService]';
 
 const normalizePhoneDigits = (phoneNumber: string): string => phoneNumber.replace(/\D/g, '');
@@ -107,7 +105,7 @@ const withInvalidAuthPayload = <T>(response: ApiResponse<T>, message: string): A
  * Helper function to make API requests
  */
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-  const url = `${AUTH_BASE_URL}${endpoint}`;
+  const url = buildAuthUrl(endpoint);
 
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',

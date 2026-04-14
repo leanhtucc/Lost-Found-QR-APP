@@ -23,14 +23,15 @@ import {
 } from '@screens/index';
 import { LoginScreen } from '@screens/auth/login';
 import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
-import { CodeVerifyScreen } from '@screens/auth/codeVerify/index';
-import { ForgotPasswordScreen } from '@screens/auth/forgotPass';
-import { ResetPasswordScreen } from '@screens/auth/resetPass';
 import { CongratulationScreen } from '@screens/auth/congratulation';
 import { OnboardingScreen } from '@screens/onboarding';
 import { TabNavigator } from './tab-navigator';
 import { appStorage } from '@storage/app';
 import { useAuthContext } from '@contexts/AuthContext';
+import { FIND_BACK } from '@constants/theme';
+import CodeVerifyScreen from '@/screens/auth/codeVerify';
+import ForgotPasswordScreen from '@/screens/auth/forgotPass';
+import ResetPasswordScreen from '@/screens/auth/resetPass';
 
 // Type definitions
 export type RootStackParamList = {
@@ -210,9 +211,14 @@ export default function RootStack() {
   if (authLoading || isCheckingOnboarding) {
     return (
       <View
-        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: FIND_BACK.canvas,
+        }}
       >
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color={FIND_BACK.primary} />
       </View>
     );
   }

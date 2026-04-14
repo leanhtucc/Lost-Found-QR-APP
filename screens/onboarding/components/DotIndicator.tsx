@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, Animated } from 'react-native';
+import { FIND_BACK } from '@constants/theme';
 import { SlideData } from '../data/slides';
 
 interface DotIndicatorProps {
@@ -33,7 +34,7 @@ export const DotIndicator: React.FC<DotIndicatorProps> = ({
 
         const backgroundColor = scrollX.interpolate({
           inputRange,
-          outputRange: ['#48474D', '#715FEA', '#48474D'],
+          outputRange: [FIND_BACK.labelText, FIND_BACK.primary, FIND_BACK.labelText],
           extrapolate: 'clamp',
         });
 

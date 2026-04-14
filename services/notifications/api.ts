@@ -11,8 +11,7 @@ import {
 } from '@/types/notification';
 import { authStorage } from '@/storage/auth';
 import { authApi } from '@/services/auth';
-
-const API_BASE = 'http://192.168.10.102:3000';
+import { buildAuthUrl, buildStreamUrl } from '@services/shared/url';
 
 const createHeaders = async (): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
@@ -75,7 +74,7 @@ const fetchWithAuth = async (url: string, options: RequestInit): Promise<Respons
  */
 export const updatePushToken = async (pushToken: string): Promise<void> => {
   try {
-    const url = `${API_BASE}/api/auth/profile`;
+    const url = buildAuthUrl('profile');
     const headers = await createHeaders();
     const response = await fetchWithAuth(url, {
       method: 'PATCH',
@@ -100,7 +99,7 @@ export const updatePushToken = async (pushToken: string): Promise<void> => {
  */
 export const getStreamToken = async (): Promise<StreamTokenResponse['data']> => {
   try {
-    const url = `${API_BASE}/api/stream/token`;
+    const url = buildStreamUrl('token');
     const headers = await createHeaders();
     const response = await fetchWithAuth(url, { method: 'GET', headers });
 
@@ -121,7 +120,7 @@ export const getStreamToken = async (): Promise<StreamTokenResponse['data']> => 
  */
 export const getNotifications = async (): Promise<NotificationsResponse['data']> => {
   try {
-    const url = `${API_BASE}/api/stream/notifications`;
+    const url = buildStreamUrl('notifications');
     const headers = await createHeaders();
     const response = await fetchWithAuth(url, { method: 'GET', headers });
 
@@ -142,7 +141,7 @@ export const getNotifications = async (): Promise<NotificationsResponse['data']>
  */
 export const markAllNotificationsAsRead = async (): Promise<void> => {
   try {
-    const url = `${API_BASE}/api/stream/notifications/mark-read`;
+    const url = buildStreamUrl('notifications', 'mark-read');
     const headers = await createHeaders();
     const response = await fetchWithAuth(url, {
       method: 'POST',
@@ -177,7 +176,7 @@ export const logActivity = async (
     if (metadata?.message) params.append('message', metadata.message);
     if (metadata?.location) params.append('location', metadata.location);
 
-    const url = `${API_BASE}/api/stream/activity/${activityType}${
+    const url = `${buildStreamUrl('activity', activityType)}${
       params.toString() ? `?${params}` : ''
     }`;
     const headers = await createHeaders();

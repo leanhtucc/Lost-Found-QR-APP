@@ -8,6 +8,7 @@ import { View, Text } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Camera } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FIND_BACK } from '@constants/theme';
 
 interface ScannerInstructionsProps {
   isScanning: boolean;
@@ -43,7 +44,7 @@ export const ScannerInstructions: React.FC<ScannerInstructionsProps> = ({
           {/* Camera Icon Indicator */}
           <Animated.View entering={FadeInUp.duration(500).delay(400)} className="mt-6">
             <LinearGradient
-              colors={['#3b82f6', '#2563eb']}
+              colors={[FIND_BACK.primary, FIND_BACK.primaryDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -55,7 +56,7 @@ export const ScannerInstructions: React.FC<ScannerInstructionsProps> = ({
               }}
               className="shadow-lg shadow-blue-500/40"
             >
-              <Camera size={32} color="#ffffff" strokeWidth={2.5} />
+              <Camera size={32} color={FIND_BACK.bodyText} strokeWidth={2.5} />
             </LinearGradient>
           </Animated.View>
         </View>

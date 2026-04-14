@@ -12,8 +12,8 @@ export interface TypographyProps extends TextProps {
 }
 
 const variantClass: Record<TypographyVariant, string> = {
-  headline: 'text-display-headline font-bold text-white',
-  title: 'text-display-title font-bold text-white',
+  headline: 'font-display text-display-headline font-bold text-white',
+  title: 'font-display text-display-title font-bold text-white',
   body: 'text-body-default text-fb-content',
   bodySm: 'text-body-small text-fb-content',
   label: 'text-label-default text-fb-label',

@@ -20,6 +20,7 @@ import {
   ScannerError,
   ScannerLoading,
 } from './components';
+import { FIND_BACK } from '@constants/theme';
 
 type ScanNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -104,7 +105,7 @@ export const ScanScreen: React.FC = () => {
 
   return (
     <View className="flex-1 bg-black">
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <StatusBar barStyle="light-content" backgroundColor={FIND_BACK.neutral} />
 
       {/* Camera View */}
       {hasPermission && device && isInitialized ? (

@@ -6,6 +6,7 @@
 import React from 'react';
 import { Text, ActivityIndicator } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { FIND_BACK } from '@constants/theme';
 
 export const ScannerLoading: React.FC = () => {
   return (
@@ -13,7 +14,7 @@ export const ScannerLoading: React.FC = () => {
       entering={FadeIn.duration(300)}
       className="absolute inset-0 bg-gray-900 items-center justify-center"
     >
-      <ActivityIndicator size="large" color="#3b82f6" />
+      <ActivityIndicator size="large" color={FIND_BACK.primary} />
       <Text className="text-white/70 text-base mt-4">Đang khởi động camera...</Text>
     </Animated.View>
   );

@@ -1,6 +1,7 @@
 import { cn } from '@/lib/cn';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, forwardRef, type ReactNode } from 'react';
+import { FIND_BACK, THEME } from '@constants/theme';
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
 export type IconBoxTone = 'primary' | 'secondary' | 'tertiary' | 'muted';
@@ -21,10 +22,10 @@ const sizeMap = {
 };
 
 const gradientFor: Record<IconBoxTone, [string, string]> = {
-  primary: ['#978CF8', '#7C6AF6'],
-  secondary: ['#47D4A8', '#2ECC8B'],
-  tertiary: ['#F89674', '#F4845F'],
-  muted: ['#3F3F46', '#27272A'],
+  primary: [FIND_BACK.primaryLight, FIND_BACK.primary],
+  secondary: [THEME.secondary[400], FIND_BACK.secondary],
+  tertiary: [THEME.tertiary[400], FIND_BACK.tertiary],
+  muted: [THEME.neutral[700], THEME.neutral[800]],
 };
 
 const glassFor: Record<IconBoxTone, string> = {

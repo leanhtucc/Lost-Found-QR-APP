@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Item } from '@/types/item';
 import { HomeItemCard } from './HomeItemCard';
 import { Plus } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 interface BottomSheetContentProps {
   items: Item[];
   onSelectItem: (itemId: string) => void;
@@ -24,20 +25,20 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
   );
 
   return (
-    <View className="flex-1 bg-[#121214] border-t border-[#2A2A2D] rounded-t-[32px]">
+    <View className="flex-1 bg-fb-neutral border-t border-fb-surface-elevated rounded-t-[32px]">
       <View className="px-5 pt-4 flex-1">
         {/* Header */}
         <View className="flex-row justify-between items-center mb-5">
           <Text className="text-white font-bold text-xl">Mất gần đây</Text>
           <TouchableOpacity>
-            <Text className="text-[#6C63FF] text-xs font-bold tracking-wider">XEM TẤT CẢ</Text>
+            <Text className="text-fb-primary text-xs font-bold tracking-wider">XEM TẤT CẢ</Text>
           </TouchableOpacity>
         </View>
 
         {/* Tabs */}
-        <View className="flex-row bg-[#1A1A1C] rounded-full p-1 mb-5 h-12">
+        <View className="flex-row bg-fb-surface-muted rounded-full p-1 mb-5 h-12">
           <TouchableOpacity
-            className={`flex-1 items-center justify-center rounded-full ${activeTab === 'lost' ? 'bg-[#6C63FF]' : 'bg-transparent'}`}
+            className={`flex-1 items-center justify-center rounded-full ${activeTab === 'lost' ? 'bg-fb-primary' : 'bg-transparent'}`}
             onPress={() => setActiveTab('lost')}
           >
             <Text
@@ -47,7 +48,7 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`flex-1 items-center justify-center rounded-full ${activeTab === 'found' ? 'bg-[#2A2A2D]' : 'bg-transparent'}`}
+            className={`flex-1 items-center justify-center rounded-full ${activeTab === 'found' ? 'bg-fb-surface-elevated' : 'bg-transparent'}`}
             onPress={() => setActiveTab('found')}
           >
             <Text
@@ -80,9 +81,9 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={onScanPress}
-          className="w-14 h-14 bg-[#6C63FF] rounded-full items-center justify-center shadow-[0_4px_16px_rgba(108,99,255,0.4)]"
+          className="w-14 h-14 bg-fb-primary rounded-full items-center justify-center shadow-[0_4px_16px_rgba(108,99,255,0.4)]"
         >
-          <Plus size={28} color="#ffffff" strokeWidth={2.5} />
+          <Plus size={28} color={FIND_BACK.bodyText} strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
     </View>

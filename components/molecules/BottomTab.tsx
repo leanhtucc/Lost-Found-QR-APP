@@ -1,6 +1,7 @@
 import { cn } from '@/lib/cn';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { memo } from 'react';
+import { FIND_BACK } from '@constants/theme';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -46,7 +47,7 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
             });
           };
 
-          const color = isFocused ? '#FFFFFF' : '#A0A0A8';
+          const color = isFocused ? FIND_BACK.bodyText : FIND_BACK.mutedText;
           const icon = options.tabBarIcon?.({ focused: isFocused, color, size: 22 });
 
           const labelFromOptions = options.tabBarLabel;

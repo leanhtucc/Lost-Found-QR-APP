@@ -6,6 +6,7 @@
 import React from 'react';
 import { Text, ActivityIndicator } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { FIND_BACK } from '@constants/theme';
 
 export const LoadingState: React.FC = () => {
   return (
@@ -13,7 +14,7 @@ export const LoadingState: React.FC = () => {
       entering={FadeIn.duration(300)}
       className="flex-1 items-center justify-center py-16"
     >
-      <ActivityIndicator size="large" color="#3b82f6" />
+      <ActivityIndicator size="large" color={FIND_BACK.primary} />
       <Text className="text-gray-500 mt-4">Đang tải thông báo...</Text>
     </Animated.View>
   );

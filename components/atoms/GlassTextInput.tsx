@@ -1,6 +1,7 @@
 import { cn } from '@/lib/cn';
 import { Search } from 'lucide-react-native';
 import { memo, forwardRef, type ReactNode } from 'react';
+import { FIND_BACK } from '@constants/theme';
 import { TextInput, View, type TextInputProps } from 'react-native';
 
 export type GlassTextInputVariant = 'text' | 'search';
@@ -21,7 +22,7 @@ const GlassTextInputInner = forwardRef<TextInput, GlassTextInputProps>(function 
     containerClassName,
     leftAdornment,
     error,
-    placeholderTextColor = '#71717A',
+    placeholderTextColor = FIND_BACK.labelText,
     editable = true,
     secureTextEntry,
     autoCorrect,
@@ -45,7 +46,7 @@ const GlassTextInputInner = forwardRef<TextInput, GlassTextInputProps>(function 
         <View className="mr-2 opacity-80">
           <Search
             size={20}
-            color="#A0A0A8"
+            color={FIND_BACK.mutedText}
             accessibilityElementsHidden
             importantForAccessibility="no"
           />

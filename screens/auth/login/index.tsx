@@ -8,6 +8,7 @@ import { SocialLoginButtons } from '../components/SocialLoginButtons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
 import { useGoogleAuth } from '@hooks/useGoogleAuth';
+import { FIND_BACK } from '@constants/theme';
 
 export const LoginScreen: React.FC = () => {
   const { isLoading, login, navigateToRegister, navigateToForgotPassword, navigateToMainApp } =
@@ -60,12 +61,12 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0E0E13]" edges={['top', 'bottom']}>
-      <StatusBar barStyle="light-content" backgroundColor="#0E0E13" />
+    <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top', 'bottom']}>
+      <StatusBar barStyle="light-content" backgroundColor={FIND_BACK.canvas} />
 
       {/* Error Banner theo Figma (Chạy fixed ở Top) */}
       {loginError && (
-        <View className="bg-[#EF4444] px-4 py-3 flex-row items-center justify-center">
+        <View className="bg-fb-danger px-4 py-3 flex-row items-center justify-center">
           <Text className="text-white text-sm font-medium">
             ({'! '}) {loginError}
           </Text>
@@ -85,7 +86,7 @@ export const LoginScreen: React.FC = () => {
             <Text className="text-[32px] font-bold text-white mb-2 tracking-tight">
               Chào mừng trở lại
             </Text>
-            <Text className="text-base text-[#A1A1AA] leading-6">
+            <Text className="text-base text-fb-muted leading-6">
               Đăng nhập để tiếp tục bảo vệ những món đồ giá trị của bạn.
             </Text>
           </View>
@@ -102,9 +103,9 @@ export const LoginScreen: React.FC = () => {
 
           {/* Register Link */}
           <View className="flex-row justify-center mt-10 mb-4">
-            <Text className="text-sm font-medium text-[#A1A1AA]">Bạn chưa có tài khoản?</Text>
+            <Text className="text-sm font-medium text-fb-muted">Bạn chưa có tài khoản?</Text>
             <TouchableOpacity onPress={navigateToRegister}>
-              <Text className="text-sm font-bold text-[#7C6AF6]">Tham gia ngay</Text>
+              <Text className="text-sm font-bold text-fb-primary">Tham gia ngay</Text>
             </TouchableOpacity>
           </View>
         </ResponsiveContainer>

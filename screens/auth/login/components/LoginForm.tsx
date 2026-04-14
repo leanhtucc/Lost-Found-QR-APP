@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react-native';
 import { Button } from '../../../../components/atoms/Button';
 import { validateEmail } from '@services/auth';
+import { FIND_BACK } from '@constants/theme';
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => void;
@@ -56,21 +57,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, onFor
           Email
         </Text>
         <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
             errors.email
               ? 'border-red-500'
               : isEmailFocused
-                ? 'border-[#7C6AF6]'
+                ? 'border-fb-primary'
                 : 'border-transparent'
           }`}
         >
           <View className="mr-4">
-            <Mail size={20} color="#9CA3AF" />
+            <Mail size={20} color={FIND_BACK.mutedText} />
           </View>
           <TextInput
             className="flex-1 text-white text-[15px] h-full"
             placeholder="alex.guardian@findback.io"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={FIND_BACK.mutedText}
             value={email}
             onChangeText={text => {
               setEmail(text);
@@ -98,21 +99,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, onFor
             Mật khẩu
           </Text>
           <View
-            className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+            className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
               errors.password
                 ? 'border-red-500'
                 : isPasswordFocused
-                  ? 'border-[#7C6AF6]'
+                  ? 'border-fb-primary'
                   : 'border-transparent'
             }`}
           >
             <View className="mr-4">
-              <Lock size={20} color={errors.password ? '#ef4444' : '#9CA3AF'} />
+              <Lock size={20} color={errors.password ? FIND_BACK.danger : FIND_BACK.mutedText} />
             </View>
             <TextInput
               className="flex-1 text-white text-[15px] h-full"
               placeholder="••••••••••••"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={FIND_BACK.mutedText}
               secureTextEntry={!showPassword}
               value={password}
               onChangeText={text => {
@@ -124,9 +125,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, onFor
             />
             <TouchableOpacity className="ml-4 p-1" onPress={() => setShowPassword(!showPassword)}>
               {showPassword ? (
-                <EyeOff size={20} color="#9CA3AF" />
+                <EyeOff size={20} color={FIND_BACK.mutedText} />
               ) : (
-                <Eye size={20} color="#9CA3AF" />
+                <Eye size={20} color={FIND_BACK.mutedText} />
               )}
             </TouchableOpacity>
           </View>
@@ -137,9 +138,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, onFor
 
         {/* Quên mật khẩu được đặt ngay dưới ô nhập password */}
         <TouchableOpacity onPress={onForgotPassword} className="self-end mt-2">
-          <Text className="text-sm font-medium text-[#A1A1AA] hover:text-white">
-            Quên mật khẩu?
-          </Text>
+          <Text className="text-sm font-medium text-fb-muted hover:text-white">Quên mật khẩu?</Text>
         </TouchableOpacity>
       </View>
 

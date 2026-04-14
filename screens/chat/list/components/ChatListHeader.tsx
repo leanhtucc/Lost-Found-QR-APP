@@ -5,6 +5,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface ChatListHeaderProps {
   onBack: () => void;
@@ -20,7 +21,7 @@ export const ChatListHeader: React.FC<ChatListHeaderProps> = ({ onBack, unreadCo
             onPress={onBack}
             className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
           >
-            <ArrowLeft size={20} color="#374151" />
+            <ArrowLeft size={20} color={FIND_BACK.mutedText} />
           </TouchableOpacity>
 
           <View>

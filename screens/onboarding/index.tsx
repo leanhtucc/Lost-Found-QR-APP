@@ -19,6 +19,7 @@ import { DotIndicator } from './components/DotIndicator';
 import { slides } from './data/slides';
 import { appStorage } from '@storage/app';
 import { IconLogoOnboarding } from '@components/icons';
+import { FIND_BACK } from '@constants/theme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -130,10 +131,14 @@ export const OnboardingScreen: React.FC = () => {
   const renderedButtonIcon = ButtonIcon ? <ButtonIcon {...(buttonIconProps ?? {})} /> : undefined;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0F0F17' }}>
-      <Animated.View style={[{ flex: 1, backgroundColor: '#0F0F17' }, enterAnimatedStyle]}>
-        <SafeAreaView className="flex-1 bg-[#0F0F17]" edges={['top', 'bottom']}>
-          <StatusBar barStyle="light-content" backgroundColor="#0F0F17" />
+    <View style={{ flex: 1, backgroundColor: FIND_BACK.canvas }}>
+      <Animated.View style={[{ flex: 1, backgroundColor: FIND_BACK.canvas }, enterAnimatedStyle]}>
+        <SafeAreaView
+          className="flex-1"
+          style={{ backgroundColor: FIND_BACK.canvas }}
+          edges={['top', 'bottom']}
+        >
+          <StatusBar barStyle="light-content" backgroundColor={FIND_BACK.canvas} />
           <View
             className="flex-1 px-6"
             style={{
@@ -146,7 +151,7 @@ export const OnboardingScreen: React.FC = () => {
             >
               <View className="flex-row items-center gap-[7px]">
                 <IconLogoOnboarding width={32} height={32} />
-                <Text className="text-[#F9F5FD] text-base font-bold tracking-[0.1px]">
+                <Text className="text-fb-content text-base font-bold tracking-[0.1px]">
                   FindBack
                 </Text>
               </View>
@@ -203,7 +208,7 @@ export const OnboardingScreen: React.FC = () => {
                   onPressIn={onPressIn}
                   onPressOut={onPressOut}
                   activeOpacity={0.9}
-                  className="h-14 w-full flex-row items-center justify-center rounded-2xl bg-[#6C63FF]"
+                  className="h-14 w-full flex-row items-center justify-center rounded-2xl bg-fb-primary"
                 >
                   <Text
                     className={

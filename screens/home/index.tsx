@@ -9,6 +9,7 @@ import { itemsApi } from '@/services/items';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { Header, MapSection, BottomSheetContent } from './components';
+import { FIND_BACK } from '@constants/theme';
 
 type HomeNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -67,7 +68,7 @@ export const HomeScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <View className="flex-1 items-center justify-center bg-gray-900">
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color={FIND_BACK.primary} />
           <Text className="mt-4 text-gray-400">Đang tải bản đồ...</Text>
         </View>
       </View>
@@ -97,7 +98,7 @@ export const HomeScreen: React.FC = () => {
         index={0}
         snapPoints={snapPoints}
         backgroundStyle={{ backgroundColor: 'transparent' }}
-        handleIndicatorStyle={{ backgroundColor: '#2A2A2D', width: 40, height: 4 }}
+        handleIndicatorStyle={{ backgroundColor: FIND_BACK.surfaceElevated, width: 40, height: 4 }}
       >
         <BottomSheetContent
           items={dashboardData?.items || []}
@@ -112,7 +113,7 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121214',
+    backgroundColor: FIND_BACK.canvas,
   },
 });
 

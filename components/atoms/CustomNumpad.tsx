@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Delete } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface CustomNumpadProps {
   onPressDigit: (digit: string) => void;
@@ -44,7 +45,7 @@ export const CustomNumpad: React.FC<CustomNumpadProps> = ({ onPressDigit, onPres
                   className="flex-1 items-center justify-center h-16 active:opacity-60"
                   onPress={onPressBackspace}
                 >
-                  <Delete size={28} color="#FFFFFF" strokeWidth={1.5} />
+                  <Delete size={28} color={FIND_BACK.bodyText} strokeWidth={1.5} />
                 </TouchableOpacity>
               );
             }

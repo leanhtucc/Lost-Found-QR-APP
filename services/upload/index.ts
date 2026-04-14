@@ -4,10 +4,7 @@
  */
 
 import { authStorage } from '@storage/auth';
-import { getApiUrl } from '@constants/environment';
-
-// Get API URL from environment
-const getUploadUrl = (): string => `${getApiUrl()}/api/upload`;
+import { buildBaseUrl, buildUploadUrl } from '@services/shared/url';
 
 // ==================== TYPES ====================
 
@@ -114,11 +111,11 @@ export const uploadApi = {
    */
   async uploadImage(uri: string): Promise<UploadResponse> {
     try {
-      const uploadUrl = `${getUploadUrl()}/image`;
+      const uploadUrl = buildUploadUrl('image');
 
       // DEBUG: Log API URL
       console.log('=== UPLOAD DEBUG ===');
-      console.log('API Base URL:', getApiUrl());
+      console.log('API Base URL:', buildBaseUrl());
       console.log('Upload URL:', uploadUrl);
       console.log('File URI:', uri);
 
@@ -181,7 +178,7 @@ export const uploadApi = {
    */
   async deleteImage(filename: string): Promise<UploadResponse> {
     try {
-      const deleteUrl = `${getUploadUrl()}/${filename}`;
+      const deleteUrl = buildUploadUrl(filename);
 
       const token = await authStorage.getAccessToken();
 
@@ -223,7 +220,7 @@ export const uploadApi = {
       return relativePath;
     }
     // Otherwise, prepend base URL
-    return `${getApiUrl()}${relativePath}`;
+    return buildBaseUrl(relativePath);
   },
 };
 

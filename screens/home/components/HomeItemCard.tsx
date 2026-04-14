@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Item } from '@/types/item';
 import { Clock, MapPin } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface HomeItemCardProps {
   item: Item;
@@ -20,7 +21,7 @@ export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => 
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
-      className="flex-row items-center bg-[#1A1A1C] border border-[#2A2A2D] rounded-2xl p-3 mb-3 shrink-0"
+      className="flex-row items-center bg-fb-surface-muted border border-fb-surface-elevated rounded-2xl p-3 mb-3 shrink-0"
     >
       <View className="w-16 h-16 rounded-xl bg-gray-800 overflow-hidden mr-3">
         {item.imagePublicUrl ? (
@@ -30,7 +31,7 @@ export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => 
             resizeMode="cover"
           />
         ) : (
-          <View className="w-full h-full items-center justify-center border border-gray-700 rounded-xl bg-[#252528]">
+          <View className="w-full h-full items-center justify-center border border-gray-700 rounded-xl bg-fb-surface-elevated">
             <Text className="text-gray-500 text-xs">No img</Text>
           </View>
         )}
@@ -41,11 +42,11 @@ export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => 
           {item.name}
         </Text>
         <View className="flex-row items-center mb-1">
-          <MapPin size={12} color="#9ca3af" />
+          <MapPin size={12} color={FIND_BACK.mutedText} />
           <Text className="text-gray-400 text-xs ml-1">{distance}</Text>
         </View>
         <View className="flex-row items-center">
-          <Clock size={12} color="#9ca3af" />
+          <Clock size={12} color={FIND_BACK.mutedText} />
           <Text className="text-gray-400 text-xs ml-1">{time}</Text>
         </View>
       </View>

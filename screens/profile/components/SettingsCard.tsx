@@ -1,112 +1,176 @@
 /**
  * Settings Card Component
- * Card cài đặt với các menu items
+ * Section Thông báo + Ứng dụng theo Figma
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, Switch } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Bell, Moon, Shield, HelpCircle, ChevronRight } from 'lucide-react-native';
+import {
+  Bell,
+  ChevronRight,
+  FileText,
+  Globe,
+  Info,
+  Mail,
+  MapPin,
+  Shield,
+} from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
-interface MenuItem {
+interface SettingsRowProps {
   icon: LucideIcon;
   label: string;
-  description: string;
-  action: 'toggle' | 'navigate';
-  defaultValue?: boolean;
+  borderTop?: boolean;
+  onPress?: () => void;
+  rightContent?: React.ReactNode;
 }
 
 interface SettingsCardProps {
-  onNavigate?: (screen: string) => void;
+  pushNotifications: boolean;
+  emailNotifications: boolean;
+  onPushNotificationsChange: (value: boolean) => void;
+  onEmailNotificationsChange: (value: boolean) => void;
+  onNotificationRadiusPress: () => void;
+  onLanguagePress: () => void;
+  onTermsPress: () => void;
+  onPrivacyPress: () => void;
+  languageLabel?: string;
+  notificationRadiusLabel?: string;
+  versionLabel?: string;
 }
 
-export const SettingsCard: React.FC<SettingsCardProps> = ({ onNavigate }) => {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
-
-  const menuItems: MenuItem[] = [
-    {
-      icon: Bell,
-      label: 'Thông báo',
-      description: 'Nhận thông báo khi có người quét QR',
-      action: 'toggle',
-      defaultValue: notificationsEnabled,
-    },
-    {
-      icon: Moon,
-      label: 'Chế độ tối',
-      description: 'Giao diện tối cho mắt',
-      action: 'toggle',
-      defaultValue: darkModeEnabled,
-    },
-    {
-      icon: Shield,
-      label: 'Bảo mật',
-      description: 'Đổi mật khẩu, xác thực 2 lớp',
-      action: 'navigate',
-    },
-    {
-      icon: HelpCircle,
-      label: 'Trợ giúp & Hỗ trợ',
-      description: 'FAQ, liên hệ hỗ trợ',
-      action: 'navigate',
-    },
-  ];
-
-  const handleToggle = (index: number, value: boolean) => {
-    if (index === 0) {
-      setNotificationsEnabled(value);
-    } else if (index === 1) {
-      setDarkModeEnabled(value);
-    }
-  };
-
-  const handleNavigate = (label: string) => {
-    onNavigate?.(label);
-  };
-
+function SettingsRow({
+  icon: Icon,
+  label,
+  borderTop = false,
+  onPress,
+  rightContent,
+}: SettingsRowProps) {
   return (
-    <Animated.View
-      entering={FadeInDown.duration(400).delay(300)}
-      className="mx-4 bg-white rounded-2xl shadow-sm overflow-hidden"
+    <TouchableOpacity
+      activeOpacity={onPress ? 0.75 : 1}
+      disabled={!onPress}
+      onPress={onPress}
+      className={`flex-row items-center justify-between px-4 py-4 ${borderTop ? 'border-t border-fb-border-subtle' : ''}`}
     >
-      <Text className="text-base font-bold text-gray-900 p-5 pb-3">Cài đặt</Text>
+      <View className="flex-row items-center gap-4">
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated">
+          <Icon size={18} color={FIND_BACK.mutedText} />
+        </View>
+        <Text className="text-base font-medium text-fb-content">{label}</Text>
+      </View>
+      {rightContent}
+    </TouchableOpacity>
+  );
+}
 
-      {menuItems.map((item, index) => (
-        <TouchableOpacity
-          key={index}
-          onPress={() => item.action === 'navigate' && handleNavigate(item.label)}
-          disabled={item.action === 'toggle'}
-          activeOpacity={0.7}
-          className={`flex-row items-center gap-4 p-5 ${
-            index < menuItems.length - 1 ? 'border-b border-gray-100' : ''
-          }`}
-        >
-          {/* Icon */}
-          <View className="w-10 h-10 rounded-xl bg-gray-50 items-center justify-center">
-            <item.icon size={20} color="#6b7280" />
-          </View>
+export const SettingsCard: React.FC<SettingsCardProps> = ({
+  pushNotifications,
+  emailNotifications,
+  onPushNotificationsChange,
+  onEmailNotificationsChange,
+  onNotificationRadiusPress,
+  onLanguagePress,
+  onTermsPress,
+  onPrivacyPress,
+  languageLabel = 'Tiếng Việt',
+  notificationRadiusLabel = '3km',
+  versionLabel = '1.0.0',
+}) => {
+  return (
+    <View className="mt-8 gap-8">
+      <View className="gap-3">
+        <View className="px-2">
+          <Text className="text-[13px] font-bold uppercase tracking-[1.3px] text-fb-muted">
+            Thông báo
+          </Text>
+        </View>
 
-          {/* Content */}
-          <View className="flex-1">
-            <Text className="font-semibold text-gray-900">{item.label}</Text>
-            <Text className="text-xs text-gray-500 mt-0.5">{item.description}</Text>
-          </View>
+        <View className="overflow-hidden rounded-3xl bg-fb-surface">
+          <SettingsRow
+            icon={Bell}
+            label="Thông báo đẩy"
+            onPress={() => onPushNotificationsChange(!pushNotifications)}
+            rightContent={
+              <Switch
+                value={pushNotifications}
+                onValueChange={onPushNotificationsChange}
+                trackColor={{ false: FIND_BACK.surfaceElevated, true: FIND_BACK.primaryDark }}
+                thumbColor={FIND_BACK.bodyText}
+              />
+            }
+          />
 
-          {/* Action */}
-          {item.action === 'toggle' ? (
-            <Switch
-              value={item.defaultValue}
-              onValueChange={value => handleToggle(index, value)}
-              trackColor={{ false: '#d1d5db', true: '#3b82f6' }}
-              thumbColor="#ffffff"
-            />
-          ) : (
-            <ChevronRight size={20} color="#9ca3af" />
-          )}
-        </TouchableOpacity>
-      ))}
-    </Animated.View>
+          <SettingsRow
+            icon={Mail}
+            label="Email thông báo"
+            borderTop
+            onPress={() => onEmailNotificationsChange(!emailNotifications)}
+            rightContent={
+              <Switch
+                value={emailNotifications}
+                onValueChange={onEmailNotificationsChange}
+                trackColor={{ false: FIND_BACK.surfaceElevated, true: FIND_BACK.primaryDark }}
+                thumbColor={FIND_BACK.bodyText}
+              />
+            }
+          />
+
+          <SettingsRow
+            icon={MapPin}
+            label="Bán kính thông báo"
+            borderTop
+            onPress={onNotificationRadiusPress}
+            rightContent={
+              <View className="flex-row items-center gap-2">
+                <Text className="text-sm font-bold text-fb-info">{notificationRadiusLabel}</Text>
+                <ChevronRight size={16} color={FIND_BACK.mutedText} />
+              </View>
+            }
+          />
+        </View>
+      </View>
+
+      <View className="gap-3">
+        <View className="px-2">
+          <Text className="text-[13px] font-bold uppercase tracking-[1.3px] text-fb-muted">
+            Ứng dụng
+          </Text>
+        </View>
+
+        <View className="overflow-hidden rounded-3xl bg-fb-surface">
+          <SettingsRow
+            icon={Globe}
+            label="Ngôn ngữ"
+            onPress={onLanguagePress}
+            rightContent={<Text className="text-sm text-fb-muted">{languageLabel}</Text>}
+          />
+
+          <SettingsRow
+            icon={FileText}
+            label="Điều khoản dịch vụ"
+            borderTop
+            onPress={onTermsPress}
+            rightContent={<ChevronRight size={16} color={FIND_BACK.mutedText} />}
+          />
+
+          <SettingsRow
+            icon={Shield}
+            label="Chính sách bảo mật"
+            borderTop
+            onPress={onPrivacyPress}
+            rightContent={<ChevronRight size={16} color={FIND_BACK.mutedText} />}
+          />
+
+          <SettingsRow
+            icon={Info}
+            label="Phiên bản"
+            borderTop
+            rightContent={<Text className="text-sm text-fb-muted">{versionLabel}</Text>}
+          />
+        </View>
+      </View>
+    </View>
   );
 };

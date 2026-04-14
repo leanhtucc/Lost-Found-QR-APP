@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Eye, EyeOff, User, Mail, Phone, Lock, CheckCircle2 } from 'lucide-react-native';
 import { Button } from '../../../../components/atoms/Button';
 import { validateEmail, validateDisplayName, validateConfirmPassword } from '@services/auth';
+import { FIND_BACK } from '@constants/theme';
 
 interface RegisterFormProps {
   onSubmit: (
@@ -139,21 +140,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
           Họ và tên
         </Text>
         <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
             errors.displayName
               ? 'border-red-500'
               : isDisplayNameFocused
-                ? 'border-[#7C6AF6]'
+                ? 'border-fb-primary'
                 : 'border-transparent'
           }`}
         >
           <View className="mr-4">
-            <User size={20} color={errors.displayName ? '#ef4444' : '#9CA3AF'} />
+            <User size={20} color={errors.displayName ? FIND_BACK.danger : FIND_BACK.mutedText} />
           </View>
           <TextInput
             className="flex-1 text-white text-[15px] h-full"
             placeholder="Nguyễn Văn A"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={FIND_BACK.mutedText}
             value={displayName}
             onChangeText={text => {
               setDisplayName(text);
@@ -177,21 +178,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
           Số điện thoại
         </Text>
         <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
             errors.phoneNumber
               ? 'border-red-500'
               : isPhoneFocused
-                ? 'border-[#7C6AF6]'
+                ? 'border-fb-primary'
                 : 'border-transparent'
           }`}
         >
           <View className="mr-4">
-            <Phone size={20} color={errors.phoneNumber ? '#ef4444' : '#9CA3AF'} />
+            <Phone size={20} color={errors.phoneNumber ? FIND_BACK.danger : FIND_BACK.mutedText} />
           </View>
           <TextInput
             className="flex-1 text-white text-[15px] h-full"
             placeholder="0912345678"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={FIND_BACK.mutedText}
             value={phoneNumber}
             onChangeText={text => {
               setPhoneNumber(text);
@@ -216,21 +217,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
           Email
         </Text>
         <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
             errors.email
               ? 'border-red-500'
               : isEmailFocused
-                ? 'border-[#7C6AF6]'
+                ? 'border-fb-primary'
                 : 'border-transparent'
           }`}
         >
           <View className="mr-4">
-            <Mail size={20} color={errors.email ? '#ef4444' : '#9CA3AF'} />
+            <Mail size={20} color={errors.email ? FIND_BACK.danger : FIND_BACK.mutedText} />
           </View>
           <TextInput
             className="flex-1 text-white text-[15px] h-full"
             placeholder="example@gmail.com"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={FIND_BACK.mutedText}
             value={email}
             onChangeText={text => {
               setEmail(text);
@@ -257,21 +258,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
             Mật khẩu
           </Text>
           <View
-            className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+            className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
               errors.password
                 ? 'border-red-500'
                 : isPasswordFocused
-                  ? 'border-[#7C6AF6]'
+                  ? 'border-fb-primary'
                   : 'border-transparent'
             }`}
           >
             <View className="mr-4">
-              <Lock size={20} color={errors.password ? '#ef4444' : '#9CA3AF'} />
+              <Lock size={20} color={errors.password ? FIND_BACK.danger : FIND_BACK.mutedText} />
             </View>
             <TextInput
               className="flex-1 text-white text-[15px] h-full"
               placeholder="••••••••••••"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={FIND_BACK.mutedText}
               secureTextEntry={!showPassword}
               value={password}
               onChangeText={text => {
@@ -283,9 +284,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
             />
             <TouchableOpacity className="ml-4 p-1" onPress={() => setShowPassword(!showPassword)}>
               {showPassword ? (
-                <EyeOff size={20} color="#9CA3AF" />
+                <EyeOff size={20} color={FIND_BACK.mutedText} />
               ) : (
-                <Eye size={20} color="#9CA3AF" />
+                <Eye size={20} color={FIND_BACK.mutedText} />
               )}
             </TouchableOpacity>
           </View>
@@ -302,15 +303,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
               className={`h-1 flex-1 rounded-full ${
                 index <= strengthScore
                   ? strengthScore === 3
-                    ? 'bg-[#22c55e]'
-                    : 'bg-[#7C6AF6]'
+                    ? 'bg-fb-secondary'
+                    : 'bg-fb-primary'
                   : 'bg-white/10'
               }`}
             />
           ))}
         </View>
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-xs font-semibold text-[#A1A1AA]">
+          <Text className="text-xs font-semibold text-fb-muted">
             {strengthScore === 0 ? 'Chưa nhập' : strengthScore < 3 ? 'Trung bình' : 'Mạnh'}
           </Text>
           <Text className="text-[10px] text-gray-500">Gợi ý: Thêm ký tự đặc biệt</Text>
@@ -323,11 +324,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
           Xác nhận mật khẩu
         </Text>
         <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-[#1A1A24] px-4 border ${
+          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
             errors.confirmPassword
               ? 'border-red-500'
               : isConfirmPasswordFocused
-                ? 'border-[#7C6AF6]'
+                ? 'border-fb-primary'
                 : 'border-transparent'
           }`}
         >
@@ -336,17 +337,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
               size={20}
               color={
                 errors.confirmPassword
-                  ? '#ef4444'
+                  ? FIND_BACK.danger
                   : confirmPassword && password === confirmPassword
-                    ? '#22c55e'
-                    : '#9CA3AF'
+                    ? FIND_BACK.secondary
+                    : FIND_BACK.mutedText
               }
             />
           </View>
           <TextInput
             className="flex-1 text-white text-[15px] h-full"
             placeholder="••••••••••••"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={FIND_BACK.mutedText}
             secureTextEntry={!showPassword}
             value={confirmPassword}
             onChangeText={text => {

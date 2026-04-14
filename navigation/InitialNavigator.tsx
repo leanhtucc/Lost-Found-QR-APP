@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { FIND_BACK } from '@constants/theme';
 import { RootStackParamList } from './index';
 
 /**
@@ -35,10 +36,10 @@ export default function InitialNavigator() {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#ffffff',
+        backgroundColor: FIND_BACK.canvas,
       }}
     >
-      <ActivityIndicator size="large" color="#2563eb" />
+      <ActivityIndicator size="large" color={FIND_BACK.primary} />
     </View>
   );
 }

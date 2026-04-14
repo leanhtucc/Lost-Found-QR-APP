@@ -9,6 +9,7 @@ import {
   ProfileScreen,
   ChatListScreen,
 } from '@screens/index';
+import { FIND_BACK } from '@constants/theme';
 
 const Tab = createBottomTabNavigator();
 
@@ -24,8 +25,8 @@ export const TabNavigator = () => {
       tabBar={props => <BottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#7C6AF6',
-        tabBarInactiveTintColor: '#A0A0A8',
+        tabBarActiveTintColor: FIND_BACK.primary,
+        tabBarInactiveTintColor: FIND_BACK.mutedText,
       }}
     >
       <Tab.Screen

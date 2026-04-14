@@ -6,12 +6,13 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { MessageCircle } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 export const EmptyChat: React.FC = () => {
   return (
     <View className="flex-1 items-center justify-center px-8">
       <View className="w-24 h-24 rounded-full bg-gray-100 items-center justify-center mb-4">
-        <MessageCircle size={48} color="#9ca3af" />
+        <MessageCircle size={48} color={FIND_BACK.mutedText} />
       </View>
 
       <Text className="text-xl font-bold text-gray-900 mb-2 text-center">Chưa có tin nhắn</Text>

@@ -1,48 +1,37 @@
 /**
  * Stats Card Component
- * Hiển thị thống kê tổng số items, safe, lost
+ * Hàng thống kê theo Figma
  */
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Package, QrCode, AlertTriangle } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface StatsCardProps {
   totalItems: number;
-  safeItems: number;
-  lostItems: number;
+  foundItems: number;
+  returnedItems: number;
 }
 
-export const StatsCard: React.FC<StatsCardProps> = ({ totalItems, safeItems, lostItems }) => {
+function MetricBox({ value, label, color }: { value: number; label: string; color: string }) {
   return (
-    <Animated.View entering={FadeInDown.duration(400).delay(100)} className="flex-row gap-3 px-4">
-      {/* Total Items */}
-      <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm items-center">
-        <View className="w-12 h-12 rounded-2xl bg-blue-50 items-center justify-center mb-2">
-          <Package size={24} color="#3b82f6" />
-        </View>
-        <Text className="text-2xl font-bold text-gray-900">{totalItems}</Text>
-        <Text className="text-xs text-gray-500 mt-1">Tổng món đồ</Text>
-      </View>
+    <View className="flex-1 items-center rounded-2xl border border-fb-border-subtle bg-fb-surface px-2 py-4">
+      <Text className="text-2xl font-bold" style={{ color }}>
+        {value}
+      </Text>
+      <Text className="mt-1 text-center text-[10px] font-bold uppercase leading-[12.5px] text-fb-muted">
+        {label}
+      </Text>
+    </View>
+  );
+}
 
-      {/* Safe Items */}
-      <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm items-center">
-        <View className="w-12 h-12 rounded-2xl bg-green-50 items-center justify-center mb-2">
-          <QrCode size={24} color="#10b981" />
-        </View>
-        <Text className="text-2xl font-bold text-gray-900">{safeItems}</Text>
-        <Text className="text-xs text-gray-500 mt-1">An toàn</Text>
-      </View>
-
-      {/* Lost Items */}
-      <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm items-center">
-        <View className="w-12 h-12 rounded-2xl bg-red-50 items-center justify-center mb-2">
-          <AlertTriangle size={24} color="#ef4444" />
-        </View>
-        <Text className="text-2xl font-bold text-gray-900">{lostItems}</Text>
-        <Text className="text-xs text-gray-500 mt-1">Đang mất</Text>
-      </View>
-    </Animated.View>
+export const StatsCard: React.FC<StatsCardProps> = ({ totalItems, foundItems, returnedItems }) => {
+  return (
+    <View className="mt-4 flex-row gap-3">
+      <MetricBox value={totalItems} label={`Vật được\nbảo vệ`} color={FIND_BACK.info} />
+      <MetricBox value={foundItems} label={`Lần tìm\nthấy`} color={FIND_BACK.primaryLight} />
+      <MetricBox value={returnedItems} label={`Lần trả\nđồ`} color={FIND_BACK.secondary} />
+    </View>
   );
 };

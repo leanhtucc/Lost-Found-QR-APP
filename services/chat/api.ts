@@ -10,8 +10,7 @@ import {
   Conversation,
 } from '@/types/chat';
 import { authStorage } from '@/storage/auth';
-
-const API_BASE = 'http://192.168.10.102:3000';
+import { buildStreamUrl } from '@services/shared/url';
 
 const createHeaders = async (): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
@@ -36,7 +35,7 @@ export const createChannel = async (
   finderId: string
 ): Promise<CreateChannelResponse['data']> => {
   try {
-    const url = `${API_BASE}/api/stream/channels/${itemId}/${finderId}`;
+    const url = buildStreamUrl('channels', itemId, finderId);
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'POST',
@@ -61,7 +60,7 @@ export const createChannel = async (
  */
 export const getInbox = async (): Promise<{ total: number; channels: Conversation[] }> => {
   try {
-    const url = `${API_BASE}/api/stream/channels`;
+    const url = buildStreamUrl('channels');
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'GET',
@@ -112,7 +111,7 @@ const extractItemName = (channelId: string): string => {
  */
 export const closeChannel = async (channelId: string): Promise<void> => {
   try {
-    const url = `${API_BASE}/api/stream/channels/${channelId}/close`;
+    const url = buildStreamUrl('channels', channelId, 'close');
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'PUT',
@@ -137,7 +136,7 @@ export const closeChannel = async (channelId: string): Promise<void> => {
  */
 export const getChannelById = async (channelId: string): Promise<any> => {
   try {
-    const url = `${API_BASE}/api/stream/channels/${channelId}`;
+    const url = buildStreamUrl('channels', channelId);
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'GET',

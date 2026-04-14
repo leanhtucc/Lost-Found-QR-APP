@@ -21,6 +21,7 @@ import {
 import type { ScanItemLostResponse, ScanItemSafeResponse } from '@/types/item';
 import { CATEGORY_CONFIG } from '@/types/item';
 import { getUserLevel, getLevelInfo } from '@/services/auth/types';
+import { COLORS, FIND_BACK } from '@constants/theme';
 
 type ScanItemResponse = ScanItemLostResponse | ScanItemSafeResponse;
 
@@ -64,7 +65,7 @@ export default function FoundItemScreen() {
             onPress={handleBack}
             className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
           >
-            <ArrowLeft size={20} color="#374151" />
+            <ArrowLeft size={20} color={FIND_BACK.mutedText} />
           </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-lg font-bold text-gray-900">Thông tin đồ vật</Text>
@@ -93,7 +94,7 @@ export default function FoundItemScreen() {
                 isLost ? 'bg-red-200' : 'bg-green-200'
               }`}
             >
-              <Info size={20} color={isLost ? '#dc2626' : '#16a34a'} />
+              <Info size={20} color={isLost ? FIND_BACK.danger : FIND_BACK.secondary} />
             </View>
             <View className="flex-1">
               <Text className={`font-bold ${isLost ? 'text-red-900' : 'text-green-900'}`}>
@@ -146,7 +147,7 @@ export default function FoundItemScreen() {
         >
           <View className="flex-row items-center gap-2 mb-4">
             <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center">
-              <Info size={18} color="#4f46e5" />
+              <Info size={18} color={FIND_BACK.primary} />
             </View>
             <Text className="text-lg font-bold text-gray-900">Chủ sở hữu</Text>
           </View>
@@ -170,10 +171,12 @@ export default function FoundItemScreen() {
                 <Text className="text-xl font-bold text-gray-900" numberOfLines={1}>
                   {ownerInfo.display_name}
                 </Text>
-                {ownerInfo.is_verified && <BadgeCheck size={20} color="#3b82f6" fill="#3b82f6" />}
+                {ownerInfo.is_verified && (
+                  <BadgeCheck size={20} color={FIND_BACK.info} fill={FIND_BACK.info} />
+                )}
               </View>
               <View className="flex-row items-center gap-2">
-                <Award size={14} color="#4f46e5" />
+                <Award size={14} color={FIND_BACK.primary} />
                 <Text className="text-sm text-indigo-600 font-semibold">
                   Thành viên {levelInfo.label}
                 </Text>
@@ -185,7 +188,7 @@ export default function FoundItemScreen() {
           <View className="flex-row gap-3 bg-gray-50 rounded-2xl p-4">
             <View className="flex-1 items-center">
               <View className="flex-row items-center gap-1 mb-1">
-                <Star size={16} color="#f59e0b" fill="#f59e0b" />
+                <Star size={16} color={COLORS.trustGold} fill={COLORS.trustGold} />
                 <Text className="text-xs font-medium text-amber-700">Uy tín</Text>
               </View>
               <Text className="text-xl font-bold text-amber-900">{trustScore}</Text>
@@ -195,7 +198,7 @@ export default function FoundItemScreen() {
 
             <View className="flex-1 items-center">
               <View className="flex-row items-center gap-1 mb-1">
-                <Package size={16} color="#10b981" />
+                <Package size={16} color={FIND_BACK.secondary} />
                 <Text className="text-xs font-medium text-emerald-700">Đã trả</Text>
               </View>
               <Text className="text-xl font-bold text-emerald-900">
@@ -223,7 +226,7 @@ export default function FoundItemScreen() {
               className="bg-indigo-600 rounded-2xl p-5 shadow-lg active:bg-indigo-700"
             >
               <View className="flex-row items-center justify-center gap-3">
-                <MessageCircle size={24} color="#ffffff" />
+                <MessageCircle size={24} color={FIND_BACK.bodyText} />
                 <Text className="text-white text-lg font-bold">Nhắn tin cho chủ sở hữu</Text>
               </View>
             </TouchableOpacity>

@@ -6,6 +6,7 @@
 import React, { useEffect } from 'react';
 import { View, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FIND_BACK } from '@constants/theme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -126,9 +127,9 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ isScanning, hasC
                   right: '10%',
                   top: -4,
                   bottom: -4,
-                  backgroundColor: '#3b82f6',
+                  backgroundColor: FIND_BACK.primary,
                   opacity: 0.4,
-                  shadowColor: '#3b82f6',
+                  shadowColor: FIND_BACK.primary,
                   shadowOffset: { width: 0, height: 0 },
                   shadowOpacity: 0.8,
                   shadowRadius: 20,

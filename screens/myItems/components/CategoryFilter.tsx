@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Item } from '@/types/item';
+import { FIND_BACK } from '@constants/theme';
 import { categoryOptions } from '../constants/categories';
 
 interface CategoryFilterProps {
@@ -23,7 +24,10 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
               selectedCategory === value ? 'bg-blue-500' : 'bg-gray-100'
             }`}
           >
-            <Icon size={16} color={selectedCategory === value ? '#fff' : '#6b7280'} />
+            <Icon
+              size={16}
+              color={selectedCategory === value ? FIND_BACK.bodyText : FIND_BACK.labelText}
+            />
             <Text
               className={`text-sm font-medium ${
                 selectedCategory === value ? 'text-white' : 'text-gray-600'

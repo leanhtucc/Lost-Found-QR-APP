@@ -16,8 +16,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { IconLogoApp } from '@components/icons';
 import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
+import { FIND_BACK, THEME } from '@constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const PARTICLE_COLORS = [
+  THEME.primary[300],
+  FIND_BACK.primaryDark,
+  THEME.primary[200],
+  THEME.primary[700],
+];
 
 // ─── Design Spell: Particle Burst ────────────────────────────────────────────
 // Mỗi hạt là một chấm nhỏ bay ra từ logo theo hướng ngẫu nhiên
@@ -99,7 +107,7 @@ const PARTICLES: ParticleProps[] = Array.from({ length: 14 }, (_, i) => ({
   angle: (i / 14) * Math.PI * 2,
   distance: 55 + (i % 3) * 18,
   size: i % 3 === 0 ? 5 : i % 3 === 1 ? 3.5 : 2.5,
-  color: i % 4 === 0 ? '#A78BFA' : i % 4 === 1 ? '#7C3AED' : i % 4 === 2 ? '#C4B5FD' : '#6D28D9',
+  color: PARTICLE_COLORS[i % PARTICLE_COLORS.length],
 }));
 
 // ─── Main SplashScreen ────────────────────────────────────────────────────────
@@ -173,7 +181,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
   return (
     <Animated.View style={screenStyle}>
-      <SafeAreaView className="flex-1 bg-[#0E0E13]" edges={['top', 'bottom']}>
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: FIND_BACK.canvas }}
+        edges={['top', 'bottom']}
+      >
         <StatusBar style="light" />
 
         <ResponsiveContainer className="flex-1 items-center justify-center gap-5" variant="form">
@@ -197,8 +209,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
           {/* Text block trượt lên */}
           <Animated.View className="items-center" style={textStyle}>
-            <Text className="text-[#F9F5FD] text-4xl font-bold tracking-tight mb-2">FindBack</Text>
-            <Text className="text-[#ACAAB1] text-[11px] font-medium tracking-[2.5px]">
+            <Text className="text-fb-content text-4xl font-bold tracking-tight mb-2">FindBack</Text>
+            <Text className="text-fb-muted text-[11px] font-medium tracking-[2.5px]">
               FIND IT. RETURN IT. REWARDED.
             </Text>
           </Animated.View>

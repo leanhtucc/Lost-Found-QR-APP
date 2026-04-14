@@ -6,6 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
 import { congratulationImage } from '@assets';
 import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
+import { FIND_BACK } from '@constants/theme';
 
 type CongratulationNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -21,7 +22,7 @@ export const CongratulationScreen: React.FC = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <StatusBar barStyle="dark-content" backgroundColor={FIND_BACK.bodyText} />
 
       <ResponsiveContainer className="flex-1 w-full justify-between" variant="form">
         {/* Content Container */}
@@ -49,7 +50,7 @@ export const CongratulationScreen: React.FC = () => {
         {/* Bottom Sign In Link */}
         <View className="pb-12 px-6 items-center">
           <TouchableOpacity onPress={handleSignIn}>
-            <Text className="text-lg font-semibold text-blue-600">Đăng nhập tại đây</Text>
+            <Text className="text-lg font-semibold text-fb-primary">Đăng nhập tại đây</Text>
           </TouchableOpacity>
         </View>
       </ResponsiveContainer>

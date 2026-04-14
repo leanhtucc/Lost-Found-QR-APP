@@ -8,6 +8,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } fro
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { MessageCircle } from 'lucide-react-native';
 import { Item } from '@/types/item';
+import { FIND_BACK } from '@constants/theme';
 
 interface LostModeCardProps {
   item: Item;
@@ -93,7 +94,7 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
               value={lostMessage}
               onChangeText={setLostMessage}
               placeholder="Ví dụ: Tôi rơi ở canteen tầng 1, xin hãy giúp đỡ!"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={FIND_BACK.labelText}
               multiline
               numberOfLines={4}
               className="bg-gray-50 rounded-xl p-4 text-gray-900 min-h-[100px] text-base"
@@ -122,7 +123,7 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
                 onPress={onOpenChat}
                 className="bg-blue-50 px-4 py-3 rounded-xl items-center justify-center active:bg-blue-100"
               >
-                <MessageCircle size={20} color="#3b82f6" />
+                <MessageCircle size={20} color={FIND_BACK.primary} />
               </TouchableOpacity>
             )}
           </View>

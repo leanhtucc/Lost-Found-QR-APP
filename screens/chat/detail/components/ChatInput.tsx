@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { Image, Send, Smile } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface ChatInputProps {
   value: string;
@@ -41,7 +42,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               onPress={onAttachPress}
               className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
             >
-              <Image size={20} color="#6b7280" />
+              <Image size={20} color={FIND_BACK.mutedText} />
             </TouchableOpacity>
           )}
 
@@ -51,14 +52,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               value={value}
               onChangeText={onChangeText}
               placeholder="Nhập tin nhắn..."
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={FIND_BACK.mutedText}
               className="h-11 rounded-full bg-gray-100 px-4 pr-10 text-gray-900"
               multiline
               maxLength={1000}
             />
             {onEmojiPress && (
               <TouchableOpacity onPress={onEmojiPress} className="absolute right-3 top-1/2 -mt-2.5">
-                <Smile size={20} color="#6b7280" />
+                <Smile size={20} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
             )}
           </View>
@@ -71,7 +72,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               value.trim() ? 'bg-blue-500 shadow-blue-500/25' : 'bg-gray-300 shadow-transparent'
             }`}
           >
-            <Send size={20} color="#ffffff" />
+            <Send size={20} color={FIND_BACK.bodyText} />
           </TouchableOpacity>
         </View>
       </View>

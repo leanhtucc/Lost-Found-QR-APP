@@ -15,14 +15,13 @@ import {
   UpdateItemParams,
   UpdateStatusParams,
 } from '@/types';
-import { getApiUrl } from '@constants/environment';
+import { buildItemsUrl, buildScanUrl } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Base URL cho Items API
  */
-const getItemsApiUrl = () => `${getApiUrl()}/api/items`;
+const getItemsApiUrl = () => buildItemsUrl();
 
 /**
  * Helper function để lấy token
@@ -332,7 +331,7 @@ export const itemsApi = {
    * GET /api/scan/:itemId
    */
   async scanQR(itemId: string): Promise<ScanItemResponse> {
-    const url = `${getApiUrl()}/api/scan/${itemId}`;
+    const url = buildScanUrl(itemId);
 
     const response = await fetch(url, {
       method: 'GET',

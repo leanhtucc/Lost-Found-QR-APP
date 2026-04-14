@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AlertCircle, RefreshCw, Settings } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface ScannerErrorProps {
   error: string;
@@ -30,7 +31,7 @@ export const ScannerError: React.FC<ScannerErrorProps> = ({
     >
       {/* Error Icon */}
       <View className="w-20 h-20 rounded-full bg-red-500/20 items-center justify-center mb-6">
-        <AlertCircle size={48} color="#ef4444" />
+        <AlertCircle size={48} color={FIND_BACK.danger} />
       </View>
 
       {/* Error Message */}
@@ -48,7 +49,7 @@ export const ScannerError: React.FC<ScannerErrorProps> = ({
             activeOpacity={0.8}
             className="bg-blue-600 rounded-2xl py-4 flex-row items-center justify-center gap-2"
           >
-            <Settings size={20} color="#ffffff" />
+            <Settings size={20} color={FIND_BACK.bodyText} />
             <Text className="text-white font-semibold text-base">Mở Cài đặt</Text>
           </TouchableOpacity>
         ) : (
@@ -57,7 +58,7 @@ export const ScannerError: React.FC<ScannerErrorProps> = ({
             activeOpacity={0.8}
             className="bg-blue-600 rounded-2xl py-4 flex-row items-center justify-center gap-2"
           >
-            <RefreshCw size={20} color="#ffffff" />
+            <RefreshCw size={20} color={FIND_BACK.bodyText} />
             <Text className="text-white font-semibold text-base">Thử lại</Text>
           </TouchableOpacity>
         )}

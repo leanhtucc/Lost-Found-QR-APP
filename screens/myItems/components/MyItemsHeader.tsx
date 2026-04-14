@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Plus } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface MyItemsHeaderProps {
   totalItems: number;
@@ -18,7 +19,7 @@ export const MyItemsHeader: React.FC<MyItemsHeaderProps> = ({ totalItems, onAddC
         className="w-10 h-10 rounded-full bg-blue-500 justify-center items-center"
         onPress={onAddClick}
       >
-        <Plus size={24} color="#fff" />
+        <Plus size={24} color={FIND_BACK.bodyText} />
       </TouchableOpacity>
     </View>
   );

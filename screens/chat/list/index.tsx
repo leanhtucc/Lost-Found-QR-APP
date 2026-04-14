@@ -12,6 +12,7 @@ import { RootStackParamList } from '@navigation/index';
 import { getInbox } from '@/services/chat';
 import { Conversation } from '@/types/chat';
 import { ChatListHeader, ConversationCard, EmptyChat, LoadingChat } from './components';
+import { FIND_BACK } from '@constants/theme';
 
 type ChatListNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -82,8 +83,8 @@ export const ChatListScreen: React.FC = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              colors={['#3b82f6']}
-              tintColor="#3b82f6"
+              colors={[FIND_BACK.primary]}
+              tintColor={FIND_BACK.primary}
             />
           }
         >

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Package } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 import { StatusFilterType } from '../hooks/useItemsFilter';
 
 interface SummaryCardsProps {
@@ -27,7 +28,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
         onPress={() => onStatusFilterChange('all')}
       >
         <View className="w-10 h-10 rounded-xl bg-blue-100 justify-center items-center mb-2">
-          <Package size={20} color="#3b82f6" />
+          <Package size={20} color={FIND_BACK.primary} />
         </View>
         <Text className="text-lg font-bold text-gray-900">{totalItems}</Text>
         <Text className="text-xs text-gray-500 mt-0.5">Tổng cộng</Text>
@@ -40,7 +41,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
         onPress={() => onStatusFilterChange('safe')}
       >
         <View className="w-10 h-10 rounded-xl bg-emerald-100 justify-center items-center mb-2">
-          <Package size={20} color="#10b981" />
+          <Package size={20} color={FIND_BACK.secondary} />
         </View>
         <Text className="text-lg font-bold text-gray-900">{safeCount}</Text>
         <Text className="text-xs text-gray-500 mt-0.5">An toàn</Text>
@@ -53,7 +54,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
         onPress={() => onStatusFilterChange('lost')}
       >
         <View className="w-10 h-10 rounded-xl bg-red-100 justify-center items-center mb-2">
-          <Package size={20} color="#ef4444" />
+          <Package size={20} color={FIND_BACK.danger} />
         </View>
         <Text className="text-lg font-bold text-gray-900">{lostCount}</Text>
         <Text className="text-xs text-gray-500 mt-0.5">Đang mất</Text>

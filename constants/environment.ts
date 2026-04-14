@@ -8,10 +8,22 @@ import Constants from 'expo-constants';
 // Get extra config from expo
 const expoExtra = Constants.expoConfig?.extra || {};
 
+const resolveRequiredApiUrl = (): string => {
+  const rawApiUrl = expoExtra.apiUrl || process.env.API_URL;
+
+  if (typeof rawApiUrl !== 'string' || rawApiUrl.trim().length === 0) {
+    throw new Error(
+      '[ENV] Missing API_URL. Set extra.apiUrl in app.config.js or API_URL in the environment.'
+    );
+  }
+
+  return rawApiUrl.trim().replace(/\/+$/, '');
+};
+
 // Environment configuration
 export const ENV = {
-  // API URL from .env file (via app.config.js)
-  API_URL: expoExtra.apiUrl || process.env.API_URL || 'http://192.168.10.102:3000',
+  // Required API URL from env/app.config (no hardcoded fallback)
+  API_URL: resolveRequiredApiUrl(),
 
   // Current environment
   ENVIRONMENT: expoExtra.environment || process.env.ENV || 'development',
@@ -47,7 +59,7 @@ export const getApiUrl = (): string => {
 
 // Helper function to get auth API URL
 export const getAuthApiUrl = (): string => {
-  return `${ENV.API_URL}/api/auth`;
+  return `${getApiUrl()}/api/auth`;
 };
 
 // Helper function to check environment

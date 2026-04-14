@@ -8,6 +8,7 @@ import { View, Text } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Item } from '@/types/item';
 import { getCategoryIcon } from '@/constants/categories';
+import { FIND_BACK } from '@constants/theme';
 
 interface ItemInfoCardProps {
   item: Item;
@@ -24,7 +25,7 @@ export const ItemInfoCard: React.FC<ItemInfoCardProps> = ({ item }) => {
       <View className="flex-row items-center gap-4">
         {/* Icon */}
         <View className="w-16 h-16 rounded-2xl bg-blue-50 items-center justify-center">
-          <CategoryIcon size={32} color="#3b82f6" />
+          <CategoryIcon size={32} color={FIND_BACK.primary} />
         </View>
 
         {/* Info */}

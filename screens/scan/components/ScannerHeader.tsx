@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { X } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { FIND_BACK } from '@constants/theme';
 
 interface ScannerHeaderProps {
   onClose: () => void;
@@ -23,7 +24,7 @@ export const ScannerHeader: React.FC<ScannerHeaderProps> = ({ onClose }) => {
         activeOpacity={0.8}
         className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-md items-center justify-center"
       >
-        <X size={24} color="#ffffff" />
+        <X size={24} color={FIND_BACK.bodyText} />
       </TouchableOpacity>
 
       <Text className="text-lg font-bold text-white">Quét mã QR</Text>

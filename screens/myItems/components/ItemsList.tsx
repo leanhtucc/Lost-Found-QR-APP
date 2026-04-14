@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Package } from 'lucide-react-native';
 import { Item } from '@/types/item';
+import { FIND_BACK } from '@constants/theme';
 import { StatusFilterType } from '../hooks/useItemsFilter';
 import { EmptyState } from './EmptyState';
 
@@ -52,7 +53,10 @@ export const ItemsList: React.FC<ItemsListProps> = ({
                     item.status === 'lost' ? 'bg-red-100' : 'bg-blue-100'
                   }`}
                 >
-                  <Package size={24} color={item.status === 'lost' ? '#ef4444' : '#3b82f6'} />
+                  <Package
+                    size={24}
+                    color={item.status === 'lost' ? FIND_BACK.danger : FIND_BACK.primary}
+                  />
                 </View>
                 <View className="flex-1 ml-3">
                   <Text className="text-base font-semibold text-gray-900 mb-1">{item.name}</Text>

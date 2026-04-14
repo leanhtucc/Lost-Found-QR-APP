@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Trash2 } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface ItemDetailHeaderProps {
   itemId: string;
@@ -34,7 +35,7 @@ export const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ itemId, onDe
           onPress={() => navigation.goBack()}
           className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
         >
-          <ArrowLeft size={20} color="#111827" />
+          <ArrowLeft size={20} color={FIND_BACK.neutral} />
         </TouchableOpacity>
 
         <Text className="font-bold text-gray-900 text-lg">Chi tiết món đồ</Text>
@@ -43,7 +44,7 @@ export const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ itemId, onDe
           onPress={handleDelete}
           className="w-10 h-10 rounded-full bg-red-50 items-center justify-center active:bg-red-100"
         >
-          <Trash2 size={20} color="#ef4444" />
+          <Trash2 size={20} color={FIND_BACK.danger} />
         </TouchableOpacity>
       </View>
     </View>

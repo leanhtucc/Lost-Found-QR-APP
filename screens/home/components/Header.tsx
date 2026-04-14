@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Bell, User } from 'lucide-react-native';
 import { logo } from '@assets';
+import { FIND_BACK } from '@constants/theme';
 
 interface HeaderProps {
   userName?: string;
@@ -45,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
           onPress={onNotificationPress}
           className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center relative"
         >
-          <Bell size={20} color="#6b7280" />
+          <Bell size={20} color={FIND_BACK.mutedText} />
           {notificationCount > 0 && (
             <View className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full items-center justify-center">
               <Text className="text-white text-xs font-bold">
@@ -63,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
           {userAvatar ? (
             <Image source={{ uri: userAvatar }} className="w-full h-full" resizeMode="cover" />
           ) : (
-            <User size={20} color="#3b82f6" />
+            <User size={20} color={FIND_BACK.primary} />
           )}
         </TouchableOpacity>
       </View>

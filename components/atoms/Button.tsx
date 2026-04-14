@@ -1,6 +1,7 @@
 import { cn } from '@/lib/cn';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, forwardRef, type ReactNode } from 'react';
+import { FIND_BACK } from '@constants/theme';
 import {
   ActivityIndicator,
   Pressable,
@@ -36,20 +37,20 @@ const shellBase =
 
 const variantShell: Record<AppButtonVariant, string> = {
   primary: '',
-  secondary: 'bg-fb-surface-elevated border border-fb-border-glass',
+  secondary: 'bg-fb-surface-elevated border border-fb-border-subtle',
   outlined: 'bg-transparent border border-white/30',
   inverted: 'bg-white',
   danger: 'bg-fb-danger',
-  success: 'bg-fb-success',
+  success: 'bg-fb-secondary',
 };
 
 const variantText: Record<AppButtonVariant, string> = {
-  primary: 'text-[#0A0A0F] font-semibold text-body-small',
-  secondary: 'text-white font-semibold text-body-small',
-  outlined: 'text-white font-semibold text-body-small',
+  primary: 'text-fb-neutral font-semibold text-body-small',
+  secondary: 'text-fb-content font-semibold text-body-small',
+  outlined: 'text-fb-content font-semibold text-body-small',
   inverted: 'text-fb-neutral font-semibold text-body-small',
-  danger: 'text-white font-semibold text-body-small',
-  success: 'text-white font-semibold text-body-small',
+  danger: 'text-fb-content font-semibold text-body-small',
+  success: 'text-fb-content font-semibold text-body-small',
 };
 
 const gradientInnerStyle: ViewStyle = {
@@ -90,7 +91,7 @@ const ButtonInner = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
   };
 
   const content = loading ? (
-    <ActivityIndicator color={variant === 'inverted' ? '#0A0A0F' : '#FFFFFF'} />
+    <ActivityIndicator color={variant === 'inverted' ? FIND_BACK.neutral : FIND_BACK.bodyText} />
   ) : (
     <>
       {leftIcon ? <View className="mr-2">{leftIcon}</View> : null}
@@ -112,7 +113,7 @@ const ButtonInner = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
       >
         <View className="w-full overflow-hidden rounded-fb">
           <LinearGradient
-            colors={['#978CF8', '#7C6AF6', '#6B5AE8']}
+            colors={[FIND_BACK.primaryLight, FIND_BACK.primary, FIND_BACK.primaryDark]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={gradientInnerStyle}

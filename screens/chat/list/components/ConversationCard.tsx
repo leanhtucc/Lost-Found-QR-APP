@@ -8,6 +8,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { User } from 'lucide-react-native';
 import { Conversation } from '@/types/chat';
+import { FIND_BACK } from '@constants/theme';
 
 interface ConversationCardProps {
   conversation: Conversation;
@@ -55,7 +56,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
               resizeMode="cover"
             />
           ) : (
-            <User size={28} color="#9ca3af" />
+            <User size={28} color={FIND_BACK.mutedText} />
           )}
         </View>
         {conversation.isOnline && (

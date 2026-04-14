@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image, Alert, ActivityIndicator } from 'r
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, User, CheckCircle2 } from 'lucide-react-native';
 import { uploadApi, validateFile } from '@services/upload';
+import { FIND_BACK } from '@constants/theme';
 
 interface AvatarPickerProps {
   /** The uploaded photo URL (from server) */
@@ -196,7 +197,7 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
           <View className="flex-1 rounded-full bg-gray-50 justify-center items-center overflow-hidden">
             {isLoading ? (
               <View className="items-center justify-center">
-                <ActivityIndicator size="large" color="#3B82F6" />
+                <ActivityIndicator size="large" color={FIND_BACK.primary} />
                 {uploadProgress ? (
                   <Text className="text-[10px] text-blue-500 mt-1.5 text-center font-medium">
                     {uploadProgress}
@@ -209,14 +210,14 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
                 {/* Success Badge - only show when upload is complete (has value) */}
                 {value && (
                   <View className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white justify-center items-center shadow-sm">
-                    <CheckCircle2 size={18} color="#FFFFFF" fill="#22c55e" />
+                    <CheckCircle2 size={18} color={FIND_BACK.bodyText} fill={FIND_BACK.secondary} />
                   </View>
                 )}
               </>
             ) : (
               <View className="items-center px-2.5">
                 <View className="w-14 h-14 rounded-full bg-gray-100 justify-center items-center mb-1.5">
-                  <User size={32} color="#9CA3AF" />
+                  <User size={32} color={FIND_BACK.mutedText} />
                 </View>
                 <Text className="text-[11px] font-medium text-gray-500 text-center">
                   Thêm ảnh đại diện
@@ -230,7 +231,7 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
         {/* Camera Icon Badge */}
         {!isLoading && (
           <View className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-blue-500 justify-center items-center border-[3px] border-white shadow-md">
-            <Camera size={16} color="#FFFFFF" />
+            <Camera size={16} color={FIND_BACK.bodyText} />
           </View>
         )}
       </TouchableOpacity>

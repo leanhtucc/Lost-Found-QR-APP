@@ -4,6 +4,7 @@
  */
 
 import { ActivityType, Notification } from '@/types/notification';
+import { FIND_BACK } from '@constants/theme';
 
 /**
  * Format thời gian thông báo
@@ -50,13 +51,13 @@ export const getNotificationIconColor = (type: ActivityType): string => {
   switch (type) {
     case 'qr_scanned':
     case 'item_found':
-      return '#22c55e';
+      return FIND_BACK.secondary;
     case 'new_message':
-      return '#3b82f6';
+      return FIND_BACK.primary;
     case 'item_returned':
-      return '#10b981';
+      return FIND_BACK.secondary;
     default:
-      return '#6b7280';
+      return FIND_BACK.labelText;
   }
 };
 

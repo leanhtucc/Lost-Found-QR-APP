@@ -6,11 +6,12 @@
 import React from 'react';
 import { Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FIND_BACK } from '@constants/theme';
 
 export const LoadingChat: React.FC = () => {
   return (
     <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center">
-      <ActivityIndicator size="large" color="#3b82f6" />
+      <ActivityIndicator size="large" color={FIND_BACK.primary} />
       <Text className="text-gray-500 mt-4">Đang tải tin nhắn...</Text>
     </SafeAreaView>
   );

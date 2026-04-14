@@ -6,6 +6,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Camera, useCodeScanner } from 'react-native-vision-camera';
+import { FIND_BACK } from '@constants/theme';
 
 interface ScannerViewProps {
   device: any;
@@ -44,6 +45,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ device, isActive, onCo
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: FIND_BACK.neutral,
   },
 });

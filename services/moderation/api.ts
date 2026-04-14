@@ -14,8 +14,7 @@ import {
   FlaggedMessagesResponse,
 } from '@/types/moderation';
 import { authStorage } from '@/storage/auth';
-
-const API_BASE = 'http://192.168.10.102:3000';
+import { buildStreamUrl } from '@services/shared/url';
 
 const createHeaders = async (): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
@@ -31,7 +30,7 @@ const createHeaders = async (): Promise<HeadersInit> => {
  */
 export const flagMessage = async (messageId: string): Promise<FlagResponse> => {
   try {
-    const url = `${API_BASE}/api/stream/messages/${messageId}/flag`;
+    const url = buildStreamUrl('messages', messageId, 'flag');
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'POST',
@@ -56,7 +55,7 @@ export const flagMessage = async (messageId: string): Promise<FlagResponse> => {
  */
 export const unflagMessage = async (messageId: string): Promise<UnflagResponse> => {
   try {
-    const url = `${API_BASE}/api/stream/messages/${messageId}/flag`;
+    const url = buildStreamUrl('messages', messageId, 'flag');
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'DELETE',
@@ -92,7 +91,7 @@ export const muteUser = async (
       queryParams.append('timeout', String(params.timeout));
     }
 
-    const url = `${API_BASE}/api/stream/channels/${channelId}/mute/${targetUserId}${
+    const url = `${buildStreamUrl('channels', channelId, 'mute', targetUserId)}${
       queryParams.toString() ? `?${queryParams}` : ''
     }`;
     const headers = await createHeaders();
@@ -123,7 +122,7 @@ export const unmuteUser = async (
   targetUserId: string
 ): Promise<UnmuteResponse> => {
   try {
-    const url = `${API_BASE}/api/stream/channels/${channelId}/mute/${targetUserId}`;
+    const url = buildStreamUrl('channels', channelId, 'mute', targetUserId);
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'DELETE',
@@ -154,7 +153,7 @@ export const banUser = async (
   params?: BanUserParams
 ): Promise<BanResponse> => {
   try {
-    const url = `${API_BASE}/api/stream/channels/${channelId}/ban/${targetUserId}`;
+    const url = buildStreamUrl('channels', channelId, 'ban', targetUserId);
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'POST',
@@ -182,7 +181,7 @@ export const getFlaggedMessages = async (
   channelId: string
 ): Promise<FlaggedMessagesResponse['data']> => {
   try {
-    const url = `${API_BASE}/api/stream/channels/${channelId}/flagged-messages`;
+    const url = buildStreamUrl('channels', channelId, 'flagged-messages');
     const headers = await createHeaders();
     const response = await fetch(url, {
       method: 'GET',

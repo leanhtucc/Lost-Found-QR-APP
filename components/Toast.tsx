@@ -6,6 +6,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { CheckCircle, XCircle, AlertCircle, X, Info, LucideIcon } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -38,28 +39,28 @@ const ICONS: Record<ToastType, LucideIcon> = {
 
 const COLORS: Record<ToastType, { bg: string; border: string; icon: string; text: string }> = {
   success: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    icon: '#22c55e',
-    text: 'text-green-800',
+    bg: 'bg-fb-surface-elevated',
+    border: 'border-fb-secondary',
+    icon: FIND_BACK.secondary,
+    text: 'text-fb-content',
   },
   error: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    icon: '#ef4444',
-    text: 'text-red-800',
+    bg: 'bg-fb-surface-elevated',
+    border: 'border-fb-danger',
+    icon: FIND_BACK.danger,
+    text: 'text-fb-content',
   },
   warning: {
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    icon: '#f59e0b',
-    text: 'text-amber-800',
+    bg: 'bg-fb-surface-elevated',
+    border: 'border-fb-tertiary',
+    icon: FIND_BACK.tertiary,
+    text: 'text-fb-content',
   },
   info: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    icon: '#3b82f6',
-    text: 'text-blue-800',
+    bg: 'bg-fb-surface-elevated',
+    border: 'border-fb-primary',
+    icon: FIND_BACK.info,
+    text: 'text-fb-content',
   },
 };
 
@@ -126,7 +127,7 @@ export const Toast: React.FC<ToastProps> = ({
         {/* Content */}
         <View className="flex-1">
           <Text className={`font-semibold text-base ${colors.text}`}>{title}</Text>
-          {message && <Text className={`text-sm ${colors.text} opacity-80 mt-1`}>{message}</Text>}
+          {message && <Text className="text-sm text-fb-muted mt-1">{message}</Text>}
         </View>
 
         {/* Close button */}

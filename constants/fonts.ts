@@ -3,7 +3,10 @@
  */
 
 export const FONT_FAMILY = {
-  sans: 'Inter',
+  display: 'Plus Jakarta Sans',
+  sans: 'Manrope',
+  body: 'Manrope',
+  label: 'Manrope',
   system: undefined as string | undefined,
 } as const;
 

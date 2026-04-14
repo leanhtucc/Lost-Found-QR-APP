@@ -3,6 +3,7 @@
 import { ComponentType } from 'react';
 import { SvgProps } from 'react-native-svg';
 import { ArrowRight, LucideProps } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 import { IconOnboarding, IconOnboarding1, IconOnboarding2 } from '@components/icons';
 
 export interface SlideData {
@@ -31,7 +32,7 @@ export const slides: SlideData[] = [
     description: 'The most reliable way to recover your lost belongings and protect what you love.',
     buttonLabel: 'Protect Your Valuables',
     ButtonIcon: ArrowRight,
-    buttonIconProps: { size: 20, color: '#FFFFFF', strokeWidth: 2.5 },
+    buttonIconProps: { size: 20, color: FIND_BACK.bodyText, strokeWidth: 2.5 },
   },
   {
     id: '2',
@@ -40,7 +41,7 @@ export const slides: SlideData[] = [
     description: 'Our community of finders is ready to help you recover your items in no time.',
     buttonLabel: 'Next',
     ButtonIcon: ArrowRight,
-    buttonIconProps: { size: 20, color: '#FFFFFF', strokeWidth: 2 },
+    buttonIconProps: { size: 20, color: FIND_BACK.bodyText, strokeWidth: 2 },
   },
   {
     id: '3',
@@ -48,6 +49,6 @@ export const slides: SlideData[] = [
     title: 'Honest finders earn real rewards',
     description: 'Do the right thing and get recognized. Honesty pays off with real-world rewards.',
     buttonLabel: 'Get Started',
-    buttonIconProps: { size: 20, color: '#FFFFFF', strokeWidth: 2 },
+    buttonIconProps: { size: 20, color: FIND_BACK.bodyText, strokeWidth: 2 },
   },
 ];

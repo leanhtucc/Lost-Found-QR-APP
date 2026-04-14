@@ -10,6 +10,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { Download } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
 import ViewShot from 'react-native-view-shot';
+import { FIND_BACK } from '@constants/theme';
 
 interface QRCodeCardProps {
   itemId: string;
@@ -62,7 +63,12 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
       {/* QR Code */}
       <ViewShot ref={qrCodeRef} options={{ format: 'png', quality: 1.0 }}>
         <View className="bg-white p-4 rounded-2xl border-2 border-gray-200">
-          <QRCode value={itemId} size={200} backgroundColor="white" color="#3b82f6" />
+          <QRCode
+            value={itemId}
+            size={200}
+            backgroundColor={FIND_BACK.bodyText}
+            color={FIND_BACK.primary}
+          />
         </View>
       </ViewShot>
 
@@ -73,7 +79,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
         onPress={handleDownloadQR}
         className="flex-row items-center gap-2 bg-blue-50 px-6 py-3 rounded-xl active:bg-blue-100"
       >
-        <Download size={20} color="#3b82f6" />
+        <Download size={20} color={FIND_BACK.primary} />
         <Text className="text-blue-600 font-semibold">Lưu mã QR</Text>
       </TouchableOpacity>
     </Animated.View>

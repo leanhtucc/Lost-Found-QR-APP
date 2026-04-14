@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Bell } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 export const EmptyState: React.FC = () => {
   return (
@@ -15,7 +16,7 @@ export const EmptyState: React.FC = () => {
       className="flex-1 items-center justify-center px-6 py-16"
     >
       <View className="w-20 h-20 rounded-full bg-gray-100 items-center justify-center mb-4">
-        <Bell size={40} color="#9ca3af" />
+        <Bell size={40} color={FIND_BACK.labelText} />
       </View>
       <Text className="text-gray-900 font-semibold text-base mb-1">Không có thông báo</Text>
       <Text className="text-sm text-gray-500 text-center">

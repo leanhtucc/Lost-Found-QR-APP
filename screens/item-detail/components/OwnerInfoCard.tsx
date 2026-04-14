@@ -9,6 +9,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Star, Award, Package, User as UserIcon, BadgeCheck } from 'lucide-react-native';
 import type { User } from '@/services/auth/types';
 import { getUserLevel, getLevelInfo } from '@/services/auth/types';
+import { COLORS, FIND_BACK } from '@constants/theme';
 
 interface OwnerInfoCardProps {
   owner?: User;
@@ -39,7 +40,7 @@ export const OwnerInfoCard: React.FC<OwnerInfoCardProps> = ({ owner, ownerInfo }
         {/* Title */}
         <View className="flex-row items-center gap-2 mb-4">
           <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center">
-            <UserIcon size={18} color="#4f46e5" />
+            <UserIcon size={18} color={FIND_BACK.primary} />
           </View>
           <Text className="text-lg font-bold text-gray-900">Chủ sở hữu</Text>
         </View>
@@ -51,7 +52,7 @@ export const OwnerInfoCard: React.FC<OwnerInfoCardProps> = ({ owner, ownerInfo }
             {avatar ? (
               <Image source={{ uri: avatar }} className="w-full h-full" resizeMode="cover" />
             ) : (
-              <UserIcon size={32} color="#6b7280" />
+              <UserIcon size={32} color={FIND_BACK.mutedText} />
             )}
           </View>
 
@@ -61,10 +62,10 @@ export const OwnerInfoCard: React.FC<OwnerInfoCardProps> = ({ owner, ownerInfo }
               <Text className="text-xl font-bold text-gray-900" numberOfLines={1}>
                 {displayName}
               </Text>
-              {isVerified && <BadgeCheck size={20} color="#3b82f6" fill="#3b82f6" />}
+              {isVerified && <BadgeCheck size={20} color={FIND_BACK.info} fill={FIND_BACK.info} />}
             </View>
             <View className="flex-row items-center gap-2">
-              <Award size={14} color="#4f46e5" />
+              <Award size={14} color={FIND_BACK.primary} />
               <Text className="text-sm text-indigo-600 font-semibold">
                 Thành viên {levelInfo.label}
               </Text>
@@ -77,7 +78,7 @@ export const OwnerInfoCard: React.FC<OwnerInfoCardProps> = ({ owner, ownerInfo }
           {/* Trust Score */}
           <View className="flex-1 items-center">
             <View className="flex-row items-center gap-1 mb-1">
-              <Star size={16} color="#f59e0b" fill="#f59e0b" />
+              <Star size={16} color={COLORS.trustGold} fill={COLORS.trustGold} />
               <Text className="text-xs font-medium text-amber-700">Uy tín</Text>
             </View>
             <Text className="text-xl font-bold text-amber-900">{trustScore}</Text>
@@ -88,7 +89,7 @@ export const OwnerInfoCard: React.FC<OwnerInfoCardProps> = ({ owner, ownerInfo }
           {/* Total Returned */}
           <View className="flex-1 items-center">
             <View className="flex-row items-center gap-1 mb-1">
-              <Package size={16} color="#10b981" />
+              <Package size={16} color={FIND_BACK.secondary} />
               <Text className="text-xs font-medium text-emerald-700">Đã trả</Text>
             </View>
             <Text className="text-xl font-bold text-emerald-900">{totalReturned}</Text>

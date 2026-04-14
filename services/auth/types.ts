@@ -3,6 +3,8 @@
  * Based on API documentation
  */
 
+import { COLORS } from '@constants/theme';
+
 // ==================== REQUEST TYPES ====================
 
 /**
@@ -149,10 +151,10 @@ export function getUserLevel(trustScore: number): UserLevel {
  */
 export function getLevelInfo(level: UserLevel): { label: string; color: string; icon: string } {
   const levels = {
-    bronze: { label: 'Đồng', color: '#CD7F32', icon: 'award' },
-    silver: { label: 'Bạc', color: '#C0C0C0', icon: 'award' },
-    gold: { label: 'Vàng', color: '#FFD700', icon: 'award' },
-    platinum: { label: 'Bạch Kim', color: '#E5E4E2', icon: 'crown' },
+    bronze: { label: 'Đồng', color: COLORS.trustBronze, icon: 'award' },
+    silver: { label: 'Bạc', color: COLORS.trustSilver, icon: 'award' },
+    gold: { label: 'Vàng', color: COLORS.trustGold, icon: 'award' },
+    platinum: { label: 'Bạch Kim', color: COLORS.trustPlatinum, icon: 'crown' },
   };
   return levels[level];
 }

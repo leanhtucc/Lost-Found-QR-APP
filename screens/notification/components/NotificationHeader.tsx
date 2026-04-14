@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Check } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface NotificationHeaderProps {
   unreadCount: number;
@@ -27,7 +28,7 @@ export const NotificationHeader: React.FC<NotificationHeaderProps> = ({
             onPress={() => navigation.goBack()}
             className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
           >
-            <ArrowLeft size={20} color="#111827" />
+            <ArrowLeft size={20} color={FIND_BACK.neutral} />
           </TouchableOpacity>
           <View>
             <Text className="font-bold text-gray-900 text-lg">Thông báo</Text>
@@ -42,7 +43,7 @@ export const NotificationHeader: React.FC<NotificationHeaderProps> = ({
             onPress={onMarkAllRead}
             className="flex-row items-center gap-1 bg-blue-50 px-3 py-2 rounded-lg active:bg-blue-100"
           >
-            <Check size={16} color="#3b82f6" />
+            <Check size={16} color={FIND_BACK.primary} />
             <Text className="text-sm text-blue-600 font-semibold">Đọc tất cả</Text>
           </TouchableOpacity>
         )}

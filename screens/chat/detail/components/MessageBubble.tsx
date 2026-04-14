@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Check, CheckCheck } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 interface MessageBubbleProps {
   content: string;
@@ -59,9 +60,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {isMine && (
               <View>
                 {isRead ? (
-                  <CheckCheck size={14} color="#3b82f6" />
+                  <CheckCheck size={14} color={FIND_BACK.info} />
                 ) : (
-                  <Check size={14} color="#9ca3af" />
+                  <Check size={14} color={FIND_BACK.mutedText} />
                 )}
               </View>
             )}
