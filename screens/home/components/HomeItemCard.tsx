@@ -1,29 +1,47 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Item } from '@/types/item';
-import { Clock, MapPin } from 'lucide-react-native';
+import { RadarLostItem } from '@/types/radar';
+import { MapPin } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
 
 interface HomeItemCardProps {
-  item: Item;
+  item: Item | RadarLostItem;
   onPress: () => void;
 }
 
+const isOwnedItem = (item: Item | RadarLostItem): item is Item => {
+  return 'ownerId' in item;
+};
+
+const formatDistance = (item: Item | RadarLostItem): string => {
+  if ('distanceMeters' in item && typeof item.distanceMeters === 'number') {
+    if (item.distanceMeters < 1000) {
+      return `${Math.round(item.distanceMeters)}M`;
+    }
+
+    return `${(item.distanceMeters / 1000).toFixed(1)}KM`;
+  }
+
+  return 'GẦN BẠN';
+};
+
 export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => {
-  // Determine if it is lost or found based on status (assuming 'safe' or empty is found, 'lost' is lost)
-  const isLost = item.status === 'lost';
-  // Mock distance and time
-  const distance = 'Cách đây 250m';
-  const time = isLost ? 'Mất 2 giờ trước' : 'Nhặt được 2 giờ trước';
-  const reward = isLost ? '500K' : undefined;
+  const isLost = isOwnedItem(item) ? item.status === 'lost' : true;
+  const distance = formatDistance(item);
+  const reward = isLost
+    ? 'distanceMeters' in item && item.distanceMeters && item.distanceMeters > 700
+      ? '1M'
+      : '500K'
+    : undefined;
 
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
-      className="flex-row items-center bg-fb-surface-muted border border-fb-surface-elevated rounded-2xl p-3 mb-3 shrink-0"
+      className="mr-4 w-[180px] rounded-2xl border border-[#4745541a] bg-[#1b1b20] p-[13px]"
     >
-      <View className="w-16 h-16 rounded-xl bg-gray-800 overflow-hidden mr-3">
+      <View className="h-24 w-full overflow-hidden rounded-xl bg-[#20212a]">
         {item.imagePublicUrl ? (
           <Image
             source={{ uri: item.imagePublicUrl }}
@@ -31,32 +49,29 @@ export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => 
             resizeMode="cover"
           />
         ) : (
-          <View className="w-full h-full items-center justify-center border border-gray-700 rounded-xl bg-fb-surface-elevated">
-            <Text className="text-gray-500 text-xs">No img</Text>
+          <View className="h-full w-full items-center justify-center rounded-xl border border-gray-700 bg-fb-surface-elevated">
+            <Text className="text-xs text-gray-500">No img</Text>
           </View>
         )}
+
+        {reward ? (
+          <View className="absolute right-2 top-2 rounded-lg bg-[#dd724f]/95 px-2 py-0.5">
+            <Text className="text-[10px] font-bold text-white">{reward}</Text>
+          </View>
+        ) : null}
       </View>
 
-      <View className="flex-1 justify-center">
-        <Text className="text-white font-bold text-base mb-1" numberOfLines={1}>
+      <View className="mt-2 w-full">
+        <Text className="text-base font-semibold text-[#e4e1e9]" numberOfLines={1}>
           {item.name}
         </Text>
-        <View className="flex-row items-center mb-1">
-          <MapPin size={12} color={FIND_BACK.mutedText} />
-          <Text className="text-gray-400 text-xs ml-1">{distance}</Text>
-        </View>
-        <View className="flex-row items-center">
-          <Clock size={12} color={FIND_BACK.mutedText} />
-          <Text className="text-gray-400 text-xs ml-1">{time}</Text>
+        <View className="mt-1 flex-row items-center">
+          <MapPin size={11} color={FIND_BACK.mutedText} />
+          <Text className="ml-1 text-[11px] font-medium tracking-wide text-[#64748b]">
+            {distance}
+          </Text>
         </View>
       </View>
-
-      {reward && (
-        <View className="bg-green-500/20 px-3 py-1 rounded-full border border-green-500/30 ml-2 shadow-sm">
-          <Text className="text-green-500 text-[9px] font-bold text-center leading-3">REWARD:</Text>
-          <Text className="text-green-500 text-xs font-bold text-center">{reward}</Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 };

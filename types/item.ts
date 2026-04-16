@@ -85,6 +85,8 @@ export interface DashboardData {
 export interface UpdateStatusParams {
   status: ItemStatus;
   lostMessage?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 // Scan QR response - khi item safe

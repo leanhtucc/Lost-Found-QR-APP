@@ -122,6 +122,23 @@ export const itemsApi = {
   },
 
   /**
+   * Lấy danh sách đồ thất lạc của chính user
+   * GET /api/items?status=lost
+   */
+  async getMyLostItems(params?: {
+    limit?: number;
+    category?: ItemCategory;
+    page?: number;
+  }): Promise<ListItemsResponse> {
+    return this.getItems({
+      status: 'lost',
+      limit: params?.limit,
+      category: params?.category,
+      page: params?.page,
+    });
+  },
+
+  /**
    * Lấy Dashboard data với statistics
    * Helper method kết hợp getItems + tính toán stats
    */
@@ -302,6 +319,18 @@ export const itemsApi = {
 
     if (params.lostMessage) {
       queryParams.append('lostMessage', params.lostMessage);
+    }
+
+    const hasLatitude = typeof params.latitude === 'number';
+    const hasLongitude = typeof params.longitude === 'number';
+
+    if (hasLatitude !== hasLongitude) {
+      throw new Error('latitude and longitude must be provided together');
+    }
+
+    if (hasLatitude && hasLongitude) {
+      queryParams.append('latitude', String(params.latitude));
+      queryParams.append('longitude', String(params.longitude));
     }
 
     const url = `${getItemsApiUrl()}/${itemId}/status?${queryParams.toString()}`;

@@ -51,6 +51,12 @@
         }
       ],
       "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Cho phep FindBack truy cap vi tri de hien thi radar do that lac gan ban"
+        }
+      ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth"
     ]

@@ -5,9 +5,6 @@ import { FIND_BACK } from '@constants/theme';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-/**
- * FindBack-style translucent pill tab bar (active icon on primary purple disc).
- */
 function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const focusedRoute = state.routes[state.index];
