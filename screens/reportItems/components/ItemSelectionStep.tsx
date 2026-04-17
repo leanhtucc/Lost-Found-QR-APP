@@ -34,6 +34,12 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
         </Text>
       ) : null}
 
+      {!isLoading && items.length === 0 ? (
+        <Text style={{ color: REPORT_COLORS.textMuted, fontSize: 14, marginTop: 12 }}>
+          Kho của bạn chưa có vật dụng ở trạng thái an toàn để báo mất.
+        </Text>
+      ) : null}
+
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 24 }}>
         <TouchableOpacity
           activeOpacity={0.85}

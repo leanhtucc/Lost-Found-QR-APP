@@ -92,7 +92,7 @@ export interface RadarLostItem {
   itemId: string;
   name: string;
   category: RadarCategory | string;
-  status: 'lost';
+  status: 'LOST';
   description?: string;
   lostMessage?: string;
   imagePublicUrl?: string;

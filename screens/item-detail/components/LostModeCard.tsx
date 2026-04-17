@@ -26,7 +26,7 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
   const [lostMessage, setLostMessage] = useState(item.lostMessage || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const isLost = item.status === 'lost';
+  const isLost = item.status === 'LOST' || item.status === 'PENDING_PAYMENT';
 
   const handleToggle = () => {
     Alert.alert(

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -128,21 +128,27 @@ interface SplashScreenProps {
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   // ── Shared values ──────────────────────────────────
-  const screenOpacity = useSharedValue(0);
+  const screenOpacity = useSharedValue(1);
   const logoScale = useSharedValue(0.6);
   const logoOpacity = useSharedValue(0);
   const textY = useSharedValue(20);
   const textOpacity = useSharedValue(0);
   const exitOpacity = useSharedValue(1);
+  const hasHiddenNativeSplash = useRef(false);
+
+  const hideNativeSplashOnLayout = useCallback(() => {
+    if (hasHiddenNativeSplash.current) {
+      return;
+    }
+
+    hasHiddenNativeSplash.current = true;
+    ExpoSplashScreen.hideAsync().catch(() => {
+      // Native splash có thể đã ẩn trước đó
+    });
+  }, []);
 
   useEffect(() => {
-    // Ẩn native splash khi component này sẵn sàng render
-    ExpoSplashScreen.hideAsync();
-
     const easeOut = Easing.bezier(0.16, 1, 0.3, 1); // Expo ease-out mượt mà
-
-    // Bước 1 → Màn hình fade in nhanh
-    screenOpacity.value = withTiming(1, { duration: 200 });
 
     // Bước 2 → Logo spring vào (delay nhỏ để tránh flash)
     logoOpacity.value = withDelay(80, withTiming(1, { duration: 300 }));
@@ -161,7 +167,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         }
       })
     );
-  }, [exitOpacity, logoOpacity, logoScale, onFinish, screenOpacity, textOpacity, textY]);
+  }, [exitOpacity, logoOpacity, logoScale, onFinish, textOpacity, textY]);
 
   // ── Animated styles ─────────────────────────────────
   const screenStyle = useAnimatedStyle(() => ({
@@ -182,6 +188,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   return (
     <Animated.View style={screenStyle}>
       <SafeAreaView
+        onLayout={hideNativeSplashOnLayout}
         className="flex-1"
         style={{ backgroundColor: FIND_BACK.canvas }}
         edges={['top', 'bottom']}

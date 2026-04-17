@@ -158,7 +158,7 @@ const normalizeNearbyItem = (payload: RadarNearbyApiItem): RadarLostItem | null 
     itemId: payload.itemId,
     name: payload.name,
     category: typeof payload.category === 'string' ? payload.category : 'other',
-    status: 'lost',
+    status: 'LOST',
     lostMessage: payload.lostMessage,
     imagePublicUrl: payload.imagePublicUrl,
     latitude,

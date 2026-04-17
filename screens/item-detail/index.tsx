@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Item } from '@/types/item';
+import { Item, ItemStatus } from '@/types/item';
 import { itemsApi } from '@/services/items';
 import { ItemDetailHeader, ItemInfoCard, QRCodeCard, LostModeCard } from './components';
 
@@ -40,10 +40,11 @@ export default function ItemDetailScreen() {
     if (!item) return;
 
     try {
-      const newStatus = item.status === 'lost' ? 'safe' : 'lost';
+      const isLostLike = item.status === 'LOST' || item.status === 'PENDING_PAYMENT';
+      const newStatus: ItemStatus = isLostLike ? 'SAFE' : 'LOST';
       const updatedItem = await itemsApi.updateStatus(item.id, {
         status: newStatus,
-        lostMessage: newStatus === 'lost' ? item.lostMessage : undefined,
+        lostMessage: newStatus === 'LOST' ? item.lostMessage : undefined,
       });
 
       // Update local state
@@ -58,8 +59,9 @@ export default function ItemDetailScreen() {
     if (!item) return;
 
     try {
+      const nextStatus: ItemStatus = item.status === 'PENDING_PAYMENT' ? 'PENDING_PAYMENT' : 'LOST';
       const updatedItem = await itemsApi.updateStatus(item.id, {
-        status: 'lost',
+        status: nextStatus,
         lostMessage: message,
       });
 

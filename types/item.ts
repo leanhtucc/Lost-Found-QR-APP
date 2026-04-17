@@ -17,7 +17,7 @@ export type ItemCategory =
   | 'other';
 
 // Item Status
-export type ItemStatus = 'safe' | 'lost';
+export type ItemStatus = 'SAFE' | 'PENDING_PAYMENT' | 'LOST' | 'FOUND' | 'RESOLVED';
 
 // Location coordinates
 export interface Location {
@@ -89,49 +89,63 @@ export interface UpdateStatusParams {
   longitude?: number;
 }
 
+export interface ScanItemOwnerInfo {
+  memberId?: string;
+  display_name: string;
+  avatar?: string;
+  trust_score?: number;
+  is_verified?: boolean;
+  joined_date?: string;
+  total_returned?: number;
+}
+
+export interface ScanItemInfo {
+  id: string;
+  itemId?: string;
+  name: string;
+  category: ItemCategory | string;
+  status: ItemStatus;
+  lost_message?: string;
+  owner_info?: ScanItemOwnerInfo;
+}
+
 // Scan QR response - khi item safe
 export interface ScanItemSafeResponse {
-  item_info: {
-    id: string;
-    name: string;
-    category: ItemCategory;
-    status: 'safe';
-    owner_info: {
-      memberId: string; // Changed from studentId
-      display_name: string;
-      avatar?: string;
-      trust_score: number; // Trust metrics
-      is_verified: boolean; // Verification badge
-      joined_date: string;
-      total_returned?: number; // Items returned count
-    };
-  };
+  success?: boolean;
+  item_info: ScanItemInfo;
   action: 'info_only';
   message: string;
 }
 
 // Scan QR response - khi item lost
 export interface ScanItemLostResponse {
-  item_info: {
-    id: string;
-    name: string;
-    category: ItemCategory;
-    status: 'lost';
-    lost_message: string;
-    owner_info: {
-      memberId: string; // Changed from studentId
-      display_name: string;
-      avatar?: string;
-      trust_score: number; // Trust metrics
-      is_verified: boolean; // Verification badge
-      joined_date: string;
-      total_returned?: number; // Items returned count
-    };
-  };
+  success?: boolean;
+  item_info: ScanItemInfo;
   action: 'open_chat';
+  message?: string;
+  channelId?: string;
 }
 
 export type ScanItemResponse = ScanItemSafeResponse | ScanItemLostResponse;
+
+export interface ScanGuestInitParams {
+  itemId: string;
+  phoneNumber: string;
+  lat?: number;
+  lng?: number;
+}
+
+export interface ScanGuestInitResponse {
+  success: boolean;
+  chatToken: string;
+  guestId: string;
+  channelId: string;
+  guestInfo?: {
+    id: string;
+    displayName: string;
+  };
+  message?: string;
+}
 
 // API Response wrapper
 export interface ItemApiResponse<T = any> {

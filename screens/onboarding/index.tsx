@@ -24,10 +24,8 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withDelay,
   Easing,
 } from 'react-native-reanimated';
-import { SplashScreen } from './SplashScreen';
 
 type OnboardingNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -45,7 +43,6 @@ export const OnboardingScreen: React.FC = () => {
   const pageWidth = Math.max(screenWidth - 48, 280);
 
   // State
-  const [showSplash, setShowSplash] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Refs
@@ -60,14 +57,8 @@ export const OnboardingScreen: React.FC = () => {
   const customEasing = Easing.bezier(0.25, 0.1, 0.25, 1);
 
   useEffect(() => {
-    // Không chờ showSplash tắt hẳn nữa để tránh gián đoạn/chớp trắng
-    // Splash đè bên trên sẽ bắt đầu mờ từ 1200ms
-    // Onboarding ở dưới sẽ bắt đầu Fade-in & Slide-up từ 1400ms tạo hiệu ứng cross-fade siêu đẹp
-    enterOpacity.value = withDelay(1400, withTiming(1, { duration: 1200, easing: customEasing }));
-    enterTranslateY.value = withDelay(
-      1400,
-      withTiming(0, { duration: 1200, easing: customEasing })
-    );
+    enterOpacity.value = withTiming(1, { duration: 550, easing: customEasing });
+    enterTranslateY.value = withTiming(0, { duration: 550, easing: customEasing });
   }, [customEasing, enterOpacity, enterTranslateY]);
 
   const enterAnimatedStyle = useAnimatedStyle(() => {
@@ -228,11 +219,6 @@ export const OnboardingScreen: React.FC = () => {
           </View>
         </SafeAreaView>
       </Animated.View>
-      {showSplash && (
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 999 }}>
-          <SplashScreen onFinish={() => setShowSplash(false)} />
-        </View>
-      )}
     </View>
   );
 };

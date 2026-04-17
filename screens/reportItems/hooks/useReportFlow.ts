@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import * as Location from 'expo-location';
+import * as WebBrowser from 'expo-web-browser';
 import { itemsApi } from '@services/items';
 import { reportsApi } from '@services/reports';
-import { REWARD_OPTIONS, REPORT_ITEMS, REPORT_LOCATION } from '../constants/mockData';
+import { REWARD_OPTIONS, REPORT_LOCATION } from '../constants/mockData';
 import { ReportItemOption, ReportLocation, ReportStep } from '../types';
 
 const FALLBACK_ADDRESS = '';
@@ -59,32 +60,34 @@ const toLocationView = (latitude: number, longitude: number, address: string): R
 
 const mapItemToOption = (item: {
   id: string;
-  itemId: string;
+  itemId?: string;
   name: string;
   category: string;
   description?: string;
   imagePublicUrl?: string;
 }): ReportItemOption => {
+  const stableItemId = item.itemId || item.id;
+
   return {
-    id: item.itemId,
+    id: stableItemId,
     name: item.name,
     category: item.category,
     subtitle: item.description?.trim() || 'Vật dụng trong kho của bạn',
     imageUrl:
       item.imagePublicUrl ||
       'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=60',
-    serialNumber: item.itemId.slice(-8).toUpperCase(),
+    serialNumber: stableItemId.slice(-8).toUpperCase(),
     insured: false,
   };
 };
 
 export const useReportFlow = () => {
   const [step, setStep] = useState<ReportStep>(1);
-  const [availableItems, setAvailableItems] = useState<ReportItemOption[]>(REPORT_ITEMS);
+  const [availableItems, setAvailableItems] = useState<ReportItemOption[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResolvingCurrentLocation, setIsResolvingCurrentLocation] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState<string>(REPORT_ITEMS[0]?.id ?? '');
+  const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [selectedRewardId, setSelectedRewardId] = useState<string>(
     REWARD_OPTIONS.find(option => option.recommended)?.id ?? REWARD_OPTIONS[0]?.id ?? ''
   );
@@ -97,7 +100,7 @@ export const useReportFlow = () => {
     setIsLoadingItems(true);
 
     try {
-      const response = await itemsApi.getItems({ status: 'safe', limit: 30, page: 1 });
+      const response = await itemsApi.getMyVaultItems({ limit: 30, page: 1 });
       const normalizedItems = response.items.map(mapItemToOption);
 
       if (normalizedItems.length > 0) {
@@ -107,19 +110,13 @@ export const useReportFlow = () => {
           return hasPrevious ? prev : normalizedItems[0].id;
         });
       } else {
-        setAvailableItems(REPORT_ITEMS);
-        setSelectedItemId(prev => {
-          const hasPrevious = REPORT_ITEMS.some(item => item.id === prev);
-          return hasPrevious ? prev : REPORT_ITEMS[0]?.id || '';
-        });
+        setAvailableItems([]);
+        setSelectedItemId('');
       }
     } catch (error) {
-      console.warn('[ReportFlow] Failed to load user items, fallback to mock list.', error);
-      setAvailableItems(REPORT_ITEMS);
-      setSelectedItemId(prev => {
-        const hasPrevious = REPORT_ITEMS.some(item => item.id === prev);
-        return hasPrevious ? prev : REPORT_ITEMS[0]?.id || '';
-      });
+      console.warn('[ReportFlow] Failed to load user vault items.', error);
+      setAvailableItems([]);
+      setSelectedItemId('');
     } finally {
       setIsLoadingItems(false);
     }
@@ -226,7 +223,7 @@ export const useReportFlow = () => {
         address: manualAddress.trim() || resolvedLocation?.address || '',
       };
 
-      await reportsApi.reportLostItem({
+      const reportResult = await reportsApi.reportLostItem({
         itemId: selectedItemId,
         location: {
           lat: locationPayload.lat,
@@ -236,6 +233,25 @@ export const useReportFlow = () => {
         bounty: selectedReward?.amount ?? 0,
         paymentMethod: 'VNPAY',
       });
+
+      if (reportResult.paymentUrl) {
+        try {
+          await WebBrowser.openBrowserAsync(reportResult.paymentUrl);
+        } catch (browserError) {
+          console.warn('[ReportFlow] Failed to open payment URL:', browserError);
+          Alert.alert(
+            'Cần thanh toán để kích hoạt radar',
+            'Đã tạo báo mất, nhưng chưa mở được trang thanh toán. Vui lòng thử lại trong lịch sử báo mất.'
+          );
+          return;
+        }
+
+        Alert.alert(
+          'Đang chờ thanh toán',
+          'Hệ thống đã chuyển tới trang thanh toán. Radar sẽ kích hoạt sau khi thanh toán thành công.'
+        );
+        return;
+      }
 
       setShowRadarState(true);
     } catch (error) {

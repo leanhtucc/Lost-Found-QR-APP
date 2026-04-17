@@ -9,10 +9,14 @@ import * as Haptics from 'expo-haptics';
 import { itemsApi } from '@/services/items';
 import type { ScanItemResponse } from '@/types/item';
 
-interface ScanResult {
+export interface ScanResult {
   itemId: string;
   scanData?: ScanItemResponse;
   isOwnItem: boolean;
+  action?: ScanItemResponse['action'];
+  channelId?: string;
+  itemName?: string;
+  ownerDisplayName?: string;
 }
 
 interface UseQRScannerReturn {
@@ -66,29 +70,35 @@ export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQR
     }
   }, []);
 
+  const toScanResult = useCallback((itemId: string, scanData: ScanItemResponse): ScanResult => {
+    const isOpenChat = scanData.action === 'open_chat';
+    const ownerDisplayName = scanData.item_info.owner_info?.display_name;
+
+    return {
+      itemId,
+      scanData,
+      isOwnItem: !isOpenChat,
+      action: scanData.action,
+      channelId: scanData.action === 'open_chat' ? scanData.channelId : undefined,
+      itemName: scanData.item_info.name,
+      ownerDisplayName,
+    };
+  }, []);
+
   // Fetch scan data and determine navigation
   const fetchScanData = useCallback(
     async (itemId: string) => {
       try {
-        // TODO: Call actual scan API endpoint: /api/scan/:itemId
-        // For now, we'll use getItemById and check ownership
-        await itemsApi.getItemById(itemId);
+        const scanData = await itemsApi.scanQR(itemId);
 
         // Record scan event
         await recordScanEvent(itemId);
 
-        // Determine if this is user's own item
-        // This should ideally be done by comparing user.memberId with item.ownerId
-        // But for now, we assume if we can fetch it, it's our item
-        const isOwnItem = true; // TODO: Compare with current user's memberId
+        const result = toScanResult(itemId, scanData);
 
         // Notify parent with result
         setTimeout(() => {
-          onScanSuccess({
-            itemId,
-            isOwnItem,
-            // scanData will be populated by actual scan API
-          });
+          onScanSuccess(result);
         }, 500);
       } catch (err) {
         console.error('Error fetching scan data:', err);
@@ -101,7 +111,7 @@ export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQR
         }, 500);
       }
     },
-    [recordScanEvent, onScanSuccess]
+    [onScanSuccess, recordScanEvent, toScanResult]
   );
 
   // Handle scanned QR code
@@ -155,6 +165,8 @@ export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQR
         const parts = decodedText.split('/item/');
         itemId = parts[parts.length - 1];
       }
+
+      itemId = itemId.split('?')[0].split('#')[0].trim();
 
       setScannedData(itemId);
 

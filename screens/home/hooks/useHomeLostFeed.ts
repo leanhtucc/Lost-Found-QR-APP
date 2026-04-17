@@ -115,13 +115,24 @@ export const useHomeLostFeed = ({
       setIsRadarLoading(true);
 
       try {
-        const data = coords
+        const primaryData = coords
           ? await radarApi.getHomeLostFeed({
               lat: coords.latitude,
               lng: coords.longitude,
               radius: normalizedRadius,
             })
           : await radarApi.getHomeLostFeed();
+
+        let data = primaryData;
+        let feedSource: 'global' | 'location' | 'global-fallback' = coords ? 'location' : 'global';
+
+        if (coords && primaryData.cards.length === 0 && primaryData.pins.length === 0) {
+          const fallbackData = await radarApi.getHomeLostFeed();
+          if (fallbackData.cards.length > 0 || fallbackData.pins.length > 0) {
+            data = fallbackData;
+            feedSource = 'global-fallback';
+          }
+        }
 
         setMapPins(data.pins);
         setLostFeedCards(data.cards);
@@ -138,6 +149,7 @@ export const useHomeLostFeed = ({
 
         if (__DEV__) {
           console.log('[HomeFeed] /api/home/lost-feed result:', {
+            source: feedSource,
             hasLocation: Boolean(coords),
             radius: coords ? normalizedRadius : null,
             myLostCount: data.myLostCount,

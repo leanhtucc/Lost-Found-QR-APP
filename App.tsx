@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as Sentry from '@sentry/react-native';
-import * as ExpoSplashScreen from 'expo-splash-screen';
+import { StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 import '@/styles/global.css';
 import RootStack from './navigation';
@@ -13,12 +13,7 @@ import { ToastProvider } from '@contexts/ToastContext';
 // eslint-disable-next-line import/no-named-as-default
 import ENV from './constants/environment';
 import { ItemsProvider } from '@/contexts';
-
-// Giữ native splash screen cho đến khi app tự ẩn qua SplashScreen component
-// Phải gọi ở module level (trước khi render) để có hiệu lực
-ExpoSplashScreen.preventAutoHideAsync().catch(() => {
-  // Bỏ qua lỗi nếu splash screen đã bị ẩn trước đó
-});
+import { SplashScreen } from '@screens/onboarding/SplashScreen';
 
 /**
  * Initialize Sentry for error tracking and crash reporting
@@ -74,6 +69,8 @@ Sentry.init({
  * 7. Sentry.wrap: Error boundary and crash reporting
  */
 function App() {
+  const [showStartupSplash, setShowStartupSplash] = useState(true);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -82,6 +79,11 @@ function App() {
             <ToastProvider>
               <ItemsProvider>
                 <RootStack />
+                {showStartupSplash ? (
+                  <View style={styles.splashOverlay}>
+                    <SplashScreen onFinish={() => setShowStartupSplash(false)} />
+                  </View>
+                ) : null}
                 <StatusBar style="light" />
               </ItemsProvider>
             </ToastProvider>
@@ -91,6 +93,13 @@ function App() {
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  splashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
+  },
+});
 
 // Wrap with Sentry for automatic error tracking
 export default Sentry.wrap(App);

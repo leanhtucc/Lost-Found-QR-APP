@@ -17,6 +17,42 @@ interface ItemInfoCardProps {
 export const ItemInfoCard: React.FC<ItemInfoCardProps> = ({ item }) => {
   const CategoryIcon = getCategoryIcon(item.category);
 
+  const statusVisual = (() => {
+    switch (item.status) {
+      case 'LOST':
+        return {
+          badgeClass: 'bg-red-100',
+          textClass: 'text-red-600',
+          label: 'ĐANG MẤT',
+        };
+      case 'PENDING_PAYMENT':
+        return {
+          badgeClass: 'bg-amber-100',
+          textClass: 'text-amber-700',
+          label: 'CHỜ THANH TOÁN',
+        };
+      case 'FOUND':
+        return {
+          badgeClass: 'bg-orange-100',
+          textClass: 'text-orange-700',
+          label: 'ĐÃ TÌM THẤY',
+        };
+      case 'RESOLVED':
+        return {
+          badgeClass: 'bg-blue-100',
+          textClass: 'text-blue-700',
+          label: 'ĐÃ HOÀN TRẢ',
+        };
+      case 'SAFE':
+      default:
+        return {
+          badgeClass: 'bg-green-100',
+          textClass: 'text-green-600',
+          label: 'AN TOÀN',
+        };
+    }
+  })();
+
   return (
     <Animated.View
       entering={FadeInDown.duration(300)}
@@ -35,17 +71,9 @@ export const ItemInfoCard: React.FC<ItemInfoCardProps> = ({ item }) => {
         </View>
 
         {/* Status Badge */}
-        <View
-          className={`px-4 py-2 rounded-full ${
-            item.status === 'lost' ? 'bg-red-100' : 'bg-green-100'
-          }`}
-        >
-          <Text
-            className={`text-sm font-bold ${
-              item.status === 'lost' ? 'text-red-600' : 'text-green-600'
-            }`}
-          >
-            {item.status === 'lost' ? 'ĐANG MẤT' : 'AN TOÀN'}
+        <View className={`px-4 py-2 rounded-full ${statusVisual.badgeClass}`}>
+          <Text className={`text-sm font-bold ${statusVisual.textClass}`}>
+            {statusVisual.label}
           </Text>
         </View>
       </View>

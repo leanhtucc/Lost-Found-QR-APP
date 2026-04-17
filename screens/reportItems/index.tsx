@@ -48,6 +48,29 @@ export default function ReportItemsScreen() {
 
   const footerLabel = useMemo(() => (step === 3 ? 'Báo mất ngay' : 'Tiếp theo'), [step]);
 
+  const isPrimaryDisabled = useMemo(() => {
+    if (isSubmitting) {
+      return true;
+    }
+
+    if (step === 1) {
+      return isLoadingItems || !selectedItemId;
+    }
+
+    if (step === 2) {
+      return useCurrentLocation && isResolvingCurrentLocation;
+    }
+
+    return false;
+  }, [
+    isLoadingItems,
+    isResolvingCurrentLocation,
+    isSubmitting,
+    selectedItemId,
+    step,
+    useCurrentLocation,
+  ]);
+
   const handleBack = () => {
     if (showRadarState) {
       setShowRadarState(false);
@@ -127,7 +150,7 @@ export default function ReportItemsScreen() {
         label={isSubmitting ? 'Đang gửi...' : footerLabel}
         onPress={handlePrimaryAction}
         bottomInset={insets.bottom}
-        disabled={isSubmitting}
+        disabled={isPrimaryDisabled}
       />
 
       <RadarStatusModal visible={showRadarState} onClose={() => setShowRadarState(false)} />

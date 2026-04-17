@@ -11,6 +11,8 @@ import {
   ItemCategory,
   ItemStatus,
   ListItemsResponse,
+  ScanGuestInitParams,
+  ScanGuestInitResponse,
   ScanItemResponse,
   UpdateItemParams,
   UpdateStatusParams,
@@ -50,6 +52,50 @@ const createHeaders = async (includeAuth = true): Promise<HeadersInit> => {
   return headers;
 };
 
+const normalizeItemStatus = (status: unknown): ItemStatus => {
+  const normalized = typeof status === 'string' ? status.trim().toUpperCase() : '';
+
+  switch (normalized) {
+    case 'SAFE':
+      return 'SAFE';
+    case 'PENDING_PAYMENT':
+      return 'PENDING_PAYMENT';
+    case 'LOST':
+      return 'LOST';
+    case 'FOUND':
+      return 'FOUND';
+    case 'RESOLVED':
+      return 'RESOLVED';
+    default:
+      return 'SAFE';
+  }
+};
+
+const normalizeItem = (item: Item): Item => {
+  return {
+    ...item,
+    status: normalizeItemStatus(item.status),
+  };
+};
+
+const normalizeListItemsResponse = (data: ListItemsResponse): ListItemsResponse => {
+  return {
+    ...data,
+    items: Array.isArray(data.items) ? data.items.map(normalizeItem) : [],
+  };
+};
+
+const normalizeScanResponse = (data: ScanItemResponse): ScanItemResponse => {
+  return {
+    ...data,
+    item_info: {
+      ...data.item_info,
+      itemId: data.item_info.itemId || data.item_info.id,
+      status: normalizeItemStatus(data.item_info.status),
+    },
+  };
+};
+
 /**
  * Items API
  */
@@ -87,7 +133,7 @@ export const itemsApi = {
    * GET /api/items
    */
   async getItems(params?: {
-    status?: ItemStatus | 'all';
+    status?: ItemStatus | 'all' | 'ALL';
     category?: ItemCategory;
     page?: number;
     limit?: number;
@@ -118,12 +164,50 @@ export const itemsApi = {
       throw new Error(data.message || 'Failed to fetch items');
     }
 
-    return data.data;
+    return normalizeListItemsResponse(data.data);
+  },
+
+  /**
+   * Lấy danh sách đồ SAFE trong kho cá nhân để báo mất nhanh
+   * GET /api/items/my-vault
+   */
+  async getMyVaultItems(params?: {
+    category?: ItemCategory;
+    page?: number;
+    limit?: number;
+  }): Promise<ListItemsResponse> {
+    const queryParams = new URLSearchParams();
+
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.page) queryParams.append('page', String(params.page));
+    if (params?.limit) queryParams.append('limit', String(params.limit));
+
+    const baseUrl = `${getItemsApiUrl()}/my-vault`;
+    const url = queryParams.toString() ? `${baseUrl}?${queryParams.toString()}` : baseUrl;
+    const headers = await createHeaders();
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch my vault items');
+    }
+
+    const data: ItemApiResponse<ListItemsResponse> = await response.json();
+
+    if (!data.success || !data.data) {
+      throw new Error(data.message || 'Failed to fetch my vault items');
+    }
+
+    return normalizeListItemsResponse(data.data);
   },
 
   /**
    * Lấy danh sách đồ thất lạc của chính user
-   * GET /api/items?status=lost
+   * GET /api/items?status=LOST
    */
   async getMyLostItems(params?: {
     limit?: number;
@@ -131,7 +215,7 @@ export const itemsApi = {
     page?: number;
   }): Promise<ListItemsResponse> {
     return this.getItems({
-      status: 'lost',
+      status: 'LOST',
       limit: params?.limit,
       category: params?.category,
       page: params?.page,
@@ -143,13 +227,15 @@ export const itemsApi = {
    * Helper method kết hợp getItems + tính toán stats
    */
   async getDashboardData(): Promise<DashboardData> {
+    // Backend validates status strictly; omit status to fetch full dashboard list.
     const response = await this.getItems({
-      status: 'all',
       limit: 50,
     });
 
-    const safeCount = response.items.filter(item => item.status === 'safe').length;
-    const lostCount = response.items.filter(item => item.status === 'lost').length;
+    const safeCount = response.items.filter(item => item.status === 'SAFE').length;
+    const lostCount = response.items.filter(
+      item => item.status === 'LOST' || item.status === 'PENDING_PAYMENT'
+    ).length;
 
     return {
       items: response.items,
@@ -183,7 +269,7 @@ export const itemsApi = {
       throw new Error(data.message || 'Failed to fetch item');
     }
 
-    return data.data;
+    return normalizeItem(data.data);
   },
 
   /**
@@ -232,7 +318,7 @@ export const itemsApi = {
       throw new Error(data.message || 'Failed to create item');
     }
 
-    return data.data;
+    return normalizeItem(data.data);
   },
 
   /**
@@ -280,7 +366,7 @@ export const itemsApi = {
       throw new Error(data.message || 'Failed to update item');
     }
 
-    return data.data;
+    return normalizeItem(data.data);
   },
 
   /**
@@ -352,15 +438,32 @@ export const itemsApi = {
       throw new Error(data.message || 'Failed to update status');
     }
 
-    return data.data;
+    return normalizeItem(data.data);
   },
 
   /**
    * Quét QR Code (Public - không cần auth)
    * GET /api/scan/:itemId
    */
-  async scanQR(itemId: string): Promise<ScanItemResponse> {
-    const url = buildScanUrl(itemId);
+  async scanQR(
+    itemId: string,
+    params?: {
+      currentLat?: number;
+      currentLng?: number;
+    }
+  ): Promise<ScanItemResponse> {
+    const queryParams = new URLSearchParams();
+
+    if (typeof params?.currentLat === 'number' && Number.isFinite(params.currentLat)) {
+      queryParams.append('current_lat', String(params.currentLat));
+    }
+
+    if (typeof params?.currentLng === 'number' && Number.isFinite(params.currentLng)) {
+      queryParams.append('current_lng', String(params.currentLng));
+    }
+
+    const baseUrl = buildScanUrl(itemId);
+    const url = queryParams.toString() ? `${baseUrl}?${queryParams.toString()}` : baseUrl;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -374,7 +477,43 @@ export const itemsApi = {
       throw new Error(error.message || 'Failed to scan QR code');
     }
 
-    return await response.json();
+    const data = (await response.json()) as ScanItemResponse;
+    return normalizeScanResponse(data);
+  },
+
+  /**
+   * B+ Flow: khởi tạo guest session cho finder khi scan QR trên web/app
+   * POST /api/scan/guest-init
+   */
+  async initGuestScanSession(payload: ScanGuestInitParams): Promise<ScanGuestInitResponse> {
+    if (!payload.itemId?.trim()) {
+      throw new Error('itemId is required');
+    }
+
+    if (!payload.phoneNumber?.trim()) {
+      throw new Error('phoneNumber is required');
+    }
+
+    const response = await fetch(buildScanUrl('guest-init'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        itemId: payload.itemId,
+        phoneNumber: payload.phoneNumber,
+        lat: payload.lat,
+        lng: payload.lng,
+      }),
+    });
+
+    const json = (await response.json()) as ScanGuestInitResponse & { error?: string };
+
+    if (!response.ok || !json.success) {
+      throw new Error(json.message || json.error || 'Failed to initialize guest session');
+    }
+
+    return json;
   },
 };
 

@@ -88,8 +88,8 @@ export default function ProfileScreen() {
   const stats = useMemo(
     () => ({
       totalItems: items.length,
-      safeItems: items.filter(i => i.status === 'safe').length,
-      lostItems: items.filter(i => i.status === 'lost').length,
+      safeItems: items.filter(i => i.status === 'SAFE').length,
+      lostItems: items.filter(i => i.status === 'LOST' || i.status === 'PENDING_PAYMENT').length,
     }),
     [items]
   );

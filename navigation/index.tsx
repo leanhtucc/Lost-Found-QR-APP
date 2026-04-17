@@ -15,7 +15,6 @@ import {
   ScanScreen,
   MyItemsScreen,
   ItemDetailScreen,
-  FoundItemScreen,
   NotificationsScreen,
   ProfileScreen,
   ReportItemsScreen,
@@ -42,7 +41,6 @@ export type RootStackParamList = {
   Register: undefined;
   MyItems: undefined;
   ItemDetails: { itemId: string };
-  FoundItem: { scanData: any }; // For Finder Flow - displays scanned item info
   ReportItems: undefined;
   QRCodeView: { itemId: string };
   ScanResult: { qrData: string };
@@ -95,12 +93,6 @@ const linking: LinkingOptions<RootStackParamList> = {
       },
       ItemDetails: {
         path: 'item/:itemId',
-        parse: {
-          itemId: (itemId: string) => itemId,
-        },
-      },
-      FoundItem: {
-        path: 'found/:itemId',
         parse: {
           itemId: (itemId: string) => itemId,
         },
@@ -243,7 +235,6 @@ export default function RootStack() {
         <Stack.Screen name="Scan" component={ScanScreen} />
         <Stack.Screen name="MyItems" component={MyItemsScreen} />
         <Stack.Screen name="ItemDetails" component={ItemDetailScreen} />
-        <Stack.Screen name="FoundItem" component={FoundItemScreen} />
         <Stack.Screen name="ReportItems" component={ReportItemsScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />

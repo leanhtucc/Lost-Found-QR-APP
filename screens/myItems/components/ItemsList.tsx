@@ -6,6 +6,9 @@ import { FIND_BACK } from '@constants/theme';
 import { StatusFilterType } from '../hooks/useItemsFilter';
 import { EmptyState } from './EmptyState';
 
+const isLostLike = (status: Item['status']): boolean =>
+  status === 'LOST' || status === 'PENDING_PAYMENT';
+
 interface ItemsListProps {
   items: Item[];
   filteredItems: Item[];
@@ -41,35 +44,38 @@ export const ItemsList: React.FC<ItemsListProps> = ({
 
       {filteredItems.length > 0 ? (
         <View className="px-4 pb-6">
-          {filteredItems.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              className="bg-white rounded-xl p-4 mb-3 border border-gray-200"
-              onPress={() => onSelectItem(item.id)}
-            >
-              <View className="flex-row items-center">
-                <View
-                  className={`w-12 h-12 rounded-xl justify-center items-center ${
-                    item.status === 'lost' ? 'bg-red-100' : 'bg-blue-100'
-                  }`}
-                >
-                  <Package
-                    size={24}
-                    color={item.status === 'lost' ? FIND_BACK.danger : FIND_BACK.primary}
-                  />
-                </View>
-                <View className="flex-1 ml-3">
-                  <Text className="text-base font-semibold text-gray-900 mb-1">{item.name}</Text>
-                  <Text className="text-sm text-gray-500">{item.category}</Text>
-                </View>
-                {item.status === 'lost' && (
-                  <View className="bg-red-100 px-2 py-1 rounded-md">
-                    <Text className="text-xs font-semibold text-red-600">Đang mất</Text>
+          {filteredItems.map(item => {
+            const lostLike = isLostLike(item.status);
+
+            return (
+              <TouchableOpacity
+                key={item.id}
+                className="bg-white rounded-xl p-4 mb-3 border border-gray-200"
+                onPress={() => onSelectItem(item.id)}
+              >
+                <View className="flex-row items-center">
+                  <View
+                    className={`w-12 h-12 rounded-xl justify-center items-center ${
+                      lostLike ? 'bg-red-100' : 'bg-blue-100'
+                    }`}
+                  >
+                    <Package size={24} color={lostLike ? FIND_BACK.danger : FIND_BACK.primary} />
                   </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          ))}
+                  <View className="flex-1 ml-3">
+                    <Text className="text-base font-semibold text-gray-900 mb-1">{item.name}</Text>
+                    <Text className="text-sm text-gray-500">{item.category}</Text>
+                  </View>
+                  {lostLike && (
+                    <View className="bg-red-100 px-2 py-1 rounded-md">
+                      <Text className="text-xs font-semibold text-red-600">
+                        {item.status === 'PENDING_PAYMENT' ? 'Chờ thanh toán' : 'Đang mất'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       ) : items.length === 0 ? (
         <EmptyState type="no-items" onAddClick={onAddClick} />

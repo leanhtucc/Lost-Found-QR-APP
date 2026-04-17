@@ -10,10 +10,23 @@ interface MapSectionProps {
   onUserLocationChange: (coords: { latitude: number; longitude: number }) => void;
 }
 
+interface MapMarkerPayload {
+  itemId: string;
+  latitude: number;
+  longitude: number;
+  isOwn: boolean;
+  name?: string;
+  lostMessage?: string | null;
+  address?: string | null;
+}
+
 const FALLBACK_REGION = {
   latitude: 10.762622,
   longitude: 106.660172,
 };
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
 
 const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): string => `
 <!DOCTYPE html>
@@ -60,6 +73,65 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
       .leaflet-popup-tip {
         background: rgba(19, 19, 25, 0.92);
       }
+
+      .leaflet-tooltip.lost-address-tooltip {
+        background: rgba(14, 14, 22, 0.94);
+        color: #f8f6ff;
+        border: 1px solid rgba(199, 191, 255, 0.45);
+        border-radius: 10px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+        padding: 6px 10px;
+      }
+
+      .leaflet-tooltip-top.lost-address-tooltip:before {
+        border-top-color: rgba(199, 191, 255, 0.45);
+      }
+
+      .lost-address-text {
+        max-width: 190px;
+        font-size: 11px;
+        line-height: 1.35;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .lost-pin-wrapper {
+        background: transparent;
+        border: none;
+      }
+
+      .lost-pin {
+        width: 16px;
+        height: 16px;
+        border-radius: 9999px;
+        border: 2px solid rgba(255, 255, 255, 0.92);
+        box-shadow:
+          0 0 0 2px rgba(7, 9, 18, 0.55),
+          0 4px 10px rgba(0, 0, 0, 0.38);
+        position: relative;
+      }
+
+      .lost-pin::after {
+        content: '';
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.96);
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .lost-pin-other {
+        background: #f97316;
+      }
+
+      .lost-pin-own {
+        background: #ef4444;
+      }
     </style>
   </head>
   <body>
@@ -92,6 +164,8 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
         var radarLayer = L.layerGroup().addTo(map);
         var userLayer = L.layerGroup().addTo(map);
         var hasCenteredOnUser = false;
+        var hasFocusedOnRadar = false;
+        var lastKnownUserLocation = null;
 
         var safeText = function (value) {
           if (!value) return '';
@@ -103,36 +177,113 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
             .replace(/'/g, '&#039;');
         };
 
+        var createLostMarkerIcon = function (isOwn) {
+          var markerClassName = isOwn ? 'lost-pin-own' : 'lost-pin-other';
+
+          return L.divIcon({
+            className: 'lost-pin-wrapper',
+            html: '<div class="lost-pin ' + markerClassName + '"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+            popupAnchor: [0, -10],
+          });
+        };
+
+        var focusRadarBounds = function (coordinates) {
+          if (!Array.isArray(coordinates) || coordinates.length === 0) {
+            return false;
+          }
+
+          var bounds = L.latLngBounds(coordinates);
+          if (!bounds.isValid()) {
+            return false;
+          }
+
+          map.fitBounds(bounds, {
+            paddingTopLeft: [24, 110],
+            paddingBottomRight: [24, 280],
+            maxZoom: 14,
+            animate: true,
+          });
+
+          hasFocusedOnRadar = true;
+          return true;
+        };
+
         window.__updateRadarMarkers = function (items) {
           radarLayer.clearLayers();
           if (!Array.isArray(items)) {
             return;
           }
 
+          var radarCoordinates = [];
+
           items.forEach(function (item) {
             if (!item || typeof item.latitude !== 'number' || typeof item.longitude !== 'number') {
               return;
             }
 
-            var marker = L.circleMarker([item.latitude, item.longitude], {
-              radius: 8,
-              color: '#111827',
-              weight: 2,
-              fillColor: item.isOwn ? '#ef4444' : '#3b82f6',
-              fillOpacity: 1,
+            radarCoordinates.push([item.latitude, item.longitude]);
+
+            var marker = L.marker([item.latitude, item.longitude], {
+              icon: createLostMarkerIcon(Boolean(item.isOwn)),
             });
 
             var title = safeText(item.name || item.itemId || 'Lost item');
             var description = safeText(item.lostMessage || (item.isOwn ? 'Đồ thất lạc của bạn' : 'Đồ thất lạc nearby'));
             marker.bindPopup('<strong>' + title + '</strong><br />' + description);
+
+            var addressTextRaw = typeof item.address === 'string' ? item.address.trim() : '';
+            if (!addressTextRaw) {
+              addressTextRaw = 'Lat ' + Number(item.latitude).toFixed(4) + ', Lng ' + Number(item.longitude).toFixed(4);
+            }
+
+            if (addressTextRaw) {
+              var addressText = safeText(addressTextRaw);
+              marker.bindTooltip(
+                '<div class="lost-address-text">' + addressText + '</div>',
+                {
+                  permanent: true,
+                  direction: 'top',
+                  offset: [0, -12],
+                  opacity: 1,
+                  className: 'lost-address-tooltip',
+                }
+              );
+              marker.openTooltip();
+            }
+
             marker.addTo(radarLayer);
           });
+
+          if (radarCoordinates.length > 0) {
+            focusRadarBounds(radarCoordinates);
+            return;
+          }
+
+          hasFocusedOnRadar = false;
+
+          if (!hasCenteredOnUser && lastKnownUserLocation) {
+            hasCenteredOnUser = true;
+            map.setView(
+              [lastKnownUserLocation.latitude, lastKnownUserLocation.longitude],
+              Math.max(map.getZoom(), 14),
+              {
+                animate: true,
+              }
+            );
+          }
         };
 
         window.__updateUserLocation = function (latitude, longitude, accuracy) {
           if (typeof latitude !== 'number' || typeof longitude !== 'number') {
             return;
           }
+
+          lastKnownUserLocation = {
+            latitude: latitude,
+            longitude: longitude,
+          };
 
           userLayer.clearLayers();
 
@@ -172,7 +323,7 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
             interactive: false,
           }).addTo(userLayer);
 
-          if (!hasCenteredOnUser) {
+          if (!hasCenteredOnUser && !hasFocusedOnRadar) {
             hasCenteredOnUser = true;
             map.setView([latitude, longitude], Math.max(map.getZoom(), 14), {
               animate: true,
@@ -211,6 +362,56 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
 
     return map;
   }, [cards]);
+
+  const markersPayload = useMemo<MapMarkerPayload[]>(() => {
+    const markerMap = new Map<string, MapMarkerPayload>();
+
+    for (const pin of pins) {
+      if (!isFiniteNumber(pin.lat) || !isFiniteNumber(pin.lng)) {
+        continue;
+      }
+
+      const card = cardByItemId.get(pin.itemId);
+      markerMap.set(pin.itemId, {
+        itemId: pin.itemId,
+        latitude: pin.lat,
+        longitude: pin.lng,
+        isOwn: pin.isOwn,
+        name: card?.name,
+        lostMessage: card?.lostMessage,
+        address: card?.address,
+      });
+    }
+
+    for (const card of cards) {
+      if (!isFiniteNumber(card.lostLat) || !isFiniteNumber(card.lostLng)) {
+        continue;
+      }
+
+      const existing = markerMap.get(card.itemId);
+      if (existing) {
+        markerMap.set(card.itemId, {
+          ...existing,
+          name: existing.name || card.name,
+          lostMessage: existing.lostMessage || card.lostMessage,
+          address: existing.address || card.address,
+        });
+        continue;
+      }
+
+      markerMap.set(card.itemId, {
+        itemId: card.itemId,
+        latitude: card.lostLat,
+        longitude: card.lostLng,
+        isOwn: card.isOwn,
+        name: card.name,
+        lostMessage: card.lostMessage,
+        address: card.address,
+      });
+    }
+
+    return Array.from(markerMap.values());
+  }, [cardByItemId, cards, pins]);
 
   const pushUserLocation = useCallback(
     (coords: Location.LocationObjectCoords) => {
@@ -289,19 +490,6 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
       return;
     }
 
-    const markersPayload = pins.map(pin => {
-      const card = cardByItemId.get(pin.itemId);
-
-      return {
-        itemId: pin.itemId,
-        latitude: pin.lat,
-        longitude: pin.lng,
-        isOwn: pin.isOwn,
-        name: card?.name,
-        lostMessage: card?.lostMessage,
-      };
-    });
-
     const markersJson = JSON.stringify(markersPayload).replace(/</g, '\\u003c');
     webViewRef.current?.injectJavaScript(`
       if (window.__updateRadarMarkers) {
@@ -309,7 +497,7 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
       }
       true;
     `);
-  }, [cardByItemId, isLeafletReady, pins]);
+  }, [isLeafletReady, markersPayload]);
 
   useEffect(() => {
     if (!isLeafletReady || !latestLocationRef.current) {

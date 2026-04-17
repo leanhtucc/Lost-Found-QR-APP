@@ -3,6 +3,10 @@ import { Item } from '@/types/item';
 
 export type StatusFilterType = 'all' | 'safe' | 'lost';
 
+const LOST_LIKE_STATUSES: Item['status'][] = ['LOST', 'PENDING_PAYMENT'];
+
+const isLostLike = (status: Item['status']): boolean => LOST_LIKE_STATUSES.includes(status);
+
 interface UseItemsFilterProps {
   items: Item[];
   searchQuery: string;
@@ -27,15 +31,15 @@ export const useItemsFilter = ({
 
       const matchesStatus =
         statusFilter === 'all' ||
-        (statusFilter === 'safe' && item.status === 'safe') ||
-        (statusFilter === 'lost' && item.status === 'lost');
+        (statusFilter === 'safe' && item.status === 'SAFE') ||
+        (statusFilter === 'lost' && isLostLike(item.status));
 
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [items, searchQuery, categoryFilter, statusFilter]);
 
-  const lostCount = useMemo(() => items.filter(i => i.status === 'lost').length, [items]);
-  const safeCount = useMemo(() => items.filter(i => i.status === 'safe').length, [items]);
+  const lostCount = useMemo(() => items.filter(i => isLostLike(i.status)).length, [items]);
+  const safeCount = useMemo(() => items.filter(i => i.status === 'SAFE').length, [items]);
 
   return {
     filteredItems,

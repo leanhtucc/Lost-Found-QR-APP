@@ -16,6 +16,7 @@ interface ReportLostItemRequest {
 
 interface ReportLostItemResponseData {
   reportId?: string;
+  paymentUrl?: string;
 }
 
 interface ReportsApiResponse<T> {
@@ -93,7 +94,18 @@ export const reportsApi = {
       throw new Error(json?.message || json?.error || fallbackMessage);
     }
 
-    return json.data || {};
+    const data = json.data || {};
+    const rawData = data as { reportId?: string; paymentUrl?: string; payment_url?: string };
+
+    return {
+      reportId: rawData.reportId,
+      paymentUrl:
+        typeof rawData.paymentUrl === 'string'
+          ? rawData.paymentUrl
+          : typeof rawData.payment_url === 'string'
+            ? rawData.payment_url
+            : undefined,
+    };
   },
 };
 

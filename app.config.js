@@ -8,9 +8,7 @@ export default {
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     splash: {
-      image: './assets/icon.png',
-      resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#0E0E13',
     },
     assetBundlePatterns: ['**/*'],
     ios: {

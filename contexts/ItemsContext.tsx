@@ -7,6 +7,34 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { Item, DashboardData } from '@/types/item';
 import { itemsApi } from '@/services/items';
 
+const PRELOAD_RETRY_DELAY_MS = 900;
+
+const wait = (milliseconds: number) =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, milliseconds);
+  });
+
+const shouldRetryPreloadError = (error: unknown): boolean => {
+  const message =
+    error && typeof error === 'object' && 'message' in error
+      ? String((error as { message?: unknown }).message || '').toLowerCase()
+      : '';
+
+  if (!message) {
+    return true;
+  }
+
+  if (message.includes('no authentication token found')) {
+    return false;
+  }
+
+  if (message.includes('validation failed')) {
+    return false;
+  }
+
+  return true;
+};
+
 interface ItemsContextType {
   items: Item[];
   dashboardData: DashboardData | null;
@@ -23,15 +51,54 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadItems = useCallback(async (showLoader = true) => {
+  const loadItems = useCallback(async (showLoader = true, options?: { enableRetry?: boolean }) => {
+    const enableRetry = options?.enableRetry ?? false;
+
     try {
       if (showLoader) setLoading(true);
+
+      if (enableRetry) {
+        try {
+          const data = await itemsApi.getDashboardData();
+          setDashboardData(data);
+          return;
+        } catch (firstError) {
+          if (!shouldRetryPreloadError(firstError)) {
+            throw firstError;
+          }
+
+          if (__DEV__) {
+            console.log('[ItemsContext] Preload failed, retrying once...');
+          }
+
+          await wait(PRELOAD_RETRY_DELAY_MS);
+
+          const retryData = await itemsApi.getDashboardData();
+          setDashboardData(retryData);
+          return;
+        }
+      }
+
       const data = await itemsApi.getDashboardData();
       setDashboardData(data);
     } catch (error: any) {
-      if (error?.message !== 'No authentication token found') {
-        console.error('Failed to load items:', error);
+      const message = error?.message || '';
+
+      if (message === 'No authentication token found') {
+        return;
       }
+
+      if (typeof message === 'string' && message.toLowerCase().includes('validation failed')) {
+        setDashboardData({
+          items: [],
+          total: 0,
+          safeCount: 0,
+          lostCount: 0,
+        });
+        return;
+      }
+
+      console.error('Failed to load items:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -44,7 +111,7 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [loadItems]);
 
   useEffect(() => {
-    loadItems();
+    void loadItems(true, { enableRetry: true });
   }, [loadItems]);
 
   const value: ItemsContextType = {

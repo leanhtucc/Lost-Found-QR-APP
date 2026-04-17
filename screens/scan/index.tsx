@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
 import { useQRScanner } from './hooks/useQRScanner';
+import type { ScanResult } from './hooks/useQRScanner';
 import {
   ScannerHeader,
   ScannerView,
@@ -29,20 +30,29 @@ export const ScanScreen: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Handle successful scan
-  const handleScanSuccess = (result: { itemId: string; scanData?: any; isOwnItem: boolean }) => {
+  const handleScanSuccess = (result: ScanResult) => {
     console.log('Scan result:', result);
 
-    // Navigate based on whether it's user's own item
-    if (result.isOwnItem) {
-      // Navigate to item detail screen for own items
+    if (result.action === 'open_chat') {
+      if (result.channelId) {
+        navigation.replace('Chat', {
+          channelId: result.channelId,
+          itemName: result.itemName || 'Vật dụng',
+          userName: result.ownerDisplayName || 'Chủ sở hữu',
+        });
+        return;
+      }
+
+      Alert.alert(
+        'Không thể mở cuộc trò chuyện',
+        'Đã quét thành công nhưng chưa nhận được kênh chat từ hệ thống. Vui lòng thử lại sau.'
+      );
       navigation.replace('ItemDetails', { itemId: result.itemId });
-    } else if (result.scanData) {
-      // Navigate to found item screen for others' items
-      navigation.replace('FoundItem', { scanData: result.scanData });
-    } else {
-      // Fallback to item details
-      navigation.replace('ItemDetails', { itemId: result.itemId });
+      return;
     }
+
+    // Default: info_only or unknown response
+    navigation.replace('ItemDetails', { itemId: result.itemId });
   };
 
   // Use QR scanner hook
