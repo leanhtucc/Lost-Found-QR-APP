@@ -1,7 +1,7 @@
 import { BottomTabBar } from '@/components/molecules/BottomTab';
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Package, ScanLine, MessageCircle, User } from 'lucide-react-native';
+import { Home, Package, MessageCircle, User } from 'lucide-react-native';
 import {
   HomeScreen,
   ScanScreen,
@@ -9,9 +9,11 @@ import {
   ProfileScreen,
   ChatListScreen,
 } from '@screens/index';
-import { FIND_BACK } from '@constants/theme';
+import { IconQrScan } from '@/components/icons';
 
 const Tab = createBottomTabNavigator();
+const TAB_ACTIVE_COLOR = '#7C3AED';
+const TAB_INACTIVE_COLOR = '#94A3B8';
 
 interface TabBarIconProps {
   color: string;
@@ -25,8 +27,8 @@ export const TabNavigator = () => {
       tabBar={props => <BottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: FIND_BACK.primary,
-        tabBarInactiveTintColor: FIND_BACK.mutedText,
+        tabBarActiveTintColor: TAB_ACTIVE_COLOR,
+        tabBarInactiveTintColor: TAB_INACTIVE_COLOR,
       }}
     >
       <Tab.Screen
@@ -61,7 +63,7 @@ export const TabNavigator = () => {
           tabBarLabel: 'Scan',
           tabBarStyle: { display: 'none' }, // Ẩn tab bar khi ở màn scan
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
-            <ScanLine size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <IconQrScan width={size} height={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />

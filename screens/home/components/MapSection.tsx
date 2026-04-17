@@ -1,15 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import * as Location from 'expo-location';
-import { RadarLostItem } from '@/types/radar';
-import { FIND_BACK } from '@constants/theme';
+import { HomeLostFeedCard, HomeLostFeedPin } from '@/types/radar';
 
 interface MapSectionProps {
-  radarItems: RadarLostItem[];
-  isRadarLoading: boolean;
-  isRealtimeConnected: boolean;
-  lastUpdatedAt: string | null;
+  pins: HomeLostFeedPin[];
+  cards: HomeLostFeedCard[];
   onUserLocationChange: (coords: { latitude: number; longitude: number }) => void;
 }
 
@@ -121,12 +118,12 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
               radius: 8,
               color: '#111827',
               weight: 2,
-              fillColor: '#ef4444',
+              fillColor: item.isOwn ? '#ef4444' : '#3b82f6',
               fillOpacity: 1,
             });
 
-            var title = safeText(item.name || 'Lost item');
-            var description = safeText(item.lostMessage || item.description || 'Đồ thất lạc mới được báo mất');
+            var title = safeText(item.name || item.itemId || 'Lost item');
+            var description = safeText(item.lostMessage || (item.isOwn ? 'Đồ thất lạc của bạn' : 'Đồ thất lạc nearby'));
             marker.bindPopup('<strong>' + title + '</strong><br />' + description);
             marker.addTo(radarLayer);
           });
@@ -190,38 +187,7 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
 </html>
 `;
 
-const getTimeSinceUpdate = (timestamp: string | null): string => {
-  if (!timestamp) {
-    return 'Đang chờ định vị để quét radar';
-  }
-
-  const updatedAt = new Date(timestamp).getTime();
-  if (Number.isNaN(updatedAt)) {
-    return 'Vừa cập nhật';
-  }
-
-  const seconds = Math.max(0, Math.floor((Date.now() - updatedAt) / 1000));
-
-  if (seconds < 60) {
-    return `Cập nhật ${seconds} giây trước`;
-  }
-
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) {
-    return `Cập nhật ${minutes} phút trước`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  return `Cập nhật ${hours} giờ trước`;
-};
-
-export const MapSection: React.FC<MapSectionProps> = ({
-  radarItems,
-  isRadarLoading,
-  isRealtimeConnected,
-  lastUpdatedAt,
-  onUserLocationChange,
-}) => {
+export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocationChange }) => {
   const webViewRef = useRef<WebView>(null);
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const latestLocationRef = useRef<{
@@ -236,19 +202,15 @@ export const MapSection: React.FC<MapSectionProps> = ({
     []
   );
 
-  const statusText = useMemo(() => {
-    if (isRadarLoading && radarItems.length === 0) {
-      return 'Đang tải dữ liệu Live Radar...';
+  const cardByItemId = useMemo(() => {
+    const map = new Map<string, HomeLostFeedCard>();
+
+    for (const card of cards) {
+      map.set(card.itemId, card);
     }
 
-    if (radarItems.length === 0) {
-      return getTimeSinceUpdate(lastUpdatedAt);
-    }
-
-    return `${getTimeSinceUpdate(lastUpdatedAt)} - ${radarItems.length} đồ thất lạc quanh bạn`;
-  }, [isRadarLoading, lastUpdatedAt, radarItems.length]);
-
-  const pillAccentColor = isRealtimeConnected ? '#22C55E' : FIND_BACK.mutedText;
+    return map;
+  }, [cards]);
 
   const pushUserLocation = useCallback(
     (coords: Location.LocationObjectCoords) => {
@@ -327,14 +289,18 @@ export const MapSection: React.FC<MapSectionProps> = ({
       return;
     }
 
-    const markersPayload = radarItems.map(item => ({
-      id: item.itemId,
-      latitude: item.latitude,
-      longitude: item.longitude,
-      name: item.name,
-      description: item.description,
-      lostMessage: item.lostMessage,
-    }));
+    const markersPayload = pins.map(pin => {
+      const card = cardByItemId.get(pin.itemId);
+
+      return {
+        itemId: pin.itemId,
+        latitude: pin.lat,
+        longitude: pin.lng,
+        isOwn: pin.isOwn,
+        name: card?.name,
+        lostMessage: card?.lostMessage,
+      };
+    });
 
     const markersJson = JSON.stringify(markersPayload).replace(/</g, '\\u003c');
     webViewRef.current?.injectJavaScript(`
@@ -343,7 +309,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
       }
       true;
     `);
-  }, [isLeafletReady, radarItems]);
+  }, [cardByItemId, isLeafletReady, pins]);
 
   useEffect(() => {
     if (!isLeafletReady || !latestLocationRef.current) {

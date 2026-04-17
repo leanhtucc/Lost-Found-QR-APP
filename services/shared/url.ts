@@ -46,6 +46,14 @@ export const buildMapUrl = (...segments: (UrlSegment | null | undefined)[]): str
   return buildApiUrl('map', ...segments);
 };
 
+export const buildHomeUrl = (...segments: (UrlSegment | null | undefined)[]): string => {
+  return buildApiUrl('home', ...segments);
+};
+
+export const buildReportsUrl = (...segments: (UrlSegment | null | undefined)[]): string => {
+  return buildApiUrl('reports', ...segments);
+};
+
 export const buildUploadUrl = (...segments: (UrlSegment | null | undefined)[]): string => {
   return buildApiUrl('upload', ...segments);
 };

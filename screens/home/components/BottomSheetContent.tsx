@@ -1,48 +1,57 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { Item } from '@/types/item';
-import { RadarLostItem } from '@/types/radar';
+import { HomeLostFeedCard } from '@/types/radar';
 import { HomeItemCard } from './HomeItemCard';
 
 interface BottomSheetContentProps {
-  items: Item[];
-  nearbyLostItems?: RadarLostItem[];
-  myLostItems?: Item[];
+  cards: HomeLostFeedCard[];
+  myLostCount: number;
+  nearbyCount: number;
   onSelectItem: (itemId: string) => void;
-  onScanPress?: () => void;
-  onReportLostPress?: () => void;
 }
 
-const isOwnedItem = (item: Item | RadarLostItem): item is Item => {
-  return 'ownerId' in item;
-};
-
-const getItemIdentifier = (item: Item | RadarLostItem): string => {
-  return isOwnedItem(item) ? item.id : item.itemId;
-};
-
 export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
-  items,
-  nearbyLostItems,
-  myLostItems,
+  cards,
+  myLostCount,
+  nearbyCount,
   onSelectItem,
-  onScanPress,
-  onReportLostPress,
 }) => {
-  const [activeTab, setActiveTab] = useState<'lost' | 'found'>('lost');
+  const [activeTab, setActiveTab] = useState<'nearby' | 'mine'>('nearby');
 
-  const safeItems = items.filter(item => item.status === 'safe');
-  const lostItems = nearbyLostItems?.length
-    ? nearbyLostItems
-    : myLostItems?.length
-      ? myLostItems
-      : items.filter(item => item.status === 'lost');
-  const filteredItems = activeTab === 'lost' ? lostItems : safeItems;
+  const nearbyCards = useMemo(() => cards.filter(card => !card.isOwn), [cards]);
+  const myCards = useMemo(() => cards.filter(card => card.isOwn), [cards]);
+  const filteredItems = activeTab === 'nearby' ? nearbyCards : myCards;
+  const activeSource = activeTab === 'nearby' ? 'nearby-others' : 'my-lost';
+
+  useEffect(() => {
+    if (!__DEV__) {
+      return;
+    }
+
+    const preview = filteredItems.slice(0, 5).map(item => {
+      return {
+        source: activeSource,
+        itemId: item.itemId,
+        name: item.name,
+        isOwn: item.isOwn,
+        distanceLabel: item.distanceLabel,
+      };
+    });
+
+    console.log('[Home][BottomSheet] Lost data source:', {
+      source: activeSource,
+      feedCardsCount: cards.length,
+      nearbyCount,
+      myLostCount,
+      renderedCount: filteredItems.length,
+      preview,
+    });
+  }, [activeSource, cards.length, filteredItems, myLostCount, nearbyCount]);
 
   const emptyStateText =
-    activeTab === 'lost'
-      ? 'Chưa có dữ liệu mất đồ gần bạn.'
-      : 'Chưa có đồ an toàn trong danh sách của bạn.';
+    activeTab === 'nearby'
+      ? 'Chưa có đồ thất lạc nearby.'
+      : 'Bạn chưa có đồ nào đang ở trạng thái mất.';
 
   return (
     <View className="flex-1 rounded-t-[32px] bg-[#131318] px-6 pb-6 pt-2">
@@ -50,25 +59,25 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
         <View className="flex-row gap-4">
           <TouchableOpacity
             activeOpacity={0.85}
-            className={`rounded-full px-5 py-2.5 ${activeTab === 'lost' ? 'bg-[#c7bfff]' : 'bg-[#2a292f]'}`}
-            onPress={() => setActiveTab('lost')}
+            className={`rounded-full px-5 py-2.5 ${activeTab === 'nearby' ? 'bg-[#c7bfff]' : 'bg-[#2a292f]'}`}
+            onPress={() => setActiveTab('nearby')}
           >
             <Text
-              className={`text-sm font-semibold ${activeTab === 'lost' ? 'text-[#25008c]' : 'text-[#c9c4d7]'}`}
+              className={`text-sm font-semibold ${activeTab === 'nearby' ? 'text-[#25008c]' : 'text-[#c9c4d7]'}`}
             >
-              Mất gần đây
+              Mất gần đây ({nearbyCount})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.85}
-            className={`rounded-full px-5 py-2.5 ${activeTab === 'found' ? 'bg-[#c7bfff]' : 'bg-[#2a292f]'}`}
-            onPress={() => setActiveTab('found')}
+            className={`rounded-full px-5 py-2.5 ${activeTab === 'mine' ? 'bg-[#c7bfff]' : 'bg-[#2a292f]'}`}
+            onPress={() => setActiveTab('mine')}
           >
             <Text
-              className={`text-sm font-medium ${activeTab === 'found' ? 'text-[#25008c]' : 'text-[#c9c4d7]'}`}
+              className={`text-sm font-medium ${activeTab === 'mine' ? 'text-[#25008c]' : 'text-[#c9c4d7]'}`}
             >
-              Nhặt được
+              Của tôi ({myLostCount})
             </Text>
           </TouchableOpacity>
         </View>
@@ -83,9 +92,9 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
           {filteredItems.length > 0 ? (
             filteredItems.map(item => (
               <HomeItemCard
-                key={getItemIdentifier(item)}
+                key={`${item.itemId}-${item.reportedAt}`}
                 item={item}
-                onPress={() => onSelectItem(getItemIdentifier(item))}
+                onPress={() => onSelectItem(item.itemId)}
               />
             ))
           ) : (

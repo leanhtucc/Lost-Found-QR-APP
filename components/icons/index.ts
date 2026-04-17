@@ -6,3 +6,4 @@ export { default as IconLogoApp } from './IconLogoApp';
 export { default as IconLogoOnboarding } from './IconLogoOnboarding';
 export { default as IconLogoLoadingApp } from './IconLogoLoadingApp';
 export { default as ImageOtpPhoneNumber } from './ImageOtpPhoneNumber';
+export { default as IconQrScan } from './IconQrScan';

@@ -18,6 +18,7 @@ import {
   FoundItemScreen,
   NotificationsScreen,
   ProfileScreen,
+  ReportItemsScreen,
   ChatListScreen,
   ChatDetailScreen,
 } from '@screens/index';
@@ -29,9 +30,9 @@ import { TabNavigator } from './tab-navigator';
 import { appStorage } from '@storage/app';
 import { useAuthContext } from '@contexts/AuthContext';
 import { FIND_BACK } from '@constants/theme';
-import CodeVerifyScreen from '@/screens/auth/codeVerify';
-import ForgotPasswordScreen from '@/screens/auth/forgotPass';
-import ResetPasswordScreen from '@/screens/auth/resetPass';
+import AuthCodeVerifyScreen from '@/screens/auth/codeVerify';
+import AuthForgotPasswordScreen from '@/screens/auth/forgotPass';
+import AuthResetPasswordScreen from '@/screens/auth/resetPass';
 
 // Type definitions
 export type RootStackParamList = {
@@ -42,6 +43,7 @@ export type RootStackParamList = {
   MyItems: undefined;
   ItemDetails: { itemId: string };
   FoundItem: { scanData: any }; // For Finder Flow - displays scanned item info
+  ReportItems: undefined;
   QRCodeView: { itemId: string };
   ScanResult: { qrData: string };
   Settings: undefined;
@@ -230,9 +232,9 @@ export default function RootStack() {
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="AuthRegister" component={AuthRegisterScreen} />
-        <Stack.Screen name="CodeVerify" component={CodeVerifyScreen} />
-        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        <Stack.Screen name="CodeVerify" component={AuthCodeVerifyScreen} />
+        <Stack.Screen name="ForgotPassword" component={AuthForgotPasswordScreen} />
+        <Stack.Screen name="ResetPassword" component={AuthResetPasswordScreen} />
         <Stack.Screen name="Congratulation" component={CongratulationScreen} />
 
         {/* Main App Screens */}
@@ -242,6 +244,7 @@ export default function RootStack() {
         <Stack.Screen name="MyItems" component={MyItemsScreen} />
         <Stack.Screen name="ItemDetails" component={ItemDetailScreen} />
         <Stack.Screen name="FoundItem" component={FoundItemScreen} />
+        <Stack.Screen name="ReportItems" component={ReportItemsScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="ChatList" component={ChatListScreen} />

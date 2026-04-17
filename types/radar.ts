@@ -4,6 +4,43 @@ export interface RadarNearbyQuery {
   radius?: number;
 }
 
+export interface HomeLostFeedQuery {
+  lat?: number;
+  lng?: number;
+  radius?: number;
+}
+
+export interface HomeLostFeedPin {
+  itemId: string;
+  lat: number;
+  lng: number;
+  isOwn: boolean;
+}
+
+export interface HomeLostFeedCard {
+  itemId: string;
+  name: string;
+  category: RadarCategory | string;
+  imagePublicUrl: string | null;
+  lostMessage: string | null;
+  address: string | null;
+  distanceMeters: number | null;
+  distanceLabel: string | null;
+  lostLat: number | null;
+  lostLng: number | null;
+  isOwn: boolean;
+  ownerDisplayName: string;
+  ownerPhotoURL: string | null;
+  reportedAt: string;
+}
+
+export interface HomeLostFeedData {
+  myLostCount: number;
+  nearbyCount: number;
+  pins: HomeLostFeedPin[];
+  cards: HomeLostFeedCard[];
+}
+
 export type RadarCategory =
   | 'electronics'
   | 'accessories'

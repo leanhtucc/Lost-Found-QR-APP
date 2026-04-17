@@ -1,39 +1,29 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { Item } from '@/types/item';
-import { RadarLostItem } from '@/types/radar';
+import { HomeLostFeedCard } from '@/types/radar';
 import { MapPin } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
 
 interface HomeItemCardProps {
-  item: Item | RadarLostItem;
+  item: HomeLostFeedCard;
   onPress: () => void;
 }
 
-const isOwnedItem = (item: Item | RadarLostItem): item is Item => {
-  return 'ownerId' in item;
-};
+const FALLBACK_ADDRESS = 'Không xác định rõ địa chỉ';
 
-const formatDistance = (item: Item | RadarLostItem): string => {
-  if ('distanceMeters' in item && typeof item.distanceMeters === 'number') {
-    if (item.distanceMeters < 1000) {
-      return `${Math.round(item.distanceMeters)}M`;
-    }
+const buildLocationLine = (item: HomeLostFeedCard): string => {
+  const address = item.address?.trim() ? item.address.trim() : FALLBACK_ADDRESS;
 
-    return `${(item.distanceMeters / 1000).toFixed(1)}KM`;
+  if (item.distanceLabel?.trim()) {
+    return `${address} • Cách đây ${item.distanceLabel.trim()}`;
   }
 
-  return 'GẦN BẠN';
+  return address;
 };
 
 export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => {
-  const isLost = isOwnedItem(item) ? item.status === 'lost' : true;
-  const distance = formatDistance(item);
-  const reward = isLost
-    ? 'distanceMeters' in item && item.distanceMeters && item.distanceMeters > 700
-      ? '1M'
-      : '500K'
-    : undefined;
+  const locationLine = buildLocationLine(item);
+  const reward = item.distanceMeters && item.distanceMeters > 700 ? '1M' : '500K';
 
   return (
     <TouchableOpacity
@@ -65,10 +55,13 @@ export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => 
         <Text className="text-base font-semibold text-[#e4e1e9]" numberOfLines={1}>
           {item.name}
         </Text>
+        <Text className="mt-0.5 text-[11px] text-[#9f9aae]" numberOfLines={1}>
+          {item.isOwn ? 'Đồ của bạn' : item.ownerDisplayName}
+        </Text>
         <View className="mt-1 flex-row items-center">
           <MapPin size={11} color={FIND_BACK.mutedText} />
-          <Text className="ml-1 text-[11px] font-medium tracking-wide text-[#64748b]">
-            {distance}
+          <Text className="ml-1 flex-1 text-[11px] font-medium text-[#64748b]" numberOfLines={2}>
+            {locationLine}
           </Text>
         </View>
       </View>
