@@ -14,6 +14,7 @@ export type ItemCategory =
   | 'phone'
   | 'jewelry'
   | 'documents'
+  | 'laptop'
   | 'other';
 
 // Item Status
@@ -79,6 +80,14 @@ export interface DashboardData {
   total: number;
   safeCount: number;
   lostCount: number;
+}
+
+// Items Summary Data (from /api/items/summary)
+export interface ItemsSummary {
+  totalItems: number;
+  safeItems: number;
+  lostItems: number;
+  foundItems: number;
 }
 
 // Update status params
@@ -212,5 +221,11 @@ export const CATEGORY_CONFIG: Record<
     icon: 'package',
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-600',
+  },
+  laptop: {
+    label: 'Laptop',
+    icon: 'laptop',
+    bgColor: 'bg-purple-100',
+    textColor: 'text-purple-600',
   },
 };

@@ -12,8 +12,8 @@ import {
 import { IconQrScan } from '@/components/icons';
 
 const Tab = createBottomTabNavigator();
-const TAB_ACTIVE_COLOR = '#7C3AED';
-const TAB_INACTIVE_COLOR = '#94A3B8';
+const TAB_ACTIVE_COLOR = '#6C4CF1';
+const TAB_INACTIVE_COLOR = '#9AA0B3';
 
 interface TabBarIconProps {
   color: string;

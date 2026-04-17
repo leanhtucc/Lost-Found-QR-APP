@@ -10,6 +10,7 @@ import {
   ItemApiResponse,
   ItemCategory,
   ItemStatus,
+  ItemsSummary,
   ListItemsResponse,
   ScanGuestInitParams,
   ScanGuestInitResponse,
@@ -243,6 +244,33 @@ export const itemsApi = {
       safeCount,
       lostCount,
     };
+  },
+
+  /**
+   * Lấy Item summary (Fast Badges)
+   * GET /api/items/summary
+   */
+  async getSummary(): Promise<ItemsSummary> {
+    const url = `${getItemsApiUrl()}/summary`;
+    const headers = await createHeaders();
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch items summary');
+    }
+
+    const data: ItemApiResponse<ItemsSummary> = await response.json();
+
+    if (!data.success || !data.data) {
+      throw new Error(data.message || 'Failed to fetch items summary');
+    }
+
+    return data.data;
   },
 
   /**

@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Item, DashboardData } from '@/types/item';
+import { Item, DashboardData, ItemsSummary, ItemStatus } from '@/types/item';
 import { itemsApi } from '@/services/items';
 
 const PRELOAD_RETRY_DELAY_MS = 900;
@@ -37,86 +37,113 @@ const shouldRetryPreloadError = (error: unknown): boolean => {
 
 interface ItemsContextType {
   items: Item[];
-  dashboardData: DashboardData | null;
+  summary: ItemsSummary | null;
   loading: boolean;
   refreshing: boolean;
-  loadItems: () => Promise<void>;
-  refresh: () => Promise<void>;
+  loadItems: (
+    statusFilter?: ItemStatus | 'all',
+    showLoader?: boolean,
+    options?: { enableRetry?: boolean }
+  ) => Promise<void>;
+  refresh: (statusFilter?: ItemStatus | 'all') => Promise<void>;
 }
 
 const ItemsContext = createContext<ItemsContextType | undefined>(undefined);
 
 export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
+  const [summary, setSummary] = useState<ItemsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadItems = useCallback(async (showLoader = true, options?: { enableRetry?: boolean }) => {
-    const enableRetry = options?.enableRetry ?? false;
+  const fetchSummaryAndItems = async (statusFilter?: ItemStatus | 'all') => {
+    // Gọi song song 2 API độc lập để tối ưu thời gian
+    const [summaryData, itemsRes] = await Promise.all([
+      itemsApi.getSummary(),
+      itemsApi.getItems({
+        limit: 50,
+        status: statusFilter === 'all' ? undefined : (statusFilter as ItemStatus),
+      }),
+    ]);
+    return { summaryData, itemsData: itemsRes.items };
+  };
 
-    try {
-      if (showLoader) setLoading(true);
+  const loadItems = useCallback(
+    async (
+      statusFilter: ItemStatus | 'all' = 'all',
+      showLoader = true,
+      options?: { enableRetry?: boolean }
+    ) => {
+      const enableRetry = options?.enableRetry ?? false;
 
-      if (enableRetry) {
-        try {
-          const data = await itemsApi.getDashboardData();
-          setDashboardData(data);
-          return;
-        } catch (firstError) {
-          if (!shouldRetryPreloadError(firstError)) {
-            throw firstError;
+      try {
+        if (showLoader) setLoading(true);
+
+        if (enableRetry) {
+          try {
+            const { summaryData, itemsData } = await fetchSummaryAndItems(statusFilter);
+            setSummary(summaryData);
+            setItems(itemsData);
+            return;
+          } catch (firstError) {
+            if (!shouldRetryPreloadError(firstError)) {
+              throw firstError;
+            }
+
+            if (__DEV__) {
+              console.log('[ItemsContext] Preload failed, retrying once...');
+            }
+
+            await wait(PRELOAD_RETRY_DELAY_MS);
+
+            const { summaryData, itemsData } = await fetchSummaryAndItems(statusFilter);
+            setSummary(summaryData);
+            setItems(itemsData);
+            return;
           }
+        }
 
-          if (__DEV__) {
-            console.log('[ItemsContext] Preload failed, retrying once...');
-          }
+        const { summaryData, itemsData } = await fetchSummaryAndItems(statusFilter);
+        setSummary(summaryData);
+        setItems(itemsData);
+      } catch (error: any) {
+        const message = error?.message || '';
 
-          await wait(PRELOAD_RETRY_DELAY_MS);
-
-          const retryData = await itemsApi.getDashboardData();
-          setDashboardData(retryData);
+        if (message === 'No authentication token found') {
           return;
         }
+
+        if (typeof message === 'string' && message.toLowerCase().includes('validation failed')) {
+          setItems([]);
+          setSummary({
+            totalItems: 0,
+            safeItems: 0,
+            lostItems: 0,
+            foundItems: 0,
+          });
+          return;
+        }
+
+        console.error('Failed to load items:', error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
+    },
+    []
+  );
 
-      const data = await itemsApi.getDashboardData();
-      setDashboardData(data);
-    } catch (error: any) {
-      const message = error?.message || '';
-
-      if (message === 'No authentication token found') {
-        return;
-      }
-
-      if (typeof message === 'string' && message.toLowerCase().includes('validation failed')) {
-        setDashboardData({
-          items: [],
-          total: 0,
-          safeCount: 0,
-          lostCount: 0,
-        });
-        return;
-      }
-
-      console.error('Failed to load items:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadItems(false);
-  }, [loadItems]);
-
-  useEffect(() => {
-    void loadItems(true, { enableRetry: true });
-  }, [loadItems]);
+  const refresh = useCallback(
+    async (statusFilter: ItemStatus | 'all' = 'all') => {
+      setRefreshing(true);
+      await loadItems(statusFilter, false);
+    },
+    [loadItems]
+  );
 
   const value: ItemsContextType = {
-    items: dashboardData?.items || [],
-    dashboardData,
+    items,
+    summary,
     loading,
     refreshing,
     loadItems,

@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, TextInput } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { Search } from 'lucide-react-native';
-import { FIND_BACK } from '@constants/theme';
+import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_SHADOW } from '../constants/ui';
 
 interface SearchBarProps {
   value: string;
@@ -10,15 +10,38 @@ interface SearchBarProps {
 
 export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
   return (
-    <View className="flex-row items-center mx-4 mt-4 bg-gray-50 rounded-xl px-3">
-      <Search size={20} color={FIND_BACK.labelText} className="mr-2" />
+    <View style={styles.container}>
+      <Search size={19} color={MY_ITEMS_COLORS.textMuted} />
       <TextInput
-        className="flex-1 h-12 text-base text-gray-900"
+        style={styles.input}
         placeholder="Tìm theo tên hoặc mã..."
         value={value}
         onChangeText={onChange}
-        placeholderTextColor={FIND_BACK.labelText}
+        placeholderTextColor={MY_ITEMS_COLORS.textMuted}
       />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 14,
+    borderRadius: MY_ITEMS_RADIUS.input,
+    paddingHorizontal: 14,
+    backgroundColor: MY_ITEMS_COLORS.surface,
+    borderWidth: 1,
+    borderColor: MY_ITEMS_COLORS.border,
+    ...MY_ITEMS_SHADOW.card,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    marginLeft: 10,
+    fontSize: 15,
+    color: MY_ITEMS_COLORS.textPrimary,
+    fontWeight: '500',
+  },
+});

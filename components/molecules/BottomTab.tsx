@@ -1,13 +1,12 @@
 import { FONT_FAMILY } from '@constants/fonts';
-import { FIND_BACK } from '@constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const FALLBACK_ACTIVE_COLOR = '#7C3AED';
-const FALLBACK_INACTIVE_COLOR = '#94A3B8';
+const FALLBACK_ACTIVE_COLOR = '#6C4CF1';
+const FALLBACK_INACTIVE_COLOR = '#9AA0B3';
 const SCAN_ICON_COLOR = '#F6F0FF';
 
 function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -92,12 +91,12 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
         onLongPress={onLongPress}
         style={styles.tabButton}
       >
-        <View style={styles.iconWrap}>{icon}</View>
+        <View style={[styles.iconWrap, isFocused ? styles.iconWrapActive : null]}>{icon}</View>
         {showLabel ? (
           <Text
             allowFontScaling={false}
             numberOfLines={1}
-            style={[styles.label, { color: tabColor }]}
+            style={[styles.label, { color: tabColor }, isFocused ? styles.activeLabel : null]}
           >
             {labelText}
           </Text>
@@ -130,7 +129,7 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
         style={styles.scanTabButton}
       >
         <LinearGradient
-          colors={['#5A3BDD', '#A192FF']}
+          colors={['#6C4CF1', '#8E6CFF']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.scanFab}
@@ -170,23 +169,23 @@ export const BottomTabBar = memo(BottomTabBarInner);
 
 const styles = StyleSheet.create({
   outer: {
-    backgroundColor: FIND_BACK.canvas,
+    backgroundColor: '#0B0A13',
     paddingHorizontal: 16,
     paddingTop: 24,
   },
   shell: {
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: 'rgba(19, 19, 25, 0.94)',
+    height: 82,
+    borderRadius: 26,
+    backgroundColor: 'rgba(16, 16, 24, 0.94)',
     borderWidth: 1,
-    borderColor: FIND_BACK.borderGlass,
+    borderColor: 'rgba(142, 108, 255, 0.22)',
     justifyContent: 'center',
     overflow: 'visible',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.24,
-    shadowRadius: 20,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.28,
+    shadowRadius: 24,
+    elevation: 14,
   },
   row: {
     flexDirection: 'row',
@@ -202,9 +201,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
     minHeight: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: 'rgba(108, 76, 241, 0.18)',
   },
   centerGap: {
     width: 72,
@@ -222,11 +227,11 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#5A3BDD',
+    shadowColor: '#6C4CF1',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    elevation: 16,
+    shadowOpacity: 0.48,
+    shadowRadius: 16,
+    elevation: 18,
   },
   label: {
     marginTop: 4,
@@ -236,6 +241,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1,
     textAlign: 'center',
+  },
+  activeLabel: {
+    fontWeight: '700',
   },
   scanLabel: {
     marginTop: 4,

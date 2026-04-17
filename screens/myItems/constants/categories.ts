@@ -7,7 +7,7 @@ export const categoryOptions: {
   icon: React.ElementType;
 }[] = [
   { value: 'all', label: 'Tất cả', icon: Package },
-  { value: 'laptop', label: 'Laptop', icon: Laptop },
+  { value: 'electronics', label: 'Laptop', icon: Laptop },
   { value: 'phone', label: 'Điện thoại', icon: Smartphone },
   { value: 'wallet', label: 'Ví', icon: Wallet },
   { value: 'keys', label: 'Chìa khóa', icon: Key },

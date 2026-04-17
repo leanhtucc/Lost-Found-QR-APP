@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Item } from '@/types/item';
-import { FIND_BACK } from '@constants/theme';
 import { categoryOptions } from '../constants/categories';
+import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS } from '../constants/ui';
 
 interface CategoryFilterProps {
   selectedCategory: Item['category'] | 'all';
@@ -14,30 +14,84 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   onCategoryChange,
 }) => {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 py-3">
-      <View className="flex-row gap-2">
-        {categoryOptions.map(({ value, label, icon: Icon }) => (
-          <TouchableOpacity
-            key={value}
-            onPress={() => onCategoryChange(value)}
-            className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full ${
-              selectedCategory === value ? 'bg-blue-500' : 'bg-gray-100'
-            }`}
-          >
-            <Icon
-              size={16}
-              color={selectedCategory === value ? FIND_BACK.bodyText : FIND_BACK.labelText}
-            />
-            <Text
-              className={`text-sm font-medium ${
-                selectedCategory === value ? 'text-white' : 'text-gray-600'
-              }`}
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.scroll}
+      contentContainerStyle={styles.scrollContent}
+    >
+      <View style={styles.row}>
+        {categoryOptions.map(({ value, label, icon: Icon }) =>
+          selectedCategory === value ? (
+            <TouchableOpacity
+              key={value}
+              activeOpacity={0.9}
+              onPress={() => onCategoryChange(value)}
+              style={styles.pillButtonTouch}
             >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Icon size={16} color="#FFFFFF" strokeWidth={2.4} />
+              <Text style={styles.activeLabel}>{label}</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              key={value}
+              activeOpacity={0.86}
+              onPress={() => onCategoryChange(value)}
+              style={styles.inactivePill}
+            >
+              <Icon size={16} color={MY_ITEMS_COLORS.textSecondary} strokeWidth={2.2} />
+              <Text style={styles.inactiveLabel}>{label}</Text>
+            </TouchableOpacity>
+          )
+        )}
       </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  scroll: {
+    marginTop: 10,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  pillButtonTouch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: MY_ITEMS_RADIUS.chip,
+    backgroundColor: MY_ITEMS_COLORS.primaryStart,
+  },
+  activePill: {
+    borderRadius: MY_ITEMS_RADIUS.chip,
+  },
+  inactivePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: MY_ITEMS_RADIUS.chip,
+    backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
+    borderWidth: 1,
+    borderColor: 'rgba(142, 108, 255, 0.26)',
+  },
+  activeLabel: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  inactiveLabel: {
+    color: MY_ITEMS_COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});
