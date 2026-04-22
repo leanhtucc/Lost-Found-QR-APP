@@ -3,8 +3,8 @@
  * Context để quản lý danh sách items của người dùng
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Item, DashboardData, ItemsSummary, ItemStatus } from '@/types/item';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Item, ItemsSummary, ItemStatus } from '@/types/item';
 import { itemsApi } from '@/services/items';
 
 const PRELOAD_RETRY_DELAY_MS = 900;
@@ -57,14 +57,26 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchSummaryAndItems = async (statusFilter?: ItemStatus | 'all') => {
-    // Gọi song song 2 API độc lập để tối ưu thời gian
-    const [summaryData, itemsRes] = await Promise.all([
-      itemsApi.getSummary(),
-      itemsApi.getItems({
-        limit: 50,
-        status: statusFilter === 'all' ? undefined : (statusFilter as ItemStatus),
-      }),
-    ]);
+    // We only call getItems to avoid /summary endpoint which is throwing Validation failed!
+    const itemsRes = await itemsApi.getItems({
+      limit: 50,
+      status: statusFilter === 'all' ? undefined : (statusFilter as ItemStatus),
+    });
+
+    // We compute local summary manually to avoid backend crash
+    const safeItems = itemsRes.items.filter(item => item.status === 'SAFE').length;
+    const lostItems = itemsRes.items.filter(
+      item => item.status === 'LOST' || item.status === 'PENDING_PAYMENT'
+    ).length;
+    const foundItems = itemsRes.items.filter(item => item.status === 'FOUND').length;
+
+    const summaryData: ItemsSummary = {
+      totalItems: itemsRes.items.length,
+      safeItems,
+      lostItems,
+      foundItems,
+    };
+
     return { summaryData, itemsData: itemsRes.items };
   };
 

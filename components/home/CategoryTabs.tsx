@@ -1,4 +1,3 @@
-// components/home/CategoryTabs.tsx
 import React from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
 

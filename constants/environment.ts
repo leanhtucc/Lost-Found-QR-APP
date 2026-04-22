@@ -46,12 +46,6 @@ export const ENV = {
   GOOGLE_ANDROID_CLIENT_ID:
     expoExtra.googleAndroidClientId || process.env.GOOGLE_ANDROID_CLIENT_ID || '',
 };
-console.log('🔍 Environment Config:');
-console.log('SENTRY_DSN:', ENV.SENTRY_DSN);
-console.log('API_URL:', ENV.API_URL);
-console.log('ENVIRONMENT:', ENV.ENVIRONMENT);
-console.log('GOOGLE_WEB_CLIENT_ID:', ENV.GOOGLE_WEB_CLIENT_ID);
-console.log('expoExtra:', expoExtra);
 // Helper function to get API URL
 export const getApiUrl = (): string => {
   return ENV.API_URL;

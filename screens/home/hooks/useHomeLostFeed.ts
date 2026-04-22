@@ -75,6 +75,11 @@ export const useHomeLostFeed = ({
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastForegroundSyncAtRef = useRef(0);
   const lastTabFocusSyncAtRef = useRef(0);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   const notifyError = useCallback(
     (fallbackMessage: string, error?: unknown) => {
@@ -86,11 +91,12 @@ export const useHomeLostFeed = ({
       lastErrorAtRef.current = now;
       const message = error instanceof Error ? error.message : fallbackMessage;
 
-      if (onError) {
-        onError(message);
+      // Gọi thông qua ref thay vì gọi trực tiếp biến onError
+      if (onErrorRef.current) {
+        onErrorRef.current(message);
       }
     },
-    [onError]
+    [] // <-- Dependency array rỗng, hàm này giờ đây bất biến!
   );
 
   const shouldRefreshSnapshot = useCallback((nextCoords: RadarCoordinates): boolean => {
@@ -115,24 +121,17 @@ export const useHomeLostFeed = ({
       setIsRadarLoading(true);
 
       try {
-        const primaryData = coords
-          ? await radarApi.getHomeLostFeed({
-              lat: coords.latitude,
-              lng: coords.longitude,
-              radius: normalizedRadius,
-            })
-          : await radarApi.getHomeLostFeed();
+        const data = await radarApi.getHomeLostFeed(
+          coords
+            ? {
+                lat: coords.latitude,
+                lng: coords.longitude,
+                radius: normalizedRadius,
+              }
+            : undefined
+        );
 
-        let data = primaryData;
-        let feedSource: 'global' | 'location' | 'global-fallback' = coords ? 'location' : 'global';
-
-        if (coords && primaryData.cards.length === 0 && primaryData.pins.length === 0) {
-          const fallbackData = await radarApi.getHomeLostFeed();
-          if (fallbackData.cards.length > 0 || fallbackData.pins.length > 0) {
-            data = fallbackData;
-            feedSource = 'global-fallback';
-          }
-        }
+        const feedSource = coords ? 'location' : 'no-location';
 
         setMapPins(data.pins);
         setLostFeedCards(data.cards);

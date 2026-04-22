@@ -48,7 +48,7 @@ export const HomeScreen: React.FC = () => {
     handleUserLocationChange,
     syncOnTabFocus,
   } = useHomeLostFeed({
-    radiusMeters: 5000,
+    radiusMeters: 550000,
     minSyncRefreshAgeMs: 20000,
     onError: handleFeedError,
   });

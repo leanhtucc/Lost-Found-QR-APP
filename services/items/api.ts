@@ -72,6 +72,41 @@ const normalizeItemStatus = (status: unknown): ItemStatus => {
   }
 };
 
+const normalizeStatusFilter = (status: unknown): ItemStatus | undefined => {
+  if (typeof status !== 'string') {
+    return undefined;
+  }
+
+  const normalized = status.trim().toUpperCase();
+  if (!normalized || normalized === 'ALL') {
+    return undefined;
+  }
+
+  switch (normalized) {
+    case 'SAFE':
+    case 'PENDING_PAYMENT':
+    case 'LOST':
+    case 'FOUND':
+    case 'RESOLVED':
+      return normalized;
+    default:
+      return undefined;
+  }
+};
+
+const normalizeCategoryFilter = (category: unknown): ItemCategory | undefined => {
+  if (typeof category !== 'string') {
+    return undefined;
+  }
+
+  const normalized = category.trim().toLowerCase();
+  if (!normalized) {
+    return undefined;
+  }
+
+  return normalized as ItemCategory;
+};
+
 const normalizeItem = (item: Item): Item => {
   return {
     ...item,
@@ -140,13 +175,39 @@ export const itemsApi = {
     limit?: number;
   }): Promise<ListItemsResponse> {
     const queryParams = new URLSearchParams();
+    const status = normalizeStatusFilter(params?.status);
+    const category = normalizeCategoryFilter(params?.category);
 
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.category) queryParams.append('category', params.category);
-    if (params?.page) queryParams.append('page', String(params.page));
-    if (params?.limit) queryParams.append('limit', String(params.limit));
+    const page =
+      typeof params?.page === 'number' && Number.isFinite(params.page) && params.page > 0
+        ? Math.floor(params.page)
+        : undefined;
+    const limit =
+      typeof params?.limit === 'number' && Number.isFinite(params.limit) && params.limit > 0
+        ? Math.floor(params.limit)
+        : undefined;
 
-    const url = `${getItemsApiUrl()}?${queryParams.toString()}`;
+    if (status) queryParams.append('status', status);
+    if (category) queryParams.append('category', category);
+    if (page) queryParams.append('page', String(page));
+    if (limit) queryParams.append('limit', String(limit));
+
+    const baseUrl = getItemsApiUrl();
+    const url = queryParams.toString() ? `${baseUrl}?${queryParams.toString()}` : baseUrl;
+
+    if (__DEV__) {
+      console.log('[ItemsAPI][getItems] Request', {
+        url,
+        rawParams: params,
+        sentQuery: {
+          status: status ?? null,
+          category: category ?? null,
+          page: page ?? null,
+          limit: limit ?? null,
+        },
+      });
+    }
+
     const headers = await createHeaders();
 
     const response = await fetch(url, {
@@ -178,13 +239,36 @@ export const itemsApi = {
     limit?: number;
   }): Promise<ListItemsResponse> {
     const queryParams = new URLSearchParams();
+    const category = normalizeCategoryFilter(params?.category);
 
-    if (params?.category) queryParams.append('category', params.category);
-    if (params?.page) queryParams.append('page', String(params.page));
-    if (params?.limit) queryParams.append('limit', String(params.limit));
+    const page =
+      typeof params?.page === 'number' && Number.isFinite(params.page) && params.page > 0
+        ? Math.floor(params.page)
+        : undefined;
+    const limit =
+      typeof params?.limit === 'number' && Number.isFinite(params.limit) && params.limit > 0
+        ? Math.floor(params.limit)
+        : undefined;
+
+    if (category) queryParams.append('category', category);
+    if (page) queryParams.append('page', String(page));
+    if (limit) queryParams.append('limit', String(limit));
 
     const baseUrl = `${getItemsApiUrl()}/my-vault`;
     const url = queryParams.toString() ? `${baseUrl}?${queryParams.toString()}` : baseUrl;
+
+    if (__DEV__) {
+      console.log('[ItemsAPI][getMyVaultItems] Request', {
+        url,
+        rawParams: params,
+        sentQuery: {
+          category: category ?? null,
+          page: page ?? null,
+          limit: limit ?? null,
+        },
+      });
+    }
+
     const headers = await createHeaders();
 
     const response = await fetch(url, {

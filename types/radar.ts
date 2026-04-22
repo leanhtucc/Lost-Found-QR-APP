@@ -5,9 +5,9 @@ export interface RadarNearbyQuery {
 }
 
 export interface HomeLostFeedQuery {
-  lat?: number;
-  lng?: number;
-  radius?: number;
+  lat?: number | string | null;
+  lng?: number | string | null;
+  radius?: number | string | null;
 }
 
 export interface HomeLostFeedPin {

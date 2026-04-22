@@ -3,7 +3,7 @@
  * Icons và tên tiếng Việt cho các category
  */
 
-import type { ItemCategory } from '@types/item';
+import type { ItemCategory } from '@/types/item';
 import {
   Laptop,
   Wallet,
@@ -28,6 +28,7 @@ export const CATEGORY_ICONS: Record<ItemCategory, LucideIcon> = {
   phone: Smartphone,
   jewelry: Gem,
   documents: FileText,
+  laptop: Laptop,
   other: Package,
 };
 
@@ -43,6 +44,7 @@ export const CATEGORY_EMOJI: Record<ItemCategory, string> = {
   phone: '📱',
   jewelry: '💍',
   documents: '📄',
+  laptop: '💻',
   other: '📦',
 };
 
@@ -58,6 +60,7 @@ export const CATEGORY_NAMES_VI: Record<ItemCategory, string> = {
   phone: 'Điện thoại',
   jewelry: 'Trang sức',
   documents: 'Giấy tờ',
+  laptop: 'Laptop',
   other: 'Khác',
 };
 

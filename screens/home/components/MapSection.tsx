@@ -20,9 +20,10 @@ interface MapMarkerPayload {
   address?: string | null;
 }
 
+// Tọa độ fallback: trung tâm Hà Nội (Hoàn Kiếm)
 const FALLBACK_REGION = {
-  latitude: 10.762622,
-  longitude: 106.660172,
+  latitude: 21.027763,
+  longitude: 105.83416,
 };
 
 const isFiniteNumber = (value: unknown): value is number =>
@@ -131,6 +132,72 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
 
       .lost-pin-own {
         background: #ef4444;
+      }
+
+      .user-location-wrapper {
+        background: transparent;
+        border: none;
+      }
+
+      .user-location-pulse {
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        background: rgba(34, 211, 238, 0.16);
+        box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.3);
+        animation: user-location-pulse 1.8s ease-out infinite;
+      }
+
+      .user-location-dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        border-radius: 9999px;
+        transform: translate(-50%, -50%);
+        background: #22d3ee;
+        border: 2px solid rgba(255, 255, 255, 0.95);
+        box-shadow:
+          0 0 0 3px rgba(8, 15, 24, 0.65),
+          0 8px 16px rgba(0, 0, 0, 0.35);
+      }
+
+      .leaflet-tooltip.user-location-tooltip {
+        background: rgba(8, 15, 24, 0.94);
+        color: #e6fffb;
+        border: 1px solid rgba(34, 211, 238, 0.38);
+        border-radius: 9999px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+        padding: 4px 10px;
+      }
+
+      .leaflet-tooltip-top.user-location-tooltip:before {
+        border-top-color: rgba(34, 211, 238, 0.38);
+      }
+
+      .user-location-text {
+        font-size: 11px;
+        line-height: 1.2;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      @keyframes user-location-pulse {
+        0% {
+          transform: scale(0.92);
+          opacity: 0.95;
+        }
+
+        70% {
+          transform: scale(1.6);
+          opacity: 0;
+        }
+
+        100% {
+          transform: scale(1.6);
+          opacity: 0;
+        }
       }
     </style>
   </head>
@@ -298,6 +365,29 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
             }).addTo(userLayer);
           }
 
+          var userLocationIcon = L.divIcon({
+            className: 'user-location-wrapper',
+            html: '<div class="user-location-pulse"></div><div class="user-location-dot"></div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            tooltipAnchor: [0, -18],
+          });
+
+          var userMarker = L.marker([latitude, longitude], {
+            icon: userLocationIcon,
+            interactive: false,
+            keyboard: false,
+          }).addTo(userLayer);
+
+          userMarker.bindTooltip('<div class="user-location-text">Vị trí của bạn</div>', {
+            permanent: true,
+            direction: 'top',
+            offset: [0, -12],
+            opacity: 1,
+            className: 'user-location-tooltip',
+          });
+          userMarker.openTooltip();
+
           L.circleMarker([latitude, longitude], {
             radius: 16,
             color: 'transparent',
@@ -383,35 +473,8 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
       });
     }
 
-    for (const card of cards) {
-      if (!isFiniteNumber(card.lostLat) || !isFiniteNumber(card.lostLng)) {
-        continue;
-      }
-
-      const existing = markerMap.get(card.itemId);
-      if (existing) {
-        markerMap.set(card.itemId, {
-          ...existing,
-          name: existing.name || card.name,
-          lostMessage: existing.lostMessage || card.lostMessage,
-          address: existing.address || card.address,
-        });
-        continue;
-      }
-
-      markerMap.set(card.itemId, {
-        itemId: card.itemId,
-        latitude: card.lostLat,
-        longitude: card.lostLng,
-        isOwn: card.isOwn,
-        name: card.name,
-        lostMessage: card.lostMessage,
-        address: card.address,
-      });
-    }
-
     return Array.from(markerMap.values());
-  }, [cardByItemId, cards, pins]);
+  }, [cardByItemId, pins]);
 
   const pushUserLocation = useCallback(
     (coords: Location.LocationObjectCoords) => {

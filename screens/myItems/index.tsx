@@ -13,12 +13,7 @@ import { SummaryCards } from './components/SummaryCards';
 import { CategoryFilter } from './components/CategoryFilter';
 import { SearchBar } from './components/SearchBar';
 import { ItemsList } from './components/ItemsList';
-import {
-  MY_ITEMS_COLORS,
-  MY_ITEMS_PRIMARY_GRADIENT,
-  MY_ITEMS_RADIUS,
-  MY_ITEMS_SHADOW,
-} from './constants/ui';
+import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_SHADOW } from './constants/ui';
 
 type RootStackParamList = {
   ItemDetails: { itemId: string };
@@ -30,22 +25,23 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 export const MyItemsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
-  const { items, summary, loadItems } = useItems();
+  const { items, loadItems } = useItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<Item['category'] | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
   const reportFabBottom = useMemo(() => Math.max(insets.bottom, 8), [insets.bottom]);
 
-  const { filteredItems } = useItemsFilter({
+  const { filteredItems, lostCount, safeCount } = useItemsFilter({
     items,
     searchQuery,
     categoryFilter,
+    statusFilter,
   });
 
   useEffect(() => {
-    const apiStatus = statusFilter === 'safe' ? 'SAFE' : statusFilter === 'lost' ? 'LOST' : 'all';
-    void loadItems(apiStatus, true, { enableRetry: true });
-  }, [statusFilter, loadItems]);
+    // Only load all items once when screen mounts (or relies on ItemsContext)
+    void loadItems('all', true, { enableRetry: true });
+  }, [loadItems]);
 
   const handleSelectItem = (itemId: string) => {
     navigation.navigate('ItemDetails', { itemId });
@@ -69,7 +65,7 @@ export const MyItemsScreen: React.FC = () => {
         style={styles.heroGlow}
       />
 
-      <MyItemsHeader totalItems={summary?.totalItems || 0} onAddClick={handleAddItem} />
+      <MyItemsHeader totalItems={items.length} onAddClick={handleAddItem} />
 
       <ScrollView
         style={styles.scrollView}
@@ -77,9 +73,9 @@ export const MyItemsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         <SummaryCards
-          totalItems={summary?.totalItems || 0}
-          safeCount={summary?.safeItems || 0}
-          lostCount={summary?.lostItems || 0}
+          totalItems={items.length}
+          safeCount={safeCount}
+          lostCount={lostCount}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
         />

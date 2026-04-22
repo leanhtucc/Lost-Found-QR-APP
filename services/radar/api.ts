@@ -16,6 +16,8 @@ const MIN_RADIUS = 1;
 const MAX_RADIUS = 50000;
 const MAX_ITEMS_PER_REQUEST = 100;
 
+const NULL_LIKE_STRING_VALUES = new Set(['', 'null', 'undefined', 'nan']);
+
 const assertRange = (value: number, field: string, min: number, max: number): void => {
   if (!Number.isFinite(value)) {
     throw new Error(`${field} must be a valid number`);
@@ -50,79 +52,122 @@ const toFiniteNumber = (value: unknown): number | null => {
   return Number.isFinite(normalized) ? normalized : null;
 };
 
-const normalizeHomeLostFeedPin = (payload: unknown): HomeLostFeedPin | null => {
-  const item = payload as Partial<HomeLostFeedPin> | null;
-  if (!item || typeof item.itemId !== 'string') {
-    return null;
+const normalizeOptionalNumberInput = (value: unknown): number | undefined => {
+  if (value === null || typeof value === 'undefined') {
+    return undefined;
   }
 
-  const lat = toFiniteNumber(item.lat);
-  const lng = toFiniteNumber(item.lng);
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (NULL_LIKE_STRING_VALUES.has(normalized)) {
+      return undefined;
+    }
+  }
+
+  const parsed = toFiniteNumber(value);
+  return parsed === null ? undefined : parsed;
+};
+
+const isWithinRange = (value: number, min: number, max: number): boolean =>
+  Number.isFinite(value) && value >= min && value <= max;
+
+const normalizeHomeLostFeedPin = (payload: unknown): HomeLostFeedPin | null => {
+  const item = (payload || {}) as Record<string, any>;
+  const rawId = item.itemId || item.id || item._id;
+
+  if (!rawId) return null;
+  const itemId = String(rawId);
+
+  const lat = toFiniteNumber(item.lat ?? item.lost_lat ?? item.latitude);
+  const lng = toFiniteNumber(item.lng ?? item.lost_lng ?? item.longitude);
 
   if (lat === null || lng === null) {
-    return null;
+    return null; // Pins absolutely require coordinates
   }
 
   return {
-    itemId: item.itemId,
+    itemId,
     lat,
     lng,
-    isOwn: Boolean(item.isOwn),
+    isOwn: Boolean(item.isOwn ?? item.is_own),
   };
 };
 
 const normalizeHomeLostFeedCard = (payload: unknown): HomeLostFeedCard | null => {
-  const item = payload as Partial<HomeLostFeedCard> | null;
-  if (!item || typeof item.itemId !== 'string' || typeof item.name !== 'string') {
+  const item = (payload || {}) as Record<string, any>;
+  const rawId = item.itemId || item.id || item._id;
+
+  if (!rawId) {
+    if (__DEV__) console.log('[RadarAPI] Dropping card due to missing ID:', item);
     return null;
   }
 
-  if (typeof item.reportedAt !== 'string') {
-    return null;
-  }
+  const itemId = String(rawId);
+  const name = typeof item.name === 'string' ? item.name : 'Vật phẩm không tên';
 
-  const distanceMeters = item.distanceMeters === null ? null : toFiniteNumber(item.distanceMeters);
-  const lostLat = item.lostLat === null ? null : toFiniteNumber(item.lostLat);
-  const lostLng = item.lostLng === null ? null : toFiniteNumber(item.lostLng);
+  const reportedAtRaw = item.reportedAt || item.created_at || item.createdAt;
+  const reportedAt = typeof reportedAtRaw === 'string' ? reportedAtRaw : new Date().toISOString();
+
+  const distanceMeters = toFiniteNumber(item.distanceMeters ?? item.distance_meters);
+  const lostLat = toFiniteNumber(item.lostLat ?? item.lost_lat ?? item.latitude);
+  const lostLng = toFiniteNumber(item.lostLng ?? item.lost_lng ?? item.longitude);
+
+  const ownerDisplayName = item.ownerDisplayName || item.owner_display_name;
 
   return {
-    itemId: item.itemId,
-    name: item.name,
+    itemId,
+    name,
     category: typeof item.category === 'string' ? item.category : 'other',
-    imagePublicUrl: typeof item.imagePublicUrl === 'string' ? item.imagePublicUrl : null,
-    lostMessage: typeof item.lostMessage === 'string' ? item.lostMessage : null,
+    imagePublicUrl:
+      typeof (item.imagePublicUrl || item.image_url) === 'string'
+        ? item.imagePublicUrl || item.image_url
+        : null,
+    lostMessage:
+      typeof (item.lostMessage || item.lost_message) === 'string'
+        ? item.lostMessage || item.lost_message
+        : null,
     address:
       typeof item.address === 'string' && item.address.trim().length > 0
         ? item.address.trim()
         : null,
     distanceMeters,
-    distanceLabel: typeof item.distanceLabel === 'string' ? item.distanceLabel : null,
+    distanceLabel:
+      typeof (item.distanceLabel || item.distance_label) === 'string'
+        ? item.distanceLabel || item.distance_label
+        : null,
     lostLat,
     lostLng,
-    isOwn: Boolean(item.isOwn),
+    isOwn: Boolean(item.isOwn ?? item.is_own),
     ownerDisplayName:
-      typeof item.ownerDisplayName === 'string' && item.ownerDisplayName.trim().length > 0
-        ? item.ownerDisplayName
-        : 'Unknown',
-    ownerPhotoURL: typeof item.ownerPhotoURL === 'string' ? item.ownerPhotoURL : null,
-    reportedAt: item.reportedAt,
+      typeof ownerDisplayName === 'string' && ownerDisplayName.trim().length > 0
+        ? ownerDisplayName
+        : 'Ẩn danh',
+    ownerPhotoURL:
+      typeof (item.ownerPhotoURL || item.owner_photo_url) === 'string'
+        ? item.ownerPhotoURL || item.owner_photo_url
+        : null,
+    reportedAt,
   };
 };
 
 const normalizeHomeLostFeedData = (payload: unknown): HomeLostFeedData => {
-  const item = (payload || {}) as Partial<HomeLostFeedData>;
+  const item = (payload || {}) as Record<string, unknown>;
+  const feedPayload =
+    item.lostFeed && typeof item.lostFeed === 'object'
+      ? (item.lostFeed as Record<string, unknown>)
+      : item;
 
-  const myLostCount = Math.max(0, Math.floor(toFiniteNumber(item.myLostCount) ?? 0));
-  const nearbyCount = Math.max(0, Math.floor(toFiniteNumber(item.nearbyCount) ?? 0));
+  const myLostCount = Math.max(0, Math.floor(toFiniteNumber(feedPayload.myLostCount) ?? 0));
+  const nearbyCount = Math.max(0, Math.floor(toFiniteNumber(feedPayload.nearbyCount) ?? 0));
 
-  const pins = Array.isArray(item.pins)
-    ? item.pins
+  const pins = Array.isArray(feedPayload.pins)
+    ? feedPayload.pins
         .map(pin => normalizeHomeLostFeedPin(pin))
         .filter((pin): pin is HomeLostFeedPin => Boolean(pin))
     : [];
 
-  const cards = Array.isArray(item.cards)
-    ? item.cards
+  const cards = Array.isArray(feedPayload.cards)
+    ? feedPayload.cards
         .map(card => normalizeHomeLostFeedCard(card))
         .filter((card): card is HomeLostFeedCard => Boolean(card))
     : [];
@@ -135,37 +180,55 @@ const normalizeHomeLostFeedData = (payload: unknown): HomeLostFeedData => {
   };
 };
 
-const normalizeNearbyItem = (payload: RadarNearbyApiItem): RadarLostItem | null => {
-  if (!payload || typeof payload.itemId !== 'string' || typeof payload.name !== 'string') {
+const normalizeNearbyItem = (payloadRaw: unknown): RadarLostItem | null => {
+  const payload = (payloadRaw || {}) as Record<string, any>;
+  const rawId = payload.itemId || payload.id || payload._id;
+
+  if (!rawId) {
+    if (__DEV__) console.log('[RadarAPI] Dropping nearby due to missing ID:', payload);
+    return null;
+  }
+  const itemId = String(rawId);
+  const name = typeof payload.name === 'string' ? payload.name : 'Vật phẩm không tên';
+
+  const status = typeof payload.status === 'string' ? payload.status.toUpperCase() : 'LOST';
+  if (status !== 'LOST' && status !== 'PENDING_PAYMENT') {
     return null;
   }
 
-  const status = typeof payload.status === 'string' ? payload.status.toLowerCase() : '';
-  if (status !== 'lost') {
-    return null;
-  }
-
-  const latitude = toFiniteNumber(payload.lostLat);
-  const longitude = toFiniteNumber(payload.lostLng);
+  const latitude = toFiniteNumber(
+    payload.lostLat ?? payload.lost_lat ?? payload.latitude ?? payload.lat
+  );
+  const longitude = toFiniteNumber(
+    payload.lostLng ?? payload.lost_lng ?? payload.longitude ?? payload.lng
+  );
 
   if (latitude === null || longitude === null) {
     return null;
   }
 
-  const distanceMeters = toFiniteNumber(payload.distanceMetres);
+  const distanceMeters = toFiniteNumber(
+    payload.distanceMetres ?? payload.distance_meters ?? payload.distanceMeters
+  );
 
   return {
-    itemId: payload.itemId,
-    name: payload.name,
+    itemId,
+    name,
     category: typeof payload.category === 'string' ? payload.category : 'other',
     status: 'LOST',
-    lostMessage: payload.lostMessage,
-    imagePublicUrl: payload.imagePublicUrl,
+    lostMessage:
+      typeof (payload.lostMessage || payload.lost_message) === 'string'
+        ? payload.lostMessage || payload.lost_message
+        : undefined,
+    imagePublicUrl:
+      typeof (payload.imagePublicUrl || payload.image_url) === 'string'
+        ? payload.imagePublicUrl || payload.image_url
+        : undefined,
     latitude,
     longitude,
     distanceMeters: distanceMeters ?? undefined,
-    ownerDisplayName: payload.ownerDisplayName,
-    ownerPhotoURL: payload.ownerPhotoURL,
+    ownerDisplayName: payload.ownerDisplayName ?? payload.owner_display_name,
+    ownerPhotoURL: payload.ownerPhotoURL ?? payload.owner_photo_url,
   };
 };
 
@@ -194,29 +257,46 @@ const normalizeNearbyData = (payload: unknown): RadarLostItem[] => {
 
 export const radarApi = {
   async getHomeLostFeed(query?: HomeLostFeedQuery): Promise<HomeLostFeedData> {
-    const hasLat = typeof query?.lat !== 'undefined';
-    const hasLng = typeof query?.lng !== 'undefined';
+    const lat = normalizeOptionalNumberInput(query?.lat);
+    const lng = normalizeOptionalNumberInput(query?.lng);
+    const radius = normalizeOptionalNumberInput(query?.radius);
 
-    if (hasLat !== hasLng) {
-      throw new Error('lat and lng must be provided together');
-    }
+    const hasValidCoords =
+      typeof lat === 'number' &&
+      typeof lng === 'number' &&
+      isWithinRange(lat, -90, 90) &&
+      isWithinRange(lng, -180, 180);
 
     const params = new URLSearchParams();
 
-    if (hasLat && hasLng) {
-      const radius = query?.radius ?? DEFAULT_RADIUS;
+    if (hasValidCoords) {
+      const safeRadius =
+        typeof radius === 'number' && isWithinRange(radius, MIN_RADIUS, MAX_RADIUS)
+          ? radius
+          : DEFAULT_RADIUS;
 
-      assertRange(query?.lat as number, 'lat', -90, 90);
-      assertRange(query?.lng as number, 'lng', -180, 180);
-      assertRange(radius, 'radius', MIN_RADIUS, MAX_RADIUS);
-
-      params.append('lat', String(query?.lat));
-      params.append('lng', String(query?.lng));
-      params.append('radius', String(Math.floor(radius)));
+      params.append('lat', String(lat));
+      params.append('lng', String(lng));
+      params.append('radius', String(Math.floor(safeRadius)));
     }
 
     const baseUrl = buildHomeUrl('lost-feed');
     const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+
+    if (__DEV__) {
+      console.log('[RadarAPI][getHomeLostFeed] Request', {
+        url,
+        rawQuery: query,
+        sentQuery: hasValidCoords
+          ? {
+              lat,
+              lng,
+              radius: Number(params.get('radius')),
+            }
+          : null,
+      });
+    }
+
     const headers = await createAuthHeaders();
 
     const response = await fetch(url, {

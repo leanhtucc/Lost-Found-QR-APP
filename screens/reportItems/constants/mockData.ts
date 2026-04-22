@@ -31,12 +31,12 @@ export const REPORT_ITEMS: ReportItemOption[] = [
 ];
 
 export const REPORT_LOCATION: ReportLocation = {
-  title: '221B Baker St, Marylebone',
+  title: '54 Nguyễn Chí Thanh, Đống Đa',
   subtitle: 'Vị trí hiện tại của ghim',
-  cityLine: 'London NW1 6XE, Vương Quốc Anh',
-  lat: 51.523767,
-  lng: -0.1585557,
-  address: '221B Baker St, Marylebone, London NW1 6XE, United Kingdom',
+  cityLine: 'Hà Nội, Việt Nam',
+  lat: 21.028512,
+  lng: 105.842037,
+  address: '54 Nguyễn Chí Thanh, Láng Thượng, Đống Đa, Hà Nội, Việt Nam',
 };
 
 export const MAP_PREVIEW_IMAGE =
