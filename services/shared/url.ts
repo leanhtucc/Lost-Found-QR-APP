@@ -30,6 +30,11 @@ export const buildApiUrl = (...segments: (UrlSegment | null | undefined)[]): str
   return buildBaseUrl('api', ...segments);
 };
 
+/** Build URL under /v1 (Guardian API public contract). */
+export const buildV1Url = (...segments: (UrlSegment | null | undefined)[]): string => {
+  return buildBaseUrl('v1', ...segments);
+};
+
 export const buildAuthUrl = (...segments: (UrlSegment | null | undefined)[]): string => {
   return buildApiUrl('auth', ...segments);
 };

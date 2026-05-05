@@ -5,10 +5,12 @@ export default {
     scheme: 'lostfoundqr',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/icon.png',
+    icon: './assets/logoApp.png',
     userInterfaceStyle: 'light',
     splash: {
-      backgroundColor: '#0E0E13',
+      image: './assets/logoApp.png',
+      resizeMode: 'contain',
+      backgroundColor: '#000000',
     },
     assetBundlePatterns: ['**/*'],
     ios: {
@@ -18,8 +20,8 @@ export default {
     android: {
       package: 'com.anhtu081204.lostandfoundqr',
       adaptiveIcon: {
-        foregroundImage: './assets/icon.png',
-        backgroundColor: '#ffffff',
+        foregroundImage: './assets/logoApp.png',
+        backgroundColor: '#000000',
       },
       googleServicesFile:
         process.env.ENV === 'production'
@@ -27,9 +29,18 @@ export default {
           : './firebase/android/google-services.json',
     },
     web: {
-      favicon: './assets/icon.png',
+      favicon: './assets/logoApp.png',
     },
     plugins: [
+      [
+        'expo-splash-screen',
+        {
+          image: './assets/logoApp.png',
+          imageWidth: 220,
+          resizeMode: 'contain',
+          backgroundColor: '#000000',
+        },
+      ],
       'expo-secure-store',
       [
         '@react-native-google-signin/google-signin',

@@ -12,18 +12,29 @@ interface HomeItemCardProps {
 const FALLBACK_ADDRESS = 'Không xác định rõ địa chỉ';
 
 const buildLocationLine = (item: HomeLostFeedCard): string => {
-  const address = item.address?.trim() ? item.address.trim() : FALLBACK_ADDRESS;
+  return item.address?.trim() ? item.address.trim() : FALLBACK_ADDRESS;
+};
 
+const buildDistanceBadge = (item: HomeLostFeedCard): string | null => {
   if (item.distanceLabel?.trim()) {
-    return `${address} • Cách đây ${item.distanceLabel.trim()}`;
+    return item.distanceLabel.trim();
   }
 
-  return address;
+  if (typeof item.distanceMeters === 'number' && Number.isFinite(item.distanceMeters)) {
+    if (item.distanceMeters < 1000) {
+      return `${Math.round(item.distanceMeters)}m`;
+    }
+
+    const kilometers = item.distanceMeters / 1000;
+    return `${kilometers >= 10 ? Math.round(kilometers) : kilometers.toFixed(1)}km`;
+  }
+
+  return null;
 };
 
 export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => {
   const locationLine = buildLocationLine(item);
-  const reward = item.distanceMeters && item.distanceMeters > 700 ? '1M' : '500K';
+  const distanceBadge = buildDistanceBadge(item);
 
   return (
     <TouchableOpacity
@@ -44,9 +55,9 @@ export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => 
           </View>
         )}
 
-        {reward ? (
+        {distanceBadge ? (
           <View className="absolute right-2 top-2 rounded-lg bg-[#dd724f]/95 px-2 py-0.5">
-            <Text className="text-[10px] font-bold text-white">{reward}</Text>
+            <Text className="text-[10px] font-bold text-white">{distanceBadge}</Text>
           </View>
         ) : null}
       </View>

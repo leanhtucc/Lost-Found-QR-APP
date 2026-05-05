@@ -1,19 +1,9 @@
-import React, { useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as Sentry from '@sentry/react-native';
-import { StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 import '@/styles/global.css';
-import RootStack from './navigation';
-import { AuthProvider } from '@contexts/AuthContext';
-import { ToastProvider } from '@contexts/ToastContext';
+import AppRoot from './app-root';
 // eslint-disable-next-line import/no-named-as-default
 import ENV from './constants/environment';
-import { ItemsProvider } from '@/contexts';
-import { SplashScreen } from '@screens/onboarding/SplashScreen';
 
 /**
  * Initialize Sentry for error tracking and crash reporting
@@ -56,50 +46,5 @@ Sentry.init({
   // spotlight: __DEV__,
 });
 
-/**
- * Main App Component
- *
- * Providers hierarchy (important order):
- * 1. GestureHandlerRootView: Required for react-native-gesture-handler
- * 2. SafeAreaProvider: Handle safe areas on devices with notches
- * 3. KeyboardProvider: Advanced keyboard handling and smooth animations
- * 4. AuthProvider: Global authentication state management
- * 5. ToastProvider: Global toast notifications
- * 6. ItemsProvider: Global items state management
- * 7. Sentry.wrap: Error boundary and crash reporting
- */
-function App() {
-  const [showStartupSplash, setShowStartupSplash] = useState(true);
-
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <KeyboardProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <ItemsProvider>
-                <RootStack />
-                {showStartupSplash ? (
-                  <View style={styles.splashOverlay}>
-                    <SplashScreen onFinish={() => setShowStartupSplash(false)} />
-                  </View>
-                ) : null}
-                <StatusBar style="light" />
-              </ItemsProvider>
-            </ToastProvider>
-          </AuthProvider>
-        </KeyboardProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
-  );
-}
-
-const styles = StyleSheet.create({
-  splashOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 9999,
-  },
-});
-
 // Wrap with Sentry for automatic error tracking
-export default Sentry.wrap(App);
+export default Sentry.wrap(AppRoot);

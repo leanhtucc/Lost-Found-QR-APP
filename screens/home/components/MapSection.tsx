@@ -301,9 +301,6 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
             marker.bindPopup('<strong>' + title + '</strong><br />' + description);
 
             var addressTextRaw = typeof item.address === 'string' ? item.address.trim() : '';
-            if (!addressTextRaw) {
-              addressTextRaw = 'Lat ' + Number(item.latitude).toFixed(4) + ', Lng ' + Number(item.longitude).toFixed(4);
-            }
 
             if (addressTextRaw) {
               var addressText = safeText(addressTextRaw);

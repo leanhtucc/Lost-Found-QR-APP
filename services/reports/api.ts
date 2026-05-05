@@ -1,4 +1,4 @@
-import { buildReportsUrl } from '@services/shared/url';
+import { buildBaseUrl, buildReportsUrl } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
 
 interface ReportLostItemLocation {
@@ -22,8 +22,48 @@ interface ReportLostItemResponseData {
 interface ReportsApiResponse<T> {
   success: boolean;
   message?: string;
+  errors?: { field?: string; message?: string }[];
   data?: T;
   error?: string;
+}
+
+interface GuardianReportLocation {
+  lat: number;
+  lng: number;
+  address?: string;
+}
+
+interface GuardianReportRadar {
+  radius: number;
+  durationHours: number;
+}
+
+interface GuardianReportReward {
+  baseAmount: number;
+  isCustom: boolean;
+}
+
+interface GuardianReportRequest {
+  itemId: string;
+  location: GuardianReportLocation;
+  radar: GuardianReportRadar;
+  reward: GuardianReportReward;
+}
+
+interface GuardianReportApiPayload {
+  report_id?: string;
+  status?: string;
+  payment?: {
+    total_to_pay?: number;
+    payment_url?: string;
+  };
+}
+
+export interface GuardianReportCreationResult {
+  reportId: string;
+  status: string;
+  totalToPay: number;
+  paymentUrl: string;
 }
 
 const createAuthHeaders = async (): Promise<HeadersInit> => {
@@ -54,7 +94,104 @@ const toFiniteNumber = (value: number, fieldName: string): number => {
   return value;
 };
 
+const toApiErrorMessage = <T>(
+  response: Response,
+  payload: ReportsApiResponse<T> | null,
+  fallback: string
+): string => {
+  const validationMessage = Array.isArray(payload?.errors)
+    ? payload?.errors
+        ?.map(item => item?.message)
+        .filter(
+          (message): message is string => typeof message === 'string' && message.trim().length > 0
+        )
+        .join('; ')
+    : '';
+
+  return (
+    validationMessage ||
+    payload?.message ||
+    payload?.error ||
+    `${fallback} (HTTP ${response.status})`
+  );
+};
+
 export const reportsApi = {
+  async createGuardianReport(
+    payload: GuardianReportRequest
+  ): Promise<GuardianReportCreationResult> {
+    if (!payload.itemId || payload.itemId.trim().length === 0) {
+      throw new Error('item_id is required');
+    }
+
+    const lat = toFiniteNumber(payload.location.lat, 'location.lat');
+    const lng = toFiniteNumber(payload.location.lng, 'location.lng');
+    const radius = Math.floor(toFiniteNumber(payload.radar.radius, 'radar.radius'));
+    const durationHours = Math.floor(
+      toFiniteNumber(payload.radar.durationHours, 'radar.duration_hours')
+    );
+    const baseAmount = Math.floor(toFiniteNumber(payload.reward.baseAmount, 'reward.base_amount'));
+
+    if (radius < 100 || radius > 5000) {
+      throw new Error('radar.radius must be between 100 and 5000');
+    }
+
+    if (durationHours < 1 || durationHours > 168) {
+      throw new Error('radar.duration_hours must be between 1 and 168');
+    }
+
+    if (baseAmount < 10000) {
+      throw new Error('Minimum reward is 10,000đ');
+    }
+
+    const headers = await createAuthHeaders();
+    const response = await fetch(buildBaseUrl('v1', 'reports'), {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        item_id: payload.itemId,
+        location: {
+          lat,
+          lng,
+          address: payload.location.address || '',
+        },
+        radar: {
+          radius,
+          duration_hours: durationHours,
+        },
+        reward: {
+          base_amount: baseAmount,
+          is_custom: payload.reward.isCustom,
+        },
+      }),
+    });
+
+    const json = await parseJsonSafely<ReportsApiResponse<GuardianReportApiPayload>>(response);
+
+    if (!response.ok || !json?.success || !json.data) {
+      throw new Error(toApiErrorMessage(response, json, 'Failed to create report'));
+    }
+
+    const reportId = typeof json.data.report_id === 'string' ? json.data.report_id : '';
+    const status = typeof json.data.status === 'string' ? json.data.status : '';
+    const paymentUrl =
+      typeof json.data.payment?.payment_url === 'string' ? json.data.payment.payment_url : '';
+    const totalToPay = Number.isFinite(Number(json.data.payment?.total_to_pay))
+      ? Number(json.data.payment?.total_to_pay)
+      : baseAmount;
+
+    if (!reportId || !paymentUrl || !status) {
+      throw new Error('Invalid report response from server');
+    }
+
+    return {
+      reportId,
+      status,
+      totalToPay,
+      paymentUrl,
+    };
+  },
+
   async reportLostItem(payload: ReportLostItemRequest): Promise<ReportLostItemResponseData> {
     if (typeof payload.itemId !== 'string' || payload.itemId.trim().length === 0) {
       throw new Error('itemId is required');

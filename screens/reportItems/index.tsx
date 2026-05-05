@@ -12,6 +12,8 @@ import {
   ActionFooter,
   ItemSelectionStep,
   LocationStep,
+  PaymentWebViewModal,
+  RadarStep,
   RadarStatusModal,
   ReportHeader,
   RewardStep,
@@ -28,17 +30,30 @@ export default function ReportItemsScreen() {
     step,
     items,
     isLoadingItems,
+    isCreatingItem,
     isSubmitting,
+    isSimulatingRadar,
     selectedItemId,
     setSelectedItemId,
+    selectionSummary,
+    isFetchingSelectionSummary,
     selectedRewardId,
     setSelectedRewardId,
+    customRewardAmount,
+    setCustomRewardAmount,
+    radarSimulation,
     location,
     manualAddress,
     setManualAddress,
     useCurrentLocation,
     setUseCurrentLocation,
     isResolvingCurrentLocation,
+    paymentSession,
+    closePaymentModal,
+    handlePaymentSuccess,
+    handlePaymentCancel,
+    handleAddNewItem,
+    refreshRadarSimulation,
     showRadarState,
     setShowRadarState,
     nextStep,
@@ -46,7 +61,12 @@ export default function ReportItemsScreen() {
     submitReport,
   } = useReportFlow();
 
-  const footerLabel = useMemo(() => (step === 3 ? 'Báo mất ngay' : 'Tiếp theo'), [step]);
+  const footerLabel = useMemo(() => (step === 4 ? 'Báo mất ngay' : 'Tiếp theo'), [step]);
+
+  const hasSelectedItem = useMemo(
+    () => items.some(item => item.id === selectedItemId),
+    [items, selectedItemId]
+  );
 
   const isPrimaryDisabled = useMemo(() => {
     if (isSubmitting) {
@@ -54,19 +74,25 @@ export default function ReportItemsScreen() {
     }
 
     if (step === 1) {
-      return isLoadingItems || !selectedItemId;
+      return isLoadingItems || isCreatingItem || !hasSelectedItem;
     }
 
     if (step === 2) {
+      return isSimulatingRadar;
+    }
+
+    if (step === 3) {
       return useCurrentLocation && isResolvingCurrentLocation;
     }
 
     return false;
   }, [
+    isCreatingItem,
+    hasSelectedItem,
     isLoadingItems,
     isResolvingCurrentLocation,
+    isSimulatingRadar,
     isSubmitting,
-    selectedItemId,
     step,
     useCurrentLocation,
   ]);
@@ -86,12 +112,12 @@ export default function ReportItemsScreen() {
   };
 
   const handlePrimaryAction = () => {
-    if (step < 3) {
-      nextStep();
+    if (step < 4) {
+      void nextStep();
       return;
     }
 
-    submitReport();
+    void submitReport();
   };
 
   return (
@@ -106,7 +132,7 @@ export default function ReportItemsScreen() {
       <ReportHeader
         title="Báo mất vật dụng"
         onBack={handleBack}
-        rightLabel={step === 3 ? 'GUARDIAN' : undefined}
+        rightLabel={step === 4 ? 'GUARDIAN' : undefined}
       />
 
       <View style={styles.indicatorWrap}>{step > 1 ? <StepIndicator step={step} /> : null}</View>
@@ -121,11 +147,25 @@ export default function ReportItemsScreen() {
             items={items}
             selectedItemId={selectedItemId}
             onSelectItem={setSelectedItemId}
+            onAddNewItem={handleAddNewItem}
             isLoading={isLoadingItems}
+            isCreatingItem={isCreatingItem}
+            selectionSummary={selectionSummary}
+            isFetchingSelectionSummary={isFetchingSelectionSummary}
           />
         ) : null}
 
         {step === 2 ? (
+          <RadarStep
+            simulation={radarSimulation}
+            isLoading={isSimulatingRadar}
+            onRetry={() => {
+              void refreshRadarSimulation();
+            }}
+          />
+        ) : null}
+
+        {step === 3 ? (
           <LocationStep
             mapImageUri={MAP_PREVIEW_IMAGE}
             location={location}
@@ -137,11 +177,13 @@ export default function ReportItemsScreen() {
           />
         ) : null}
 
-        {step === 3 ? (
+        {step === 4 ? (
           <RewardStep
             rewards={REWARD_OPTIONS}
             selectedRewardId={selectedRewardId}
             onSelectReward={setSelectedRewardId}
+            customRewardAmount={customRewardAmount}
+            onChangeCustomRewardAmount={setCustomRewardAmount}
           />
         ) : null}
       </ScrollView>
@@ -153,7 +195,21 @@ export default function ReportItemsScreen() {
         disabled={isPrimaryDisabled}
       />
 
-      <RadarStatusModal visible={showRadarState} onClose={() => setShowRadarState(false)} />
+      <RadarStatusModal
+        visible={showRadarState}
+        onClose={() => setShowRadarState(false)}
+        activeUsersCount={radarSimulation.activeUsersCount}
+        radius={radarSimulation.recommendedRadius}
+        durationHours={radarSimulation.estimatedDurationHours}
+      />
+
+      <PaymentWebViewModal
+        visible={paymentSession.visible}
+        paymentUrl={paymentSession.paymentUrl}
+        onClose={closePaymentModal}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentCancel={handlePaymentCancel}
+      />
     </SafeAreaView>
   );
 }

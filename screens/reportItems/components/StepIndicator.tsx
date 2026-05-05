@@ -7,7 +7,7 @@ interface StepIndicatorProps {
   total?: number;
 }
 
-export const StepIndicator: React.FC<StepIndicatorProps> = ({ step, total = 3 }) => {
+export const StepIndicator: React.FC<StepIndicatorProps> = ({ step, total = 4 }) => {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
       {Array.from({ length: total }).map((_, index) => {

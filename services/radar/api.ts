@@ -8,7 +8,7 @@ import {
   RadarNearbyApiItem,
   RadarNearbyQuery,
 } from '@/types/radar';
-import { buildHomeUrl, buildMapUrl } from '@services/shared/url';
+import { buildHomeUrl, buildMapUrl, buildV1Url } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
 
 const DEFAULT_RADIUS = 5000;
@@ -255,7 +255,67 @@ const normalizeNearbyData = (payload: unknown): RadarLostItem[] => {
   return items.slice(0, MAX_ITEMS_PER_REQUEST);
 };
 
+interface GuardianRadarPayload {
+  lat: number;
+  lng: number;
+  radius?: number;
+}
+
+/** Response từ GET /v1/map/active-users */
+interface ActiveUsersResponse {
+  active_users_count?: number;
+}
+
+export interface GuardianRadarSimulation {
+  activeUsersCount: number;
+  /** Radius (mét) người dùng đã chọn – echo lại từ request */
+  recommendedRadius: number;
+  /** Thời lượng giờ mặc định, backend không còn trả về riêng */
+  estimatedDurationHours: number;
+}
+
 export const radarApi = {
+  /**
+   * Lấy số người dùng hoạt động gần khu vực (Radar step)
+   * GET /v1/map/active-users  ← V2 BREAKING CHANGE (cũ: POST /v1/radar/simulate)
+   * Gọi mỗi khi user kéo slider chọn bán kính (500m / 2000m / 5000m)
+   */
+  async simulateGuardianRadar(payload: GuardianRadarPayload): Promise<GuardianRadarSimulation> {
+    assertRange(payload.lat, 'lat', -90, 90);
+    assertRange(payload.lng, 'lng', -180, 180);
+
+    const radius = typeof payload.radius === 'number' ? Math.floor(payload.radius) : 500;
+    assertRange(radius, 'radius', 100, 5000);
+
+    // V2: GET /v1/map/active-users?lat=...&lng=...&radius=...
+    const params = new URLSearchParams({
+      lat: String(payload.lat),
+      lng: String(payload.lng),
+      radius: String(radius),
+    });
+
+    const headers = await createAuthHeaders();
+    const response = await fetch(`${buildV1Url('map', 'active-users')}?${params.toString()}`, {
+      method: 'GET',
+      headers,
+    });
+
+    const apiPayload = await parseJsonSafely<RadarApiResponse<ActiveUsersResponse>>(response);
+
+    if (!response.ok || !apiPayload?.success || !apiPayload.data) {
+      const fallbackMessage = `Failed to fetch active users (HTTP ${response.status})`;
+      throw new Error(apiPayload?.message || apiPayload?.error || fallbackMessage);
+    }
+
+    // V2: backend chỉ trả active_users_count;
+    // recommendedRadius & estimatedDurationHours echo lại từ request
+    return {
+      activeUsersCount: Math.max(0, Math.floor(apiPayload.data.active_users_count || 0)),
+      recommendedRadius: radius,
+      estimatedDurationHours: 24, // mặc định; user có thể chỉnh ở Reward step
+    };
+  },
+
   async getHomeLostFeed(query?: HomeLostFeedQuery): Promise<HomeLostFeedData> {
     const lat = normalizeOptionalNumberInput(query?.lat);
     const lng = normalizeOptionalNumberInput(query?.lng);

@@ -6,6 +6,9 @@ import { REPORT_COLORS } from '../constants/theme';
 interface RadarStatusModalProps {
   visible: boolean;
   onClose: () => void;
+  activeUsersCount?: number;
+  radius?: number;
+  durationHours?: number;
 }
 
 const RadarInfoCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({
@@ -39,7 +42,13 @@ const RadarInfoCard: React.FC<{ title: string; value: string; icon: React.ReactN
   );
 };
 
-export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({ visible, onClose }) => {
+export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
+  visible,
+  onClose,
+  activeUsersCount = 0,
+  radius = 500,
+  durationHours = 24,
+}) => {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View
@@ -183,7 +192,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({ visible, onC
               }}
             >
               <Text style={{ color: REPORT_COLORS.accent, fontSize: 16, fontWeight: '700' }}>
-                12 người đã được thông báo
+                {activeUsersCount.toLocaleString('vi-VN')} người đã được thông báo
               </Text>
             </View>
             <Text
@@ -202,12 +211,12 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({ visible, onC
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 18 }}>
               <RadarInfoCard
                 title="Phạm vi"
-                value="500m quanh bạn"
+                value={`${radius.toLocaleString('vi-VN')}m quanh bạn`}
                 icon={<LocateFixed size={16} color={REPORT_COLORS.accent} />}
               />
               <RadarInfoCard
                 title="Thời gian"
-                value="24 giờ tới"
+                value={`${durationHours} giờ tới`}
                 icon={<Clock3 size={16} color={REPORT_COLORS.accent} />}
               />
             </View>

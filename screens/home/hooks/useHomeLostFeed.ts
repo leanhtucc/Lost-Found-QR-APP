@@ -6,12 +6,12 @@ import { radarApi } from '@services/radar';
 const DEFAULT_RADIUS_METERS = 5000;
 const MIN_RADIUS_METERS = 1;
 const MAX_RADIUS_METERS = 50000;
-const SNAPSHOT_REFRESH_DISTANCE_METERS = 250;
-const SNAPSHOT_REFRESH_INTERVAL_MS = 60000;
+const SNAPSHOT_REFRESH_DISTANCE_METERS = 5000; // Chỉ load lại nếu di chuyển hơn 5km
+const SNAPSHOT_REFRESH_INTERVAL_MS = 3600000; // 1 tiếng (không tự động load lại liên tục)
 const ERROR_THROTTLE_MS = 6000;
-const FOREGROUND_SYNC_THROTTLE_MS = 3000;
-const TAB_FOCUS_SYNC_THROTTLE_MS = 5000;
-const DEFAULT_MIN_SYNC_REFRESH_AGE_MS = 20000;
+const FOREGROUND_SYNC_THROTTLE_MS = 3600000; // 1 tiếng
+const TAB_FOCUS_SYNC_THROTTLE_MS = 3600000; // 1 tiếng
+const DEFAULT_MIN_SYNC_REFRESH_AGE_MS = 3600000; // 1 tiếng
 
 interface RadarCoordinates {
   latitude: number;
@@ -21,6 +21,10 @@ interface RadarCoordinates {
 interface LastSnapshotState {
   location: RadarCoordinates;
   timestamp: number;
+}
+
+interface PendingRefreshState {
+  coords?: RadarCoordinates;
 }
 
 interface UseHomeLostFeedOptions {
@@ -71,6 +75,7 @@ export const useHomeLostFeed = ({
   const locationRef = useRef<RadarCoordinates | null>(null);
   const lastSnapshotRef = useRef<LastSnapshotState | null>(null);
   const snapshotInFlightRef = useRef(false);
+  const pendingRefreshRef = useRef<PendingRefreshState | null>(null);
   const lastErrorAtRef = useRef(0);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastForegroundSyncAtRef = useRef(0);
@@ -114,6 +119,7 @@ export const useHomeLostFeed = ({
   const refreshLostFeed = useCallback(
     async (coords?: RadarCoordinates) => {
       if (snapshotInFlightRef.current) {
+        pendingRefreshRef.current = { coords };
         return;
       }
 
@@ -169,6 +175,13 @@ export const useHomeLostFeed = ({
       } finally {
         snapshotInFlightRef.current = false;
         setIsRadarLoading(false);
+
+        const pendingRefresh = pendingRefreshRef.current;
+        pendingRefreshRef.current = null;
+
+        if (pendingRefresh) {
+          void refreshLostFeed(pendingRefresh.coords);
+        }
       }
     },
     [normalizedRadius, notifyError]
@@ -213,6 +226,11 @@ export const useHomeLostFeed = ({
   }, [syncLostFeedAtCurrentLocation]);
 
   const syncOnTabFocus = useCallback(async () => {
+    // Không load lại data khi vào lại trang nếu đã có dữ liệu
+    if (lastSnapshotRef.current) {
+      return;
+    }
+
     const now = Date.now();
     if (now - lastTabFocusSyncAtRef.current < TAB_FOCUS_SYNC_THROTTLE_MS) {
       return;

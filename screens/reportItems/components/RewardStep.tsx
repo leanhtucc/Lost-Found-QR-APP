@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ChevronRight, Lock, ShieldCheck, Wallet } from 'lucide-react-native';
 import { REPORT_COLORS, REPORT_LAYOUT } from '../constants/theme';
 import { RewardOption } from '../types';
@@ -8,6 +8,8 @@ interface RewardStepProps {
   rewards: RewardOption[];
   selectedRewardId: string;
   onSelectReward: (rewardId: string) => void;
+  customRewardAmount: number;
+  onChangeCustomRewardAmount: (amount: number) => void;
 }
 
 const formatCurrency = (value: number): string => {
@@ -18,7 +20,11 @@ export const RewardStep: React.FC<RewardStepProps> = ({
   rewards,
   selectedRewardId,
   onSelectReward,
+  customRewardAmount,
+  onChangeCustomRewardAmount,
 }) => {
+  const isCustomSelected = selectedRewardId === 'custom';
+
   return (
     <View>
       <Text
@@ -96,14 +102,15 @@ export const RewardStep: React.FC<RewardStepProps> = ({
 
       <TouchableOpacity
         activeOpacity={0.86}
+        onPress={() => onSelectReward('custom')}
         style={{
           marginTop: 10,
           borderRadius: 14,
           paddingVertical: 16,
           paddingHorizontal: 16,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.08)',
-          backgroundColor: 'rgba(36,36,54,0.45)',
+          borderWidth: isCustomSelected ? 2 : 1,
+          borderColor: isCustomSelected ? REPORT_COLORS.accent : 'rgba(255,255,255,0.08)',
+          backgroundColor: isCustomSelected ? REPORT_COLORS.accentSoft : 'rgba(36,36,54,0.45)',
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -117,6 +124,40 @@ export const RewardStep: React.FC<RewardStepProps> = ({
         </View>
         <ChevronRight size={18} color={REPORT_COLORS.textSecondary} />
       </TouchableOpacity>
+
+      {isCustomSelected ? (
+        <View
+          style={{
+            marginTop: 12,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: REPORT_COLORS.border,
+            backgroundColor: 'rgba(36,36,54,0.55)',
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+          }}
+        >
+          <Text style={{ color: REPORT_COLORS.textMuted, fontSize: 12, fontWeight: '700' }}>
+            SỐ TIỀN THƯỞNG TÙY CHỈNH (TỐI THIỂU 10.000Đ)
+          </Text>
+          <TextInput
+            keyboardType="number-pad"
+            value={String(customRewardAmount)}
+            onChangeText={value => {
+              const normalized = value.replace(/\D/g, '');
+              onChangeCustomRewardAmount(normalized ? Number(normalized) : 0);
+            }}
+            placeholder="Ví dụ: 150000"
+            placeholderTextColor={REPORT_COLORS.textMuted}
+            style={{
+              marginTop: 8,
+              color: REPORT_COLORS.textPrimary,
+              fontSize: 22,
+              fontWeight: '700',
+            }}
+          />
+        </View>
+      ) : null}
 
       <View
         style={{

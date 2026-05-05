@@ -18,8 +18,123 @@ import {
   UpdateItemParams,
   UpdateStatusParams,
 } from '@/types';
-import { buildItemsUrl, buildScanUrl } from '@services/shared/url';
+import { buildItemsUrl, buildScanUrl, buildV1Url } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
+
+export interface EligibleForReportItem {
+  item_id: string;
+  name: string;
+  category: string;
+  image_url: string | null;
+  details: {
+    color: string | null;
+    storage: string | null;
+    serial: string | null;
+  };
+  has_insurance: boolean;
+}
+
+export interface AnalyzeItemImageResult {
+  name: string;
+  category: string;
+  /** color trả về ở top-level từ AI V2 */
+  color: string;
+  confidenceScore: number;
+  imagePublicUrl?: string;
+  details: {
+    color: string;
+    storage: string;
+    serial: string;
+    ai_visual_tags?: string[];
+    ai_description?: string;
+  };
+}
+
+export interface CreateGuardianItemPayload {
+  name: string;
+  category: string;
+  imagePublicUrl?: string;
+  details: {
+    color?: string;
+    storage?: string;
+    model?: string;
+    serial?: string;
+    imei?: string;
+    ai_visual_tags?: string[];
+    ai_description?: string;
+  };
+  hasInsurance?: boolean;
+}
+
+export interface SelectionSummaryResponse {
+  id: string;
+  name: string;
+  category: string;
+  image_url?: string;
+  display_text: {
+    primary: string;
+    secondary: string;
+    serial_number: string | null;
+  };
+  status_badges: {
+    has_insurance: boolean;
+    label: string;
+    color_theme: 'SUCCESS' | 'STANDARD' | 'NONE';
+  };
+  ai_visual_tags: string[];
+}
+
+export interface CreateGuardianItemResult {
+  /** cuid – dùng để build deep-link QR Code */
+  qrCodeId: string;
+  /** cuid – ID nội bộ của item */
+  itemId: string;
+  name: string;
+  category: string;
+  imagePublicUrl: string | null;
+  details: {
+    color: string | null;
+    storage: string | null;
+    serial: string | null;
+  };
+  hasInsurance: boolean;
+}
+
+interface EligibleForReportEnvelope {
+  data?: EligibleForReportItem[];
+}
+
+/** Response shape từ POST /v1/ai/analyze-item (Gemini 1.5 Flash) */
+interface AnalyzeItemImageEnvelope {
+  /** Tên gợi ý của vật phẩm */
+  suggested_name?: string;
+  category?: string;
+  /** Màu trực tiếp ở top-level (không lồng trong details) */
+  color?: string | null;
+  confidence_score?: number;
+  imagePublicUrl?: string;
+  ai_visual_tags?: string[];
+  description?: string;
+}
+
+/** Response shape từ POST /api/items */
+interface CreateGuardianItemEnvelope {
+  id?: string;
+  /** cuid dùng để sinh QR deep-link */
+  qrCodeId?: string;
+  ownerId?: string;
+  name?: string;
+  category?: string;
+  status?: string;
+  imagePublicUrl?: string | null;
+  hasInsurance?: boolean;
+  details?: {
+    color?: string | null;
+    storage?: string | null;
+    serial?: string | null;
+  };
+  createdAt?: string;
+}
 
 /**
  * Base URL cho Items API
@@ -51,6 +166,14 @@ const createHeaders = async (includeAuth = true): Promise<HeadersInit> => {
   }
 
   return headers;
+};
+
+const parseJsonSafely = async <T>(response: Response): Promise<T | null> => {
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
 };
 
 const normalizeItemStatus = (status: unknown): ItemStatus => {
@@ -136,6 +259,190 @@ const normalizeScanResponse = (data: ScanItemResponse): ScanItemResponse => {
  * Items API
  */
 export const itemsApi = {
+  /**
+   * Danh sách vật phẩm SAFE có thể báo mất ngay (Guardian flow)
+   * GET /v1/items/eligible-for-report
+   */
+  async getEligibleForReportItems(): Promise<EligibleForReportItem[]> {
+    // V2: đường dẫn là /api/items/eligible-for-report (không phải /v1)
+    const url = buildItemsUrl('eligible-for-report');
+    const headers = await createHeaders();
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    const payload = await parseJsonSafely<ItemApiResponse<EligibleForReportEnvelope>>(response);
+
+    if (!response.ok || !payload?.success) {
+      const fallbackMessage = `Failed to fetch eligible report items (HTTP ${response.status})`;
+      throw new Error(payload?.message || payload?.error || fallbackMessage);
+    }
+
+    const items = Array.isArray(payload.data?.data) ? payload.data.data : [];
+
+    return items.map(item => ({
+      item_id: String(item.item_id || ''),
+      name: String(item.name || 'Vật phẩm chưa đặt tên'),
+      category: String(item.category || 'other'),
+      image_url: typeof item.image_url === 'string' ? item.image_url : null,
+      details: {
+        color: typeof item.details?.color === 'string' ? item.details.color : null,
+        storage: typeof item.details?.storage === 'string' ? item.details.storage : null,
+        serial: typeof item.details?.serial === 'string' ? item.details.serial : null,
+      },
+      has_insurance: Boolean(item.has_insurance),
+    }));
+  },
+
+  /**
+   * Phân tích ảnh vật phẩm bằng Gemini AI để auto-fill form thêm mới
+   * POST /v1/ai/analyze-item  ← V2 BREAKING CHANGE (cũ: analyze-image)
+   * Content-Type: multipart/form-data, field name: "image"
+   */
+  async analyzeItemImage(imageUri: string): Promise<AnalyzeItemImageResult> {
+    if (typeof imageUri !== 'string' || imageUri.trim().length === 0) {
+      throw new Error('imageUri is required');
+    }
+
+    const token = await getToken();
+    const formData = new FormData();
+
+    formData.append('image', {
+      uri: imageUri,
+      name: 'item-image.jpg',
+      type: 'image/jpeg',
+    } as unknown as Blob);
+
+    // V2: endpoint đổi từ analyze-image → analyze-item
+    const response = await fetch(buildV1Url('ai', 'analyze-item'), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const payload = await parseJsonSafely<ItemApiResponse<AnalyzeItemImageEnvelope>>(response);
+
+    if (!response.ok || !payload?.success || !payload.data) {
+      const fallbackMessage = `Failed to analyze item image (HTTP ${response.status})`;
+      throw new Error(payload?.message || payload?.error || fallbackMessage);
+    }
+
+    const confidenceScore =
+      typeof payload.data.confidence_score === 'number' ? payload.data.confidence_score : 1;
+
+    // V2: tên vật phẩm ở field suggested_name thay vì name
+    const suggestedName = payload.data.suggested_name?.trim() || 'Vật phẩm mới';
+    const category = payload.data.category?.trim() || 'other';
+    // V2: color ở top-level, không lồng trong details
+    const color = payload.data.color?.trim() || '';
+
+    return {
+      name: suggestedName,
+      category,
+      color,
+      confidenceScore,
+      imagePublicUrl: payload.data.imagePublicUrl,
+      details: {
+        color,
+        storage: '',
+        serial: '',
+        ai_visual_tags: payload.data.ai_visual_tags || [],
+        ai_description: payload.data.description || '',
+      },
+    };
+  },
+
+  /**
+   * Tạo vật phẩm mới theo contract Guardian API V2
+   * POST /api/items  ← V2 BREAKING CHANGE (cũ: POST /v1/items)
+   * Response: dùng qrCodeId (cuid) để build QR deep-link
+   */
+  async createGuardianItem(payload: CreateGuardianItemPayload): Promise<CreateGuardianItemResult> {
+    if (!payload.name?.trim()) {
+      throw new Error('name is required');
+    }
+
+    if (!payload.category?.trim()) {
+      throw new Error('category is required');
+    }
+
+    const headers = await createHeaders();
+    // V2: dùng /api/items thay vì /v1/items
+    const response = await fetch(buildItemsUrl(), {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        name: payload.name.trim(),
+        category: payload.category.trim(),
+        // V2: field là imagePublicUrl (không phải image_url)
+        imagePublicUrl: payload.imagePublicUrl || '',
+        hasInsurance: Boolean(payload.hasInsurance),
+        // V2: serial, color, storage nằm trong details
+        details: {
+          color: payload.details.color || null,
+          storage: payload.details.storage || null,
+          model: payload.details.model || null,
+          serial: payload.details.serial || null,
+          imei: payload.details.imei || null,
+          ai_visual_tags: payload.details.ai_visual_tags || [],
+          ai_description: payload.details.ai_description || null,
+        },
+      }),
+    });
+
+    const apiPayload = await parseJsonSafely<ItemApiResponse<CreateGuardianItemEnvelope>>(response);
+
+    // V2: response chứa qrCodeId (cuid) – đây là field bắt buộc
+    if (!response.ok || !apiPayload?.success || !apiPayload.data?.qrCodeId) {
+      const fallbackMessage = `Failed to create item (HTTP ${response.status})`;
+      throw new Error(apiPayload?.message || apiPayload?.error || fallbackMessage);
+    }
+
+    return {
+      // V2: qrCodeId – dùng để sinh deep-link https://findback.vn/item/{qrCodeId}
+      qrCodeId: apiPayload.data.qrCodeId,
+      // id nội bộ vẫn giữ
+      itemId: apiPayload.data.id || apiPayload.data.qrCodeId,
+      name: apiPayload.data.name || payload.name,
+      category: apiPayload.data.category || payload.category,
+      imagePublicUrl:
+        typeof apiPayload.data.imagePublicUrl === 'string' ? apiPayload.data.imagePublicUrl : null,
+      details: {
+        color: apiPayload.data.details?.color || null,
+        storage: apiPayload.data.details?.storage || null,
+        serial: apiPayload.data.details?.serial || null,
+      },
+      hasInsurance: Boolean(apiPayload.data.hasInsurance),
+    };
+  },
+
+  /**
+   * Lấy Chi tiết lựa chọn của 1 item (thay vì tự tính)
+   * GET /v1/items/:id/selection-summary
+   */
+  async getSelectionSummary(itemId: string): Promise<SelectionSummaryResponse> {
+    const url = buildV1Url('items', `${itemId}/selection-summary`);
+    const headers = await createHeaders();
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    const payload = await parseJsonSafely<ItemApiResponse<SelectionSummaryResponse>>(response);
+
+    if (!response.ok || !payload?.success || !payload.data) {
+      const fallbackMessage = `Failed to fetch selection summary (HTTP ${response.status})`;
+      throw new Error(payload?.message || payload?.error || fallbackMessage);
+    }
+
+    return payload.data;
+  },
+
   /**
    * Lấy danh sách categories từ backend
    * GET /api/items/categories
