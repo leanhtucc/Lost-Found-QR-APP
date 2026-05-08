@@ -66,3 +66,16 @@ export const buildUploadUrl = (...segments: (UrlSegment | null | undefined)[]): 
 export const buildScanUrl = (...segments: (UrlSegment | null | undefined)[]): string => {
   return buildApiUrl('scan', ...segments);
 };
+
+export const buildNotificationsUrl = (...segments: (UrlSegment | null | undefined)[]): string => {
+  return buildV1Url('notifications', ...segments);
+};
+
+/** Get full image URL from a potentially relative path. */
+export const getFullImageUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (path.startsWith('file://')) return path; // local uri
+  const basePath = trimSlashes(path);
+  return `${apiBase()}/${basePath}`;
+};

@@ -43,7 +43,7 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
             shadowRadius: 16,
           }}
         >
-          <Text style={{ color: REPORT_COLORS.ctaText, fontSize: 20, fontWeight: '800' }}>
+          <Text style={{ color: REPORT_COLORS.ctaText, fontSize: 16, fontWeight: '800' }}>
             {label}
           </Text>
           <ArrowRight size={18} color={REPORT_COLORS.ctaText} />

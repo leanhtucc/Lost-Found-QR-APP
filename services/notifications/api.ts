@@ -1,65 +1,56 @@
 /**
  * Notifications API Service
- * Service xử lý các API liên quan đến thông báo với Stream Chat
+ * FindBack Alerts — /v1/notifications
+ *
+ * Endpoints:
+ *   GET    /v1/notifications?category=...&page=...&limit=...
+ *   GET    /v1/notifications/unread-count
+ *   PATCH  /v1/notifications/:id/read
+ *   POST   /v1/notifications/read-all
  */
 
 import {
-  NotificationsResponse,
-  StreamTokenResponse,
-  ActivityType,
-  ActivityMetadata,
+  GetNotificationsResponse,
+  MarkAllReadResponse,
+  MarkReadResponse,
+  Notification,
+  NotificationCategory,
+  UnreadCountResponse,
 } from '@/types/notification';
 import { authStorage } from '@/storage/auth';
 import { authApi } from '@/services/auth';
-import { buildAuthUrl, buildStreamUrl } from '@services/shared/url';
+import { buildNotificationsUrl, buildAuthUrl } from '@services/shared/url';
+
+// ─── Auth helpers ────────────────────────────────────────────────────────────
 
 const createHeaders = async (): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
-
-  if (!token) {
-    throw new Error('No access token found. Please login again.');
-  }
-
+  if (!token) throw new Error('No access token found. Please login again.');
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,
   };
 };
 
-/**
- * Helper để tự động refresh token khi gặp 401
- */
+/** Auto-refresh on 401 */
 const fetchWithAuth = async (url: string, options: RequestInit): Promise<Response> => {
   let response = await fetch(url, options);
 
-  // Nếu gặp 401, thử refresh token và gọi lại
   if (response.status === 401) {
-    console.log('Token expired, attempting to refresh...');
-
+    console.log('[NotifAPI] Token expired, attempting refresh…');
     try {
       const refreshToken = await authStorage.getRefreshToken();
+      if (!refreshToken) throw new Error('No refresh token available');
 
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      // Refresh token
       const refreshResponse = await authApi.refreshToken({ refreshToken });
-
       if (refreshResponse.success && refreshResponse.data) {
-        // Token đã được lưu trong authApi.refreshToken
-        // Tạo headers mới và gọi lại request
         const newHeaders = await createHeaders();
-        response = await fetch(url, {
-          ...options,
-          headers: newHeaders,
-        });
+        response = await fetch(url, { ...options, headers: newHeaders });
       } else {
         throw new Error('Failed to refresh token');
       }
     } catch (error) {
-      console.error('Token refresh failed:', error);
-      // Clear tokens và yêu cầu đăng nhập lại
+      console.error('[NotifAPI] Token refresh failed:', error);
       await authStorage.clearTokens();
       throw new Error('Session expired. Please login again.');
     }
@@ -68,9 +59,104 @@ const fetchWithAuth = async (url: string, options: RequestInit): Promise<Respons
   return response;
 };
 
+// ─── Public API ──────────────────────────────────────────────────────────────
+
+export interface GetNotificationsParams {
+  category?: NotificationCategory;
+  page?: number;
+  limit?: number;
+}
+
 /**
- * Cập nhật Push Token lên server
- * @param pushToken - Expo Push Token từ thiết bị
+ * GET /v1/notifications
+ * Lấy danh sách thông báo (có filter theo category, phân trang).
+ */
+export const getNotifications = async (
+  params: GetNotificationsParams = {}
+): Promise<GetNotificationsResponse['data']> => {
+  const { category, page = 1, limit = 20 } = params;
+
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (category) query.append('category', category);
+
+  const url = `${buildNotificationsUrl()}?${query}`;
+  const headers = await createHeaders();
+
+  console.log('[NotifAPI] GET', url);
+  const response = await fetchWithAuth(url, { method: 'GET', headers });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message || `HTTP ${response.status}`);
+  }
+
+  const result: GetNotificationsResponse = await response.json();
+  return result.data;
+};
+
+/**
+ * GET /v1/notifications/unread-count
+ * Lấy nhanh số thông báo chưa đọc (dùng cho badge 🔔).
+ */
+export const getUnreadCount = async (): Promise<number> => {
+  const url = buildNotificationsUrl('unread-count');
+  const headers = await createHeaders();
+
+  const response = await fetchWithAuth(url, { method: 'GET', headers });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const result: UnreadCountResponse = await response.json();
+  return result.data.unread_count;
+};
+
+/**
+ * PATCH /v1/notifications/:id/read
+ * Đánh dấu 1 thông báo đã đọc.
+ */
+export const markNotificationAsRead = async (notificationId: string): Promise<Notification> => {
+  const url = buildNotificationsUrl(notificationId, 'read');
+  const headers = await createHeaders();
+
+  console.log('[NotifAPI] PATCH', url);
+  const response = await fetchWithAuth(url, { method: 'PATCH', headers });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message || `HTTP ${response.status}`);
+  }
+
+  const result: MarkReadResponse = await response.json();
+  return result.data;
+};
+
+/**
+ * POST /v1/notifications/read-all
+ * Đánh dấu tất cả thông báo đã đọc.
+ */
+export const markAllNotificationsAsRead = async (): Promise<number> => {
+  const url = buildNotificationsUrl('read-all');
+  const headers = await createHeaders();
+
+  console.log('[NotifAPI] POST', url);
+  const response = await fetchWithAuth(url, { method: 'POST', headers });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message || `HTTP ${response.status}`);
+  }
+
+  const result: MarkAllReadResponse = await response.json();
+  console.log(`[NotifAPI] Marked ${result.data.updated_count} as read`);
+  return result.data.updated_count;
+};
+
+/**
+ * Cập nhật Push Token lên server (giữ lại cho FCM integration).
  */
 export const updatePushToken = async (pushToken: string): Promise<void> => {
   try {
@@ -82,117 +168,11 @@ export const updatePushToken = async (pushToken: string): Promise<void> => {
       body: JSON.stringify({ pushToken }),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
-    console.log('Push token updated:', result.message);
+    console.log('[NotifAPI] Push token updated:', result.message);
   } catch (error) {
-    console.error('Error updating push token:', error);
-    throw error;
-  }
-};
-
-/**
- * Lấy Stream Chat Token để kết nối real-time
- */
-export const getStreamToken = async (): Promise<StreamTokenResponse['data']> => {
-  try {
-    const url = buildStreamUrl('token');
-    const headers = await createHeaders();
-    const response = await fetchWithAuth(url, { method: 'GET', headers });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const result: StreamTokenResponse = await response.json();
-    return result.data;
-  } catch (error) {
-    console.error('Error fetching stream token:', error);
-    throw error;
-  }
-};
-
-/**
- * Lấy danh sách thông báo (Activity Feed)
- */
-export const getNotifications = async (): Promise<NotificationsResponse['data']> => {
-  try {
-    const url = buildStreamUrl('notifications');
-    const headers = await createHeaders();
-    const response = await fetchWithAuth(url, { method: 'GET', headers });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const result: NotificationsResponse = await response.json();
-    return result.data;
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    throw error;
-  }
-};
-
-/**
- * Đánh dấu tất cả thông báo đã đọc
- */
-export const markAllNotificationsAsRead = async (): Promise<void> => {
-  try {
-    const url = buildStreamUrl('notifications', 'mark-read');
-    const headers = await createHeaders();
-    const response = await fetchWithAuth(url, {
-      method: 'POST',
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Marked all as read:', result.message);
-  } catch (error) {
-    console.error('Error marking all as read:', error);
-    throw error;
-  }
-};
-
-/**
- * Ghi nhận hoạt động (tạo thông báo tự động)
- * @param activityType - Loại hoạt động: item_found, new_message, item_returned
- * @param metadata - Dữ liệu bổ sung (itemId, finderName, v.v.)
- */
-export const logActivity = async (
-  activityType: ActivityType,
-  metadata?: ActivityMetadata
-): Promise<void> => {
-  try {
-    const params = new URLSearchParams();
-    if (metadata?.itemId) params.append('itemId', metadata.itemId);
-    if (metadata?.finderName) params.append('finderName', metadata.finderName);
-    if (metadata?.message) params.append('message', metadata.message);
-    if (metadata?.location) params.append('location', metadata.location);
-
-    const url = `${buildStreamUrl('activity', activityType)}${
-      params.toString() ? `?${params}` : ''
-    }`;
-    const headers = await createHeaders();
-    const response = await fetchWithAuth(url, {
-      method: 'POST',
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Activity logged:', result.message);
-  } catch (error) {
-    console.error('Error logging activity:', error);
+    console.error('[NotifAPI] Error updating push token:', error);
     throw error;
   }
 };

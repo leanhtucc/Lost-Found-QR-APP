@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '@navigation/index';
-import { MAP_PREVIEW_IMAGE, REWARD_OPTIONS } from './constants/mockData';
+import { REWARD_OPTIONS } from './constants/mockData';
 import { REPORT_COLORS, REPORT_LAYOUT } from './constants/theme';
 import { useReportFlow } from './hooks/useReportFlow';
 import {
@@ -53,6 +53,7 @@ export default function ReportItemsScreen() {
     handlePaymentSuccess,
     handlePaymentCancel,
     handleAddNewItem,
+    handleMapLocationChange,
     refreshRadarSimulation,
     showRadarState,
     setShowRadarState,
@@ -126,8 +127,8 @@ export default function ReportItemsScreen() {
         colors={[REPORT_COLORS.background, '#0f0b1a']}
         style={StyleSheet.absoluteFillObject}
       />
-      <View style={styles.glowTop} />
-      <View style={styles.glowBottom} />
+      <View style={styles.glowTop} pointerEvents="none" />
+      <View style={styles.glowBottom} pointerEvents="none" />
 
       <ReportHeader
         title="Báo mất vật dụng"
@@ -167,13 +168,13 @@ export default function ReportItemsScreen() {
 
         {step === 3 ? (
           <LocationStep
-            mapImageUri={MAP_PREVIEW_IMAGE}
             location={location}
             manualAddress={manualAddress}
             onChangeManualAddress={setManualAddress}
             useCurrentLocation={useCurrentLocation}
             onToggleUseCurrentLocation={() => setUseCurrentLocation(prev => !prev)}
             isResolvingCurrentLocation={isResolvingCurrentLocation}
+            onLocationChange={handleMapLocationChange}
           />
         ) : null}
 

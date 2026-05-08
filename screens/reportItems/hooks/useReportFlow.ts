@@ -180,8 +180,10 @@ export const useReportFlow = () => {
     reportId: '',
   });
   const [showRadarState, setShowRadarState] = useState(false);
+  const [localImages, setLocalImages] = useState<Record<string, string>>({});
 
   const loadUserItems = useCallback(async (): Promise<ReportItemOption[]> => {
+    console.log('[useReportFlow] Starting loadUserItems...');
     setIsLoadingItems(true);
 
     try {
@@ -189,12 +191,16 @@ export const useReportFlow = () => {
       const normalizedItems = eligibleItems.map(mapItemToOption);
 
       if (normalizedItems.length > 0) {
+        console.log(`[useReportFlow] Loaded ${normalizedItems.length} items from eligible API.`);
         setAvailableItems(normalizedItems);
         setSelectedItemId(prev => {
           const hasPrevious = normalizedItems.some(item => item.id === prev);
-          return hasPrevious ? prev : normalizedItems[0].id;
+          const nextSelected = hasPrevious ? prev : normalizedItems[0].id;
+          console.log(`[useReportFlow] Setting selectedItemId to: ${nextSelected}`);
+          return nextSelected;
         });
       } else {
+        console.log('[useReportFlow] No items from eligible API.');
         setAvailableItems([]);
         setSelectedItemId('');
       }
@@ -229,13 +235,24 @@ export const useReportFlow = () => {
     void loadUserItems();
   }, [loadUserItems]);
 
+  const itemsToDisplay = useMemo(() => {
+    return availableItems.map(item => {
+      // Override with local image if we have one (usually from just taking a photo)
+      if (localImages[item.id]) {
+        return { ...item, imageUrl: localImages[item.id] };
+      }
+      return item;
+    });
+  }, [availableItems, localImages]);
+
   const selectedItem = useMemo(
-    () => availableItems.find(item => item.id === selectedItemId) ?? availableItems[0],
-    [availableItems, selectedItemId]
+    () => itemsToDisplay.find(item => item.id === selectedItemId) ?? itemsToDisplay[0],
+    [itemsToDisplay, selectedItemId]
   );
 
   useEffect(() => {
     let isMounted = true;
+    console.log(`[useReportFlow] selectedItemId changed: ${selectedItemId}`);
 
     if (!selectedItemId) {
       setSelectionSummary(null);
@@ -373,6 +390,28 @@ export const useReportFlow = () => {
     }
   }, []);
 
+  const handleMapLocationChange = useCallback(async (lat: number, lng: number) => {
+    // Update coordinates immediately so the submit flow can use them
+    setSelectedLocation(prev => ({ ...prev, lat, lng }));
+
+    // Reverse geocode in the background
+    try {
+      const geocoded = await Location.reverseGeocodeAsync({
+        latitude: lat,
+        longitude: lng,
+      });
+
+      if (geocoded.length > 0) {
+        const address = toAddressString(geocoded[0]);
+        const nextLocation = toLocationView(lat, lng, address);
+        setSelectedLocation(nextLocation);
+        setManualAddress(nextLocation.address || FALLBACK_ADDRESS);
+      }
+    } catch {
+      // Geocoding failure is non-critical; coordinates are already saved
+    }
+  }, []);
+
   useEffect(() => {
     if (!useCurrentLocation) {
       return;
@@ -408,14 +447,14 @@ export const useReportFlow = () => {
     setIsSubmitting(true);
 
     try {
-      let resolvedLocation = selectedLocation;
+      let resolvedLocation: ReportLocation | null = selectedLocation;
 
       if (useCurrentLocation) {
         resolvedLocation = await resolveCurrentLocation();
       }
 
-      const latitude = resolvedLocation?.lat;
-      const longitude = resolvedLocation?.lng;
+      const latitude = resolvedLocation?.lat ?? selectedLocation.lat;
+      const longitude = resolvedLocation?.lng ?? selectedLocation.lng;
 
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
         Alert.alert('Thiếu vị trí', 'Vui lòng ghim vị trí đánh rơi trước khi gửi báo mất.');
@@ -510,6 +549,7 @@ export const useReportFlow = () => {
 
   const runAddItemFlow = useCallback(
     async (source: 'camera' | 'library') => {
+      console.log(`[useReportFlow] Starting runAddItemFlow with source: ${source}`);
       setIsCreatingItem(true);
 
       try {
@@ -573,6 +613,9 @@ export const useReportFlow = () => {
         const hasCreatedItem = refreshedItems.some(
           item => item.id === createdItem.itemId || item.id === createdItem.qrCodeId
         );
+        console.log(
+          `[useReportFlow] Item created successfully. Has created item in refreshed list: ${hasCreatedItem}`
+        );
 
         if (hasCreatedItem) {
           // Ưu tiên itemId (id nội bộ) vì list dùng item_id từ backend
@@ -580,7 +623,16 @@ export const useReportFlow = () => {
             refreshedItems.find(
               item => item.id === createdItem.itemId || item.id === createdItem.qrCodeId
             )?.id ?? createdItem.itemId;
+
+          console.log(`[useReportFlow] Auto-selecting new item: ${targetId}`);
           setSelectedItemId(targetId);
+
+          setLocalImages(prev => ({
+            ...prev,
+            [targetId]: imageUri,
+            [createdItem.itemId]: imageUri,
+            [createdItem.qrCodeId]: imageUri,
+          }));
         }
 
         Alert.alert(
@@ -625,7 +677,7 @@ export const useReportFlow = () => {
   return {
     step,
     setStep,
-    items: availableItems,
+    items: itemsToDisplay,
     isLoadingItems,
     isCreatingItem,
     isSubmitting,
@@ -660,6 +712,7 @@ export const useReportFlow = () => {
     handlePaymentSuccess,
     handlePaymentCancel,
     handleAddNewItem,
+    handleMapLocationChange,
     refreshRadarSimulation: simulateRadar,
     showRadarState,
     setShowRadarState,

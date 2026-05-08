@@ -1,14 +1,21 @@
 /**
  * Notification Utils
- * Các hàm tiện ích cho màn hình thông báo
+ * Helpers for the notification screen (dark theme)
  */
 
-import { ActivityType, Notification } from '@/types/notification';
-import { FIND_BACK } from '@constants/theme';
+import {
+  Notification,
+  NotificationType,
+  NotificationCategory,
+  MatchFoundMetadata,
+  ProximityMetadata,
+  QrScannedMetadata,
+  NewChatMetadata,
+  EscrowMetadata,
+} from '@/types/notification';
 
-/**
- * Format thời gian thông báo
- */
+// ─── Time formatting ─────────────────────────────────────────────────────────
+
 export const formatNotificationTime = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
@@ -18,123 +25,115 @@ export const formatNotificationTime = (dateString: string): string => {
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMins < 1) return 'Vừa xong';
-  if (diffMins < 60) return `${diffMins} phút trước`;
-  if (diffHours < 24) return `${diffHours} giờ trước`;
-  if (diffDays === 1) return 'Hôm qua';
-  if (diffDays < 7) return `${diffDays} ngày trước`;
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return '1d ago';
+  if (diffDays < 7) return `${diffDays}d ago`;
 
-  // Format ngày tháng cho thông báo cũ hơn
   return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 };
 
-/**
- * Lấy màu background cho icon theo loại thông báo
- */
-export const getNotificationIconBg = (type: ActivityType): string => {
+// ─── Type → accent color ────────────────────────────────────────────────────
+
+export const getNotificationAccentColor = (type: NotificationType): string => {
   switch (type) {
-    case 'qr_scanned':
-    case 'item_found':
-      return 'bg-green-100';
-    case 'new_message':
-      return 'bg-blue-100';
-    case 'item_returned':
-      return 'bg-emerald-100';
+    case 'MATCH_FOUND':
+    case 'PROXIMITY':
+      return '#F97316'; // orange
+    case 'QR_SCANNED':
+      return '#22C55E'; // green
+    case 'NEW_CHAT':
+      return '#8B5CF6'; // purple
+    case 'ESCROW_LOCKED':
+      return '#22C55E'; // green
+    case 'REFUNDED':
+    case 'RELEASED':
+      return '#22D3EE'; // cyan
     default:
-      return 'bg-gray-100';
+      return '#71717A';
   }
 };
 
+// ─── Category → tab label ────────────────────────────────────────────────────
+
+export const CATEGORY_TABS: { id: string; label: string; category?: NotificationCategory }[] = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'important', label: 'Quan trọng', category: 'IMPORTANT' },
+  { id: 'transaction', label: 'Giao dịch', category: 'TRANSACTION' },
+  { id: 'item', label: 'Vật phẩm', category: 'ITEM' },
+  { id: 'social', label: 'Xã hội', category: 'SOCIAL' },
+];
+
 /**
- * Lấy màu icon theo loại thông báo
+ * Map tab id → API category param.
+ * Returns undefined for "all" (no filter).
  */
-export const getNotificationIconColor = (type: ActivityType): string => {
-  switch (type) {
-    case 'qr_scanned':
-    case 'item_found':
-      return FIND_BACK.secondary;
-    case 'new_message':
-      return FIND_BACK.primary;
-    case 'item_returned':
-      return FIND_BACK.secondary;
-    default:
-      return FIND_BACK.labelText;
-  }
+export const tabToCategory = (tabId: string): NotificationCategory | undefined => {
+  const tab = CATEGORY_TABS.find(t => t.id === tabId);
+  return tab?.category;
 };
 
-/**
- * Tạo title cho thông báo
- */
-export const getNotificationTitle = (notification: Notification): string => {
-  switch (notification.type) {
-    case 'qr_scanned':
-      return '📱 Có người quét mã QR của bạn!';
-    case 'item_found':
-      return '🎉 Đồ vật của bạn đã được tìm thấy!';
-    case 'new_message':
-      return '💬 Tin nhắn mới';
-    case 'item_returned':
-      return '✅ Đồ vật đã được trả lại';
-    default:
-      return 'Thông báo';
-  }
-};
+// ─── Mock data (for demo / fallback) ─────────────────────────────────────────
 
-/**
- * Tạo message cho thông báo
- */
-export const getNotificationMessage = (notification: Notification): string => {
-  const actorName = notification.actor.name;
-  const itemName = notification.item?.name || 'món đồ';
-
-  switch (notification.type) {
-    case 'qr_scanned':
-      return `${actorName} vừa quét mã QR của "${itemName}"`;
-    case 'item_found':
-      return `${actorName} báo đã tìm thấy "${itemName}" của bạn`;
-    case 'new_message':
-      return notification.message || `${actorName} gửi tin nhắn về "${itemName}"`;
-    case 'item_returned':
-      return `"${itemName}" đã được trả lại thành công từ ${actorName}`;
-    default:
-      return notification.message || 'Bạn có thông báo mới';
-  }
-};
-
-/**
- * Mock notifications cho demo
- */
 export const getMockNotifications = (): Notification[] => [
   {
-    id: '1',
-    type: 'qr_scanned',
-    actor: { id: 'user1', name: 'Nguyễn Văn A' },
-    item: { id: 'item1', name: 'Laptop Dell Vostro' },
-    isRead: false,
-    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    id: 'notif-001',
+    receiver_id: 'user-self',
+    category: 'IMPORTANT',
+    type: 'MATCH_FOUND',
+    title: 'Có người vừa nhặt được đồ gần bạn!',
+    content: 'iPhone 15 có người báo tìm thấy trong bán kính 300m',
+    metadata: { distance: '300m', post_id: 'post-123', item_name: 'iPhone 15' },
+    is_read: false,
+    created_at: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
   },
   {
-    id: '2',
-    type: 'new_message',
-    actor: { id: 'user2', name: 'Trần Thị B' },
-    item: { id: 'item2', name: 'Ví da đen' },
-    message: 'Tôi đã nhặt được ví của bạn ở khu A',
-    isRead: false,
-    createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    id: 'notif-002',
+    receiver_id: 'user-self',
+    category: 'SOCIAL',
+    type: 'NEW_CHAT',
+    title: 'Người nhặt: Tôi nghĩ tôi có đồ của bạn',
+    content: '',
+    metadata: {
+      room_id: 'room-456',
+      sender_avatar: 'https://ui-avatars.com/api/?name=NT&background=8B5CF6&color=fff&size=88',
+      message_preview: 'Tôi nghĩ tôi có đồ của bạn',
+      item_id: 'item-789',
+    },
+    is_read: false,
+    created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
   },
   {
-    id: '3',
-    type: 'item_found',
-    actor: { id: 'user3', name: 'Lê Văn C' },
-    item: { id: 'item3', name: 'Chìa khóa xe' },
-    isRead: false,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    id: 'notif-003',
+    receiver_id: 'user-self',
+    category: 'TRANSACTION',
+    type: 'ESCROW_LOCKED',
+    title: '500.000đ đã được khóa an toàn',
+    content: 'Giao dịch được bảo vệ bởi FindBack Escrow',
+    metadata: { amount: 500000, transaction_id: 'txn-789', status: 'locked', post_id: 'post-123' },
+    is_read: false,
+    created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
   },
   {
-    id: '4',
-    type: 'item_returned',
-    actor: { id: 'user4', name: 'Phạm Thị D' },
-    item: { id: 'item4', name: 'Tai nghe AirPods' },
-    isRead: true,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    id: 'notif-004',
+    receiver_id: 'user-self',
+    category: 'IMPORTANT',
+    type: 'PROXIMITY',
+    title: 'Người nhặt còn cách bạn 100m',
+    content: 'Sẵn sàng để nhận lại món đồ của mình',
+    metadata: { distance: '100m', post_id: 'post-456' },
+    is_read: true,
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'notif-005',
+    receiver_id: 'user-self',
+    category: 'ITEM',
+    type: 'QR_SCANNED',
+    title: 'Bạn đã nhận lại 2 món đồ tuần này 🎉',
+    content: 'Hãy tiếp tục lan tỏa sự tử tế cùng cộng đồng.',
+    metadata: { item_id: 'item-999', room_id: 'room-111', finder_id: 'user-finder' },
+    is_read: true,
+    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
   },
 ];

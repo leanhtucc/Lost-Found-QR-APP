@@ -18,7 +18,7 @@ import {
   UpdateItemParams,
   UpdateStatusParams,
 } from '@/types';
-import { buildItemsUrl, buildScanUrl, buildV1Url } from '@services/shared/url';
+import { buildItemsUrl, buildScanUrl, buildV1Url, getFullImageUrl } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
 
 export interface EligibleForReportItem {
@@ -233,6 +233,10 @@ const normalizeCategoryFilter = (category: unknown): ItemCategory | undefined =>
 const normalizeItem = (item: Item): Item => {
   return {
     ...item,
+    imagePublicUrl:
+      typeof item.imagePublicUrl === 'string'
+        ? getFullImageUrl(item.imagePublicUrl) || undefined
+        : undefined,
     status: normalizeItemStatus(item.status),
   };
 };
@@ -286,7 +290,7 @@ export const itemsApi = {
       item_id: String(item.item_id || ''),
       name: String(item.name || 'Vật phẩm chưa đặt tên'),
       category: String(item.category || 'other'),
-      image_url: typeof item.image_url === 'string' ? item.image_url : null,
+      image_url: typeof item.image_url === 'string' ? getFullImageUrl(item.image_url) : null,
       details: {
         color: typeof item.details?.color === 'string' ? item.details.color : null,
         storage: typeof item.details?.storage === 'string' ? item.details.storage : null,
@@ -345,7 +349,7 @@ export const itemsApi = {
       category,
       color,
       confidenceScore,
-      imagePublicUrl: payload.data.imagePublicUrl,
+      imagePublicUrl: getFullImageUrl(payload.data.imagePublicUrl) || undefined,
       details: {
         color,
         storage: '',
@@ -410,7 +414,9 @@ export const itemsApi = {
       name: apiPayload.data.name || payload.name,
       category: apiPayload.data.category || payload.category,
       imagePublicUrl:
-        typeof apiPayload.data.imagePublicUrl === 'string' ? apiPayload.data.imagePublicUrl : null,
+        typeof apiPayload.data.imagePublicUrl === 'string'
+          ? getFullImageUrl(apiPayload.data.imagePublicUrl)
+          : null,
       details: {
         color: apiPayload.data.details?.color || null,
         storage: apiPayload.data.details?.storage || null,
@@ -425,7 +431,8 @@ export const itemsApi = {
    * GET /v1/items/:id/selection-summary
    */
   async getSelectionSummary(itemId: string): Promise<SelectionSummaryResponse> {
-    const url = buildV1Url('items', `${itemId}/selection-summary`);
+    // V2: Dùng buildItemsUrl để trỏ vào /api/items thay vì /v1/items
+    const url = buildItemsUrl(`${itemId}/selection-summary`);
     const headers = await createHeaders();
 
     const response = await fetch(url, {
@@ -438,6 +445,10 @@ export const itemsApi = {
     if (!response.ok || !payload?.success || !payload.data) {
       const fallbackMessage = `Failed to fetch selection summary (HTTP ${response.status})`;
       throw new Error(payload?.message || payload?.error || fallbackMessage);
+    }
+
+    if (payload.data.image_url) {
+      payload.data.image_url = getFullImageUrl(payload.data.image_url) || undefined;
     }
 
     return payload.data;

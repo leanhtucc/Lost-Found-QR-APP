@@ -221,25 +221,65 @@ export default function RootStack() {
     <NavigationContainer ref={navigationRef} linking={linking} onReady={() => setIsNavReady(true)}>
       <Stack.Navigator initialRouteName={getInitialRoute()} screenOptions={screenOptions}>
         {/* Auth Screens */}
-        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="AuthRegister" component={AuthRegisterScreen} />
-        <Stack.Screen name="CodeVerify" component={AuthCodeVerifyScreen} />
-        <Stack.Screen name="ForgotPassword" component={AuthForgotPasswordScreen} />
-        <Stack.Screen name="ResetPassword" component={AuthResetPasswordScreen} />
-        <Stack.Screen name="Congratulation" component={CongratulationScreen} />
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="AuthRegister"
+          component={AuthRegisterScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CodeVerify"
+          component={AuthCodeVerifyScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={AuthForgotPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResetPassword"
+          component={AuthResetPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Congratulation"
+          component={CongratulationScreen}
+          options={{ headerShown: false }}
+        />
 
         {/* Main App Screens */}
-        <Stack.Screen name="TabNavigator" component={TabNavigator} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Scan" component={ScanScreen} />
-        <Stack.Screen name="MyItems" component={MyItemsScreen} />
-        <Stack.Screen name="ItemDetails" component={ItemDetailScreen} />
-        <Stack.Screen name="ReportItems" component={ReportItemsScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
-        <Stack.Screen name="Notifications" component={NotificationsScreen} />
-        <Stack.Screen name="ChatList" component={ChatListScreen} />
-        <Stack.Screen name="Chat" component={ChatDetailScreen} />
+        <Stack.Screen
+          name="TabNavigator"
+          component={TabNavigator}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Scan" component={ScanScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="MyItems" component={MyItemsScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="ItemDetails"
+          component={ItemDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ReportItems"
+          component={ReportItemsScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="ChatList" component={ChatListScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Chat" component={ChatDetailScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

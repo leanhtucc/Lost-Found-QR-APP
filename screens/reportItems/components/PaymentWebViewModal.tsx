@@ -48,7 +48,7 @@ export const PaymentWebViewModal: React.FC<PaymentWebViewModalProps> = ({
             justifyContent: 'space-between',
           }}
         >
-          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 18, fontWeight: '700' }}>
+          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 15, fontWeight: '700' }}>
             Thanh toán Guardian
           </Text>
           <TouchableOpacity onPress={onClose} activeOpacity={0.85}>
@@ -78,13 +78,13 @@ export const PaymentWebViewModal: React.FC<PaymentWebViewModalProps> = ({
           />
         ) : (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-            <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 18, fontWeight: '700' }}>
+            <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 15, fontWeight: '700' }}>
               Không thể mở trang thanh toán
             </Text>
             <Text
               style={{
                 color: REPORT_COLORS.textSecondary,
-                fontSize: 15,
+                fontSize: 14,
                 textAlign: 'center',
                 marginTop: 10,
               }}

@@ -38,7 +38,7 @@ const RadarInfoCard: React.FC<{ title: string; value: string; icon: React.ReactN
         </Text>
       </View>
       <Text
-        style={{ color: REPORT_COLORS.textPrimary, fontSize: 20, fontWeight: '700', marginTop: 4 }}
+        style={{ color: REPORT_COLORS.textPrimary, fontSize: 16, fontWeight: '700', marginTop: 4 }}
       >
         {value}
       </Text>
@@ -49,10 +49,10 @@ const RadarInfoCard: React.FC<{ title: string; value: string; icon: React.ReactN
 export const RadarStep: React.FC<RadarStepProps> = ({ simulation, isLoading, onRetry }) => {
   return (
     <View>
-      <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 42, fontWeight: '800' }}>
+      <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 32, fontWeight: '800' }}>
         Radar đang hoạt động
       </Text>
-      <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 17, marginTop: 8 }}>
+      <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 15, marginTop: 8 }}>
         Số người dùng đang hoạt động gần khu vực của bạn trong bán kính đã chọn.
       </Text>
 
@@ -85,14 +85,14 @@ export const RadarStep: React.FC<RadarStepProps> = ({ simulation, isLoading, onR
           )}
         </View>
 
-        <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 30, fontWeight: '800' }}>
+        <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 22, fontWeight: '800' }}>
           {simulation.activeUsersCount.toLocaleString('vi-VN')} người đang hoạt động gần đây
         </Text>
 
         <Text
           style={{
             color: REPORT_COLORS.textSecondary,
-            fontSize: 16,
+            fontSize: 14,
             marginTop: 8,
             textAlign: 'center',
             lineHeight: 23,
@@ -134,7 +134,7 @@ export const RadarStep: React.FC<RadarStepProps> = ({ simulation, isLoading, onR
         }}
       >
         <RefreshCcw size={16} color={REPORT_COLORS.textPrimary} />
-        <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 17, fontWeight: '600' }}>
+        <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 15, fontWeight: '600' }}>
           {isLoading ? 'Đang cập nhật...' : 'Mô phỏng lại'}
         </Text>
       </TouchableOpacity>

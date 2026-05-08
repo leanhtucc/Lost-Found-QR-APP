@@ -37,10 +37,10 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
 
   return (
     <View>
-      <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 42, fontWeight: '800' }}>
+      <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 32, fontWeight: '800' }}>
         Bạn mất vật gì?
       </Text>
-      <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 20, marginTop: 8 }}>
+      <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 16, marginTop: 8 }}>
         Chọn vật phẩm từ kho của bạn hoặc thêm mới.
       </Text>
 
@@ -62,10 +62,21 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
         </Text>
       ) : null}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 24 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ marginTop: 24, flexGrow: 0, marginHorizontal: -REPORT_LAYOUT.horizontalPadding }}
+        contentContainerStyle={{
+          paddingHorizontal: REPORT_LAYOUT.horizontalPadding,
+          paddingRight: REPORT_LAYOUT.horizontalPadding + 16,
+        }}
+      >
         <TouchableOpacity
           activeOpacity={0.85}
-          onPress={onAddNewItem}
+          onPress={() => {
+            console.log('[ItemSelectionStep] Tapped Thêm mới');
+            onAddNewItem?.();
+          }}
           disabled={isCreatingItem}
           style={{
             width: 176,
@@ -96,7 +107,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
           <Text
             style={{
               color: REPORT_COLORS.textPrimary,
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: '600',
               marginTop: 16,
             }}
@@ -112,7 +123,10 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
             <TouchableOpacity
               key={item.id}
               activeOpacity={0.88}
-              onPress={() => onSelectItem(item.id)}
+              onPress={() => {
+                console.log(`[ItemSelectionStep] Tapped item: ${item.id} - ${item.name}`);
+                onSelectItem(item.id);
+              }}
               style={{
                 width: 196,
                 borderRadius: 20,
@@ -131,7 +145,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
               <Text
                 style={{
                   color: REPORT_COLORS.textPrimary,
-                  fontSize: 32,
+                  fontSize: 24,
                   fontWeight: '700',
                   marginTop: 12,
                 }}
@@ -190,13 +204,13 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
             padding: 18,
           }}
         >
-          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 26, fontWeight: '700' }}>
+          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 20, fontWeight: '700' }}>
             Chi tiết lựa chọn
           </Text>
-          <Text style={{ color: '#2DD4BF', fontSize: 19, marginTop: 8, fontWeight: '700' }}>
+          <Text style={{ color: '#2DD4BF', fontSize: 16, marginTop: 8, fontWeight: '700' }}>
             {selectionSummary.name}
           </Text>
-          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 16, marginTop: 4 }}>
+          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 14, marginTop: 4 }}>
             {selectionSummary.display_text.primary}
           </Text>
           {selectionSummary.display_text.secondary ? (
@@ -279,10 +293,10 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
             padding: 18,
           }}
         >
-          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 26, fontWeight: '700' }}>
+          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 20, fontWeight: '700' }}>
             Chi tiết lựa chọn
           </Text>
-          <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 19, marginTop: 8 }}>
+          <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 16, marginTop: 8 }}>
             Đã chọn{' '}
             <Text style={{ color: REPORT_COLORS.accent, fontWeight: '700' }}>
               {selectedItem.name}

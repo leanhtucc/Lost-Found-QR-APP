@@ -34,7 +34,7 @@ const RadarInfoCard: React.FC<{ title: string; value: string; icon: React.ReactN
         </Text>
       </View>
       <Text
-        style={{ color: REPORT_COLORS.textPrimary, fontSize: 22, fontWeight: '600', marginTop: 4 }}
+        style={{ color: REPORT_COLORS.textPrimary, fontSize: 18, fontWeight: '600', marginTop: 4 }}
       >
         {value}
       </Text>
@@ -79,7 +79,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
             <TouchableOpacity onPress={onClose} activeOpacity={0.8}>
               <X size={18} color={REPORT_COLORS.textPrimary} />
             </TouchableOpacity>
-            <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 19, fontWeight: '700' }}>
+            <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 16, fontWeight: '700' }}>
               Đang dò tìm
             </Text>
             <Text
@@ -173,7 +173,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
             <Text
               style={{
                 color: REPORT_COLORS.textPrimary,
-                fontSize: 38,
+                fontSize: 28,
                 fontWeight: '800',
                 textAlign: 'center',
               }}
@@ -191,14 +191,14 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
                 paddingVertical: 6,
               }}
             >
-              <Text style={{ color: REPORT_COLORS.accent, fontSize: 16, fontWeight: '700' }}>
+              <Text style={{ color: REPORT_COLORS.accent, fontSize: 14, fontWeight: '700' }}>
                 {activeUsersCount.toLocaleString('vi-VN')} người đã được thông báo
               </Text>
             </View>
             <Text
               style={{
                 color: REPORT_COLORS.textSecondary,
-                fontSize: 17,
+                fontSize: 15,
                 textAlign: 'center',
                 marginTop: 16,
                 lineHeight: 24,
@@ -234,7 +234,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 18, fontWeight: '600' }}>
+              <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 15, fontWeight: '600' }}>
                 Đóng
               </Text>
             </TouchableOpacity>

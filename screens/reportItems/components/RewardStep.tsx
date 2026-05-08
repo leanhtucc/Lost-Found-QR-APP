@@ -30,7 +30,7 @@ export const RewardStep: React.FC<RewardStepProps> = ({
       <Text
         style={{
           color: REPORT_COLORS.textPrimary,
-          fontSize: 42,
+          fontSize: 32,
           fontWeight: '800',
           textAlign: 'center',
         }}
@@ -40,7 +40,7 @@ export const RewardStep: React.FC<RewardStepProps> = ({
       <Text
         style={{
           color: REPORT_COLORS.textSecondary,
-          fontSize: 18,
+          fontSize: 15,
           marginTop: 10,
           textAlign: 'center',
         }}
@@ -88,7 +88,7 @@ export const RewardStep: React.FC<RewardStepProps> = ({
               <Text
                 style={{
                   color: selected ? REPORT_COLORS.accent : REPORT_COLORS.textPrimary,
-                  fontSize: 34,
+                  fontSize: 24,
                   fontWeight: '700',
                   marginTop: 4,
                 }}
@@ -118,7 +118,7 @@ export const RewardStep: React.FC<RewardStepProps> = ({
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Wallet size={18} color={REPORT_COLORS.textSecondary} />
-          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 18, fontWeight: '500' }}>
+          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 15, fontWeight: '500' }}>
             Tùy chỉnh số tiền
           </Text>
         </View>
@@ -152,7 +152,7 @@ export const RewardStep: React.FC<RewardStepProps> = ({
             style={{
               marginTop: 8,
               color: REPORT_COLORS.textPrimary,
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: '700',
             }}
           />
@@ -182,7 +182,7 @@ export const RewardStep: React.FC<RewardStepProps> = ({
           >
             <ShieldCheck size={20} color={REPORT_COLORS.accent} />
           </View>
-          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 23, fontWeight: '700' }}>
+          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 18, fontWeight: '700' }}>
             Bảo mật & Cam kết
           </Text>
         </View>
@@ -190,19 +190,19 @@ export const RewardStep: React.FC<RewardStepProps> = ({
         <View style={{ marginTop: 12, gap: 10 }}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Lock size={15} color={REPORT_COLORS.accent} style={{ marginTop: 2 }} />
-            <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 17, flex: 1 }}>
+            <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 15, flex: 1 }}>
               Tiền sẽ được khóa an toàn bởi hệ thống Guardian.
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Lock size={15} color={REPORT_COLORS.accent} style={{ marginTop: 2 }} />
-            <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 17, flex: 1 }}>
+            <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 15, flex: 1 }}>
               Hoàn trả 100% nếu không tìm thấy sau 30 ngày.
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Lock size={15} color={REPORT_COLORS.accent} style={{ marginTop: 2 }} />
-            <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 17, flex: 1 }}>
+            <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 15, flex: 1 }}>
               Xác minh danh tính người nhận thưởng tự động.
             </Text>
           </View>

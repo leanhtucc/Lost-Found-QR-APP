@@ -27,7 +27,7 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({ title, onBack, right
         <X size={20} color={REPORT_COLORS.accent} />
       </TouchableOpacity>
 
-      <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 28, fontWeight: '700' }}>
+      <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 22, fontWeight: '700' }}>
         {title}
       </Text>
 
