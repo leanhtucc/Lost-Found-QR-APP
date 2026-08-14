@@ -56,31 +56,30 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
   return (
     <Animated.View
       entering={FadeInDown.duration(300).delay(100)}
-      className="bg-white rounded-2xl p-6 mb-4 shadow-sm items-center"
+      className="mb-4 items-center rounded-3xl border border-fb-border-subtle bg-fb-surface p-6"
     >
-      <Text className="text-base font-semibold text-gray-900 mb-4">Mã QR của món đồ</Text>
+      <Text className="text-lg font-bold text-fb-content">Mã QR bảo vệ</Text>
+      <Text className="mb-5 mt-1 text-center text-xs leading-5 text-fb-muted">
+        Dán mã này lên món đồ để người nhặt có thể liên hệ an toàn.
+      </Text>
 
       {/* QR Code */}
       <ViewShot ref={qrCodeRef} options={{ format: 'png', quality: 1.0 }}>
-        <View className="bg-white p-4 rounded-2xl border-2 border-gray-200">
-          <QRCode
-            value={itemId}
-            size={200}
-            backgroundColor={FIND_BACK.bodyText}
-            color={FIND_BACK.primary}
-          />
+        <View className="rounded-3xl border-4 border-white bg-white p-4">
+          <QRCode value={itemId} size={200} backgroundColor="#FFFFFF" color={FIND_BACK.neutral} />
         </View>
       </ViewShot>
 
-      <Text className="text-sm text-gray-500 mt-4 mb-4">ID: {itemId}</Text>
+      <Text className="mb-4 mt-4 text-xs text-fb-label">ID: {itemId}</Text>
 
       {/* Download Button */}
       <TouchableOpacity
         onPress={handleDownloadQR}
-        className="flex-row items-center gap-2 bg-blue-50 px-6 py-3 rounded-xl active:bg-blue-100"
+        accessibilityRole="button"
+        className="flex-row items-center gap-2 rounded-2xl border border-fb-primary/25 bg-fb-primary/10 px-6 py-3"
       >
-        <Download size={20} color={FIND_BACK.primary} />
-        <Text className="text-blue-600 font-semibold">Lưu mã QR</Text>
+        <Download size={18} color={FIND_BACK.primaryLight} />
+        <Text className="font-semibold text-fb-primary-light">Lưu mã QR</Text>
       </TouchableOpacity>
     </Animated.View>
   );

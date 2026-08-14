@@ -24,14 +24,16 @@ export const ForgotPassFormView: React.FC<ForgotPassFormViewProps> = ({
   return (
     <>
       <View className="mb-10">
-        <Text className="text-3xl font-bold text-gray-900 mb-3">Quên mật khẩu?</Text>
-        <Text className="text-base text-gray-500 leading-6">
+        <Text className="mb-3 text-3xl font-bold text-fb-content">Quên mật khẩu?</Text>
+        <Text className="text-base leading-6 text-fb-muted">
           Nhập email đã đăng ký để nhận link đặt lại mật khẩu.
         </Text>
       </View>
 
       <View className="mb-6">
-        <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
+        <Text className="mb-2 text-xs font-semibold uppercase tracking-wider text-fb-muted">
+          Email
+        </Text>
         <TextInput
           value={email}
           onChangeText={onEmailChange}
@@ -39,7 +41,7 @@ export const ForgotPassFormView: React.FC<ForgotPassFormViewProps> = ({
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
-          className="h-14 border border-gray-200 rounded-xl px-4 text-base text-gray-900 bg-gray-50"
+          className="h-14 rounded-2xl border border-fb-border-subtle bg-fb-surface-muted px-4 text-base text-fb-content"
           placeholderTextColor={FIND_BACK.mutedText}
         />
         {error ? <Text className="text-red-500 text-sm mt-2">{error}</Text> : null}
@@ -48,14 +50,15 @@ export const ForgotPassFormView: React.FC<ForgotPassFormViewProps> = ({
       <TouchableOpacity
         onPress={onSubmit}
         disabled={!isEmailValid || isLoading}
-        className={`h-14 rounded-full justify-center items-center mb-8 ${
-          isEmailValid && !isLoading ? 'bg-blue-600' : 'bg-blue-300'
+        accessibilityRole="button"
+        className={`mb-8 h-14 items-center justify-center rounded-2xl ${
+          isEmailValid && !isLoading ? 'bg-fb-primary' : 'bg-fb-surface-elevated'
         }`}
       >
         {isLoading ? (
           <ActivityIndicator color={FIND_BACK.bodyText} />
         ) : (
-          <Text className="text-white text-center text-base font-semibold">
+          <Text className="text-center text-base font-semibold text-fb-content">
             Gửi link đặt lại mật khẩu
           </Text>
         )}
@@ -64,9 +67,9 @@ export const ForgotPassFormView: React.FC<ForgotPassFormViewProps> = ({
       <View className="flex-1" />
 
       <View className="flex-row justify-center pb-8">
-        <Text className="text-base text-gray-600">Chưa có tài khoản? </Text>
+        <Text className="text-base text-fb-muted">Chưa có tài khoản? </Text>
         <TouchableOpacity onPress={onRegister}>
-          <Text className="text-base font-semibold text-blue-600">Đăng ký ngay</Text>
+          <Text className="text-base font-semibold text-fb-primary-light">Đăng ký ngay</Text>
         </TouchableOpacity>
       </View>
     </>

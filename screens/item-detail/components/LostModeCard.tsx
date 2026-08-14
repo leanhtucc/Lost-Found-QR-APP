@@ -62,21 +62,27 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
   return (
     <Animated.View
       entering={FadeInDown.duration(300).delay(200)}
-      className="bg-white rounded-2xl p-4 shadow-sm"
+      className="rounded-3xl border border-fb-border-subtle bg-fb-surface p-5"
     >
       {/* Header with Switch */}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-1">
-          <Text className="text-base font-semibold text-gray-900">Chế độ thất lạc</Text>
-          <Text className="text-sm text-gray-500 mt-1">Kích hoạt khi món đồ bị mất</Text>
+          <Text className="text-base font-bold text-fb-content">Chế độ thất lạc</Text>
+          <Text className="mt-1 text-sm text-fb-muted">
+            Bật để cộng đồng có thể hỗ trợ tìm lại.
+          </Text>
         </View>
 
         {/* Custom Switch */}
         <TouchableOpacity
           onPress={handleToggle}
-          className={`w-14 h-8 rounded-full p-1 ${isLost ? 'bg-red-500' : 'bg-gray-300'}`}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: isLost }}
+          className={`h-8 w-14 rounded-full p-1 ${isLost ? 'bg-fb-danger' : 'bg-fb-surface-elevated'}`}
         >
-          <View className={`w-6 h-6 rounded-full bg-white ${isLost ? 'self-end' : 'self-start'}`} />
+          <View
+            className={`h-6 w-6 rounded-full bg-fb-content ${isLost ? 'self-end' : 'self-start'}`}
+          />
         </TouchableOpacity>
       </View>
 
@@ -84,10 +90,10 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
       {isLost && (
         <Animated.View
           entering={FadeIn.duration(300)}
-          className="pt-4 border-t border-gray-100 space-y-4"
+          className="space-y-4 border-t border-fb-border-subtle pt-4"
         >
           <View>
-            <Text className="text-sm font-semibold text-gray-900 mb-2">
+            <Text className="mb-2 text-sm font-semibold text-fb-content">
               Lời nhắn cho người nhặt được
             </Text>
             <TextInput
@@ -97,7 +103,7 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
               placeholderTextColor={FIND_BACK.labelText}
               multiline
               numberOfLines={4}
-              className="bg-gray-50 rounded-xl p-4 text-gray-900 min-h-[100px] text-base"
+              className="min-h-[112px] rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated p-4 text-base text-fb-content"
               textAlignVertical="top"
             />
           </View>
@@ -107,23 +113,24 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
             <TouchableOpacity
               onPress={handleUpdate}
               disabled={isUpdating}
-              className={`flex-1 bg-gradient-to-r from-blue-500 to-blue-600 py-3 rounded-xl items-center justify-center ${
+              className={`flex-1 items-center justify-center rounded-2xl bg-fb-primary py-3 ${
                 isUpdating ? 'opacity-50' : ''
               }`}
             >
               {isUpdating ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color={FIND_BACK.bodyText} />
               ) : (
-                <Text className="text-white font-semibold">Cập nhật trạng thái</Text>
+                <Text className="font-semibold text-fb-content">Cập nhật trạng thái</Text>
               )}
             </TouchableOpacity>
 
             {onOpenChat && (
               <TouchableOpacity
                 onPress={onOpenChat}
-                className="bg-blue-50 px-4 py-3 rounded-xl items-center justify-center active:bg-blue-100"
+                accessibilityLabel="Mở cuộc trò chuyện"
+                className="items-center justify-center rounded-2xl border border-fb-primary/25 bg-fb-primary/10 px-4 py-3"
               >
-                <MessageCircle size={20} color={FIND_BACK.primary} />
+                <MessageCircle size={20} color={FIND_BACK.primaryLight} />
               </TouchableOpacity>
             )}
           </View>

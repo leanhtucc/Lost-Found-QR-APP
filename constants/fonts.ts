@@ -1,12 +1,16 @@
 /**
- * Typography scale for FindBack + legacy SF Pro aliases (system font on most devices).
+ * Typography scale for FindBack.
+ * Be Vietnam Pro is loaded in app-root.tsx and is the single app typeface.
  */
 
 export const FONT_FAMILY = {
-  display: 'Plus Jakarta Sans',
-  sans: 'Manrope',
-  body: 'Manrope',
-  label: 'Manrope',
+  display: 'BeVietnamPro_700Bold',
+  sans: 'BeVietnamPro_400Regular',
+  body: 'BeVietnamPro_400Regular',
+  label: 'BeVietnamPro_500Medium',
+  medium: 'BeVietnamPro_500Medium',
+  semibold: 'BeVietnamPro_600SemiBold',
+  bold: 'BeVietnamPro_700Bold',
   system: undefined as string | undefined,
 } as const;
 

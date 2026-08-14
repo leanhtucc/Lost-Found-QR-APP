@@ -64,8 +64,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'System', 'sans-serif'],
-        display: ['var(--font-display)', 'System', 'sans-serif'],
+        sans: ['BeVietnamPro_400Regular', 'System', 'sans-serif'],
+        display: ['BeVietnamPro_700Bold', 'System', 'sans-serif'],
       },
       /* Names avoid collision with fb.* text colors (e.g. text-fb-label) */
       fontSize: {

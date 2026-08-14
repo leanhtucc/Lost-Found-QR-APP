@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { User } from 'lucide-react-native';
+import { BadgeCheck, Package, User } from 'lucide-react-native';
 import { Conversation } from '@/types/chat';
 import { FIND_BACK } from '@constants/theme';
 
@@ -44,11 +44,16 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       entering={FadeInDown.duration(300).delay(index * 50)}
       onPress={onPress}
       activeOpacity={0.7}
-      className={`flex-row items-center px-4 py-3 ${conversation.unreadCount > 0 ? 'bg-blue-50' : 'bg-white'}`}
+      accessibilityRole="button"
+      className={`mb-3 flex-row items-center rounded-3xl border p-4 ${
+        conversation.unreadCount > 0
+          ? 'border-fb-primary/30 bg-fb-primary/10'
+          : 'border-fb-border-subtle bg-fb-surface'
+      }`}
     >
       {/* Avatar */}
       <View className="relative">
-        <View className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center overflow-hidden">
+        <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated">
           {conversation.userAvatar ? (
             <Image
               source={{ uri: conversation.userAvatar }}
@@ -60,26 +65,34 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
           )}
         </View>
         {conversation.isOnline && (
-          <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+          <View className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-fb-surface bg-fb-secondary" />
         )}
       </View>
 
       {/* Content */}
       <View className="flex-1 ml-3">
         <View className="flex-row items-center justify-between mb-1">
-          <Text className="text-base font-semibold text-gray-900" numberOfLines={1}>
-            {conversation.userName}
-          </Text>
-          <Text className="text-xs text-gray-500">{formatTime(conversation.lastMessageAt)}</Text>
+          <View className="flex-1 flex-row items-center gap-1.5">
+            <Text className="flex-shrink text-base font-semibold text-fb-content" numberOfLines={1}>
+              {conversation.userName}
+            </Text>
+            {conversation.isVerified ? <BadgeCheck size={15} color={FIND_BACK.info} /> : null}
+          </View>
+          <Text className="text-xs text-fb-label">{formatTime(conversation.lastMessageAt)}</Text>
         </View>
 
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
-            <Text className="text-xs text-blue-600 mb-1" numberOfLines={1}>
-              📦 {conversation.itemName}
-            </Text>
+            <View className="mb-1 flex-row items-center gap-1.5">
+              <Package size={12} color={FIND_BACK.primaryLight} />
+              <Text className="flex-1 text-xs text-fb-primary-light" numberOfLines={1}>
+                {conversation.itemName}
+              </Text>
+            </View>
             <Text
-              className={`text-sm ${conversation.unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'}`}
+              className={`text-sm ${
+                conversation.unreadCount > 0 ? 'font-medium text-fb-content' : 'text-fb-muted'
+              }`}
               numberOfLines={1}
             >
               {conversation.lastMessage}
@@ -87,8 +100,8 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
           </View>
 
           {conversation.unreadCount > 0 && (
-            <View className="ml-2 w-6 h-6 bg-blue-600 rounded-full items-center justify-center">
-              <Text className="text-white text-xs font-bold">
+            <View className="ml-2 h-6 min-w-[24px] items-center justify-center rounded-full bg-fb-primary px-1.5">
+              <Text className="text-xs font-bold text-fb-content">
                 {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
               </Text>
             </View>

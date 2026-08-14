@@ -15,10 +15,10 @@ type RegisterNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const REGISTER_SCREEN_LOG_TAG = '[Auth:RegisterScreen]';
 
-const maskPhoneForLog = (phoneNumber: string): string => {
-  const digits = phoneNumber.replace(/\D/g, '');
-  if (digits.length < 3) return phoneNumber;
-  return `***${digits.slice(-3)}`;
+const maskEmailForLog = (email: string): string => {
+  const [localPart, domain] = email.trim().toLowerCase().split('@');
+  if (!localPart || !domain) return 'invalid-email';
+  return `${localPart.slice(0, 1)}***@${domain}`;
 };
 
 const logRegisterScreen = (event: string, details?: Record<string, unknown>) => {
@@ -32,14 +32,13 @@ export const RegisterScreen: React.FC = () => {
   /**
    * Xử lý đăng ký:
    * 1. Gọi API backend /register
-   * 2. Nếu thành công → chuyển sang màn CodeVerify kèm số điện thoại
-   *    (Firebase OTP sẽ được gửi tại màn CodeVerify)
+   * 2. Backend gửi OTP đến email đăng ký
+   * 3. Chuyển sang màn CodeVerify kèm email
    */
   const handleRegister = async (
     displayName: string,
     email: string,
     password: string,
-    phoneNumber: string,
     photoURL?: string
   ) => {
     const startedAt = Date.now();
@@ -48,14 +47,13 @@ export const RegisterScreen: React.FC = () => {
     logRegisterScreen('submit_register_pressed', {
       attemptId,
       displayNameLength: displayName.trim().length,
-      email,
-      phoneMasked: maskPhoneForLog(phoneNumber),
+      emailMasked: maskEmailForLog(email),
       passwordLength: password.length,
       hasPhotoURL: Boolean(photoURL),
     });
 
     try {
-      const success = await register(displayName, email, password, phoneNumber, photoURL);
+      const success = await register(displayName, email, password, photoURL);
 
       logRegisterScreen('register_result_received', {
         attemptId,
@@ -67,11 +65,10 @@ export const RegisterScreen: React.FC = () => {
         logRegisterScreen('navigate_to_code_verify', {
           attemptId,
           routeName: 'CodeVerify',
-          params: { phoneNumber },
+          params: { email: maskEmailForLog(email) },
         });
 
-        // Chuyển sang màn OTP, truyền số điện thoại để gửi SMS
-        navigation.navigate('CodeVerify', { phoneNumber });
+        navigation.navigate('CodeVerify', { email });
       } else {
         logRegisterScreen('stay_on_register_screen', {
           attemptId,

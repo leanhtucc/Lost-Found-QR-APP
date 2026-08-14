@@ -54,11 +54,11 @@ export const TypingIndicator: React.FC = () => {
 
   return (
     <Animated.View entering={FadeIn.duration(300)} className="flex-row justify-start mb-2">
-      <View className="bg-gray-200 rounded-2xl rounded-bl-md px-4 py-3">
+      <View className="rounded-2xl rounded-bl-md border border-fb-border-subtle bg-fb-surface-elevated px-4 py-3">
         <View className="flex-row gap-1.5">
-          <Animated.View style={animatedStyle1} className="w-2 h-2 rounded-full bg-gray-400" />
-          <Animated.View style={animatedStyle2} className="w-2 h-2 rounded-full bg-gray-400" />
-          <Animated.View style={animatedStyle3} className="w-2 h-2 rounded-full bg-gray-400" />
+          <Animated.View style={animatedStyle1} className="h-2 w-2 rounded-full bg-fb-muted" />
+          <Animated.View style={animatedStyle2} className="h-2 w-2 rounded-full bg-fb-muted" />
+          <Animated.View style={animatedStyle3} className="h-2 w-2 rounded-full bg-fb-muted" />
         </View>
       </View>
     </Animated.View>

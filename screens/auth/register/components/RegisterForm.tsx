@@ -1,18 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
-import { Eye, EyeOff, User, Mail, Phone, Lock, CheckCircle2 } from 'lucide-react-native';
+import { Eye, EyeOff, User, Mail, Lock, CheckCircle2 } from 'lucide-react-native';
 import { Button } from '../../../../components/atoms/Button';
 import { validateEmail, validateDisplayName, validateConfirmPassword } from '@services/auth';
 import { FIND_BACK } from '@constants/theme';
 
 interface RegisterFormProps {
-  onSubmit: (
-    displayName: string,
-    email: string,
-    password: string,
-    phoneNumber: string,
-    photoURL?: string
-  ) => void;
+  onSubmit: (displayName: string, email: string, password: string, photoURL?: string) => void;
   isLoading: boolean;
 }
 
@@ -45,27 +39,13 @@ const passwordRules: PasswordRule[] = [
   },
 ];
 
-const validatePhoneNumber = (phone: string): { isValid: boolean; error?: string } => {
-  if (!phone || phone.trim().length === 0) {
-    return { isValid: false, error: 'Số điện thoại là bắt buộc' };
-  }
-  const cleanPhone = phone.replace(/[\s\-\.\(\)]/g, '');
-  const phoneRegex = /^(0[3|5|7|8|9]\d{8}|\+84[3|5|7|8|9]\d{8})$/;
-  if (!phoneRegex.test(cleanPhone)) {
-    return { isValid: false, error: 'Số điện thoại không hợp lệ' };
-  }
-  return { isValid: true };
-};
-
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading }) => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isDisplayNameFocused, setIsDisplayNameFocused] = useState(false);
-  const [isPhoneFocused, setIsPhoneFocused] = useState(false);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] = useState(false);
@@ -93,11 +73,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
       newErrors.email = emailResult.error;
     }
 
-    const phoneResult = validatePhoneNumber(phoneNumber);
-    if (!phoneResult.isValid && phoneResult.error) {
-      newErrors.phoneNumber = phoneResult.error;
-    }
-
     if (!password) {
       newErrors.password = 'Mật khẩu là bắt buộc';
     } else if (!allPasswordRulesPassed) {
@@ -115,7 +90,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
   const handleSubmit = () => {
     if (validateForm()) {
-      onSubmit(displayName.trim(), email.trim(), password, phoneNumber.trim(), undefined);
+      onSubmit(displayName.trim(), email.trim().toLowerCase(), password, undefined);
     }
   };
 
@@ -172,45 +147,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
         ) : null}
       </View>
 
-      {/* Phone Number Input */}
-      <View className="w-full">
-        <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
-          Số điện thoại
-        </Text>
-        <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
-            errors.phoneNumber
-              ? 'border-red-500'
-              : isPhoneFocused
-                ? 'border-fb-primary'
-                : 'border-transparent'
-          }`}
-        >
-          <View className="mr-4">
-            <Phone size={20} color={errors.phoneNumber ? FIND_BACK.danger : FIND_BACK.mutedText} />
-          </View>
-          <TextInput
-            className="flex-1 text-white text-[15px] h-full"
-            placeholder="0912345678"
-            placeholderTextColor={FIND_BACK.mutedText}
-            value={phoneNumber}
-            onChangeText={text => {
-              setPhoneNumber(text);
-              clearError('phoneNumber');
-            }}
-            onFocus={() => setIsPhoneFocused(true)}
-            onBlur={() => setIsPhoneFocused(false)}
-            keyboardType="phone-pad"
-          />
-          <View className="ml-4 p-1" pointerEvents="none">
-            <View style={{ width: 20, height: 20 }} />
-          </View>
-        </View>
-        {errors.phoneNumber ? (
-          <Text className="text-red-500 text-[13px] mt-2">{errors.phoneNumber}</Text>
-        ) : null}
-      </View>
-
       {/* Email Input */}
       <View className="w-full">
         <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
@@ -241,6 +177,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
             onBlur={() => setIsEmailFocused(false)}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
           />
           <View className="ml-4 p-1" pointerEvents="none">
             <View style={{ width: 20, height: 20 }} />

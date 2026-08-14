@@ -31,7 +31,7 @@ export const OtpInputSection: React.FC<OtpInputSectionProps> = ({
         onChangeText={onOtpChange}
         keyboardType="number-pad"
         textContentType="oneTimeCode"
-        autoComplete="sms-otp"
+        autoComplete="one-time-code"
         maxLength={OTP_LENGTH}
         caretHidden
         contextMenuHidden

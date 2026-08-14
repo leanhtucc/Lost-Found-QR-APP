@@ -26,9 +26,9 @@ export const ScannerInstructions: React.FC<ScannerInstructionsProps> = ({
     >
       {scannedData ? (
         // Success State
-        <View className="bg-green-500/90 backdrop-blur-xl rounded-2xl px-6 py-4 items-center">
-          <Text className="text-white text-lg font-bold mb-1">✓ Quét thành công!</Text>
-          <Text className="text-white/90 text-sm">Đang tải thông tin...</Text>
+        <View className="items-center rounded-2xl border border-fb-secondary/30 bg-fb-secondary/90 px-6 py-4">
+          <Text className="mb-1 text-lg font-bold text-fb-neutral">Quét thành công</Text>
+          <Text className="text-sm text-fb-neutral/80">Đang tải thông tin...</Text>
         </View>
       ) : (
         // Normal State
@@ -54,7 +54,7 @@ export const ScannerInstructions: React.FC<ScannerInstructionsProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
-              className="shadow-lg shadow-blue-500/40"
+              className="shadow-lg shadow-fb-primary/40"
             >
               <Camera size={32} color={FIND_BACK.bodyText} strokeWidth={2.5} />
             </LinearGradient>

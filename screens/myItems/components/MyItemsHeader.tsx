@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Plus } from 'lucide-react-native';
 import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_SHADOW } from '../constants/ui';
 
 interface MyItemsHeaderProps {
@@ -17,9 +18,25 @@ export const MyItemsHeader: React.FC<MyItemsHeaderProps> = ({ totalItems, onAddC
       style={styles.wrapper}
     >
       <View>
-        <Text style={styles.title}>My Items</Text>
+        <Text style={styles.title}>Đồ của tôi</Text>
         <Text style={styles.subtitle}>{totalItems} món đồ đã đăng ký</Text>
       </View>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={onAddClick}
+        accessibilityRole="button"
+        accessibilityLabel="Thêm món đồ"
+        style={styles.addButtonTouchArea}
+      >
+        <LinearGradient
+          colors={['#7C6AF6', '#6B5AE8']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.addButtonGradient}
+        >
+          <Plus size={20} color="#F9F5FD" strokeWidth={2.5} />
+        </LinearGradient>
+      </TouchableOpacity>
     </LinearGradient>
   );
 };

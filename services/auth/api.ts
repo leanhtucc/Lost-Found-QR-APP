@@ -35,13 +35,11 @@ import { buildAuthUrl } from '@services/shared/url';
 
 const AUTH_API_LOG_TAG = '[Auth:ApiService]';
 
-const normalizePhoneDigits = (phoneNumber: string): string => phoneNumber.replace(/\D/g, '');
-
-const maskPhoneForLog = (phoneNumber?: string): string => {
-  if (!phoneNumber) return '';
-  const digits = normalizePhoneDigits(phoneNumber);
-  if (digits.length < 3) return phoneNumber;
-  return `***${digits.slice(-3)}`;
+const maskEmailForLog = (email?: string): string => {
+  if (!email) return '';
+  const [localPart, domain] = email.trim().toLowerCase().split('@');
+  if (!localPart || !domain) return 'invalid-email';
+  return `${localPart.slice(0, 1)}***@${domain}`;
 };
 
 const logAuthApi = (event: string, details?: Record<string, unknown>) => {
@@ -161,8 +159,7 @@ export const authApi = {
     logAuthApi('register_request_start', {
       requestId,
       endpoint: '/register',
-      email: data.email,
-      phoneMasked: maskPhoneForLog(data.phoneNumber),
+      emailMasked: maskEmailForLog(data.email),
       displayNameLength: data.displayName?.length,
       hasPhotoURL: Boolean(data.photoURL),
       passwordLength: data.password?.length,
@@ -186,7 +183,7 @@ export const authApi = {
   },
 
   /**
-   * Step 2: Verify SMS OTP by phone number
+   * Step 2: Verify OTP sent to the registration email
    * Returns tokens on success
    */
   async verifyOtp(data: VerifyOtpRequest): Promise<ApiResponse<VerifyOtpResponseData>> {
@@ -196,7 +193,7 @@ export const authApi = {
     logAuthApi('verify_otp_request_start', {
       requestId,
       endpoint: '/verify-otp',
-      phoneMasked: maskPhoneForLog(data.phoneNumber),
+      emailMasked: maskEmailForLog(data.email),
       codeLength: data.code?.length,
     });
 
@@ -241,7 +238,7 @@ export const authApi = {
         logAuthApi('verify_otp_user_saved', {
           requestId,
           userId: response.data.user.id,
-          phoneMasked: maskPhoneForLog(response.data.user.phoneNumber),
+          emailMasked: maskEmailForLog(response.data.user.email),
         });
       } else {
         // If user is not in response, fetch profile to get user data
@@ -265,7 +262,7 @@ export const authApi = {
   },
 
   /**
-   * Resend OTP by phone number
+   * Resend OTP to the registration email
    */
   async resendOtp(data: ResendOtpRequest): Promise<ApiResponse<ResendOtpResponseData>> {
     const requestId = `api-resend-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -274,7 +271,7 @@ export const authApi = {
     logAuthApi('resend_otp_request_start', {
       requestId,
       endpoint: '/resend-otp',
-      phoneMasked: maskPhoneForLog(data.phoneNumber),
+      emailMasked: maskEmailForLog(data.email),
     });
 
     const response = await apiRequest<ResendOtpResponseData>('/resend-otp', {

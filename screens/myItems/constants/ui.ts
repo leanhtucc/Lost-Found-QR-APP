@@ -3,22 +3,22 @@ import colors from '@/constants/colors';
 export const MY_ITEMS_COLORS = {
   background: colors.background,
   surface: colors.surface,
-  surfaceMuted: '#F3F4F6',
+  surfaceMuted: '#1F1F26',
   border: colors.border,
   textPrimary: colors.textPrimary,
   textSecondary: colors.textSecondary,
-  textMuted: '#9CA3AF',
+  textMuted: '#71717A',
 
   primaryStart: colors.primary,
   primaryEnd: colors.tertiary,
-  primarySoft: '#FFEFE2',
+  primarySoft: 'rgba(124, 106, 246, 0.16)',
 
-  safeSoft: '#E8F7EF',
-  safeText: colors.success,
-  lostSoft: '#FEECEF',
-  lostText: colors.error,
-  pendingSoft: '#FFF7E7',
-  pendingText: colors.warning,
+  safeSoft: 'rgba(46, 204, 139, 0.14)',
+  safeText: '#70FFBA',
+  lostSoft: 'rgba(215, 51, 87, 0.14)',
+  lostText: '#FF8DA3',
+  pendingSoft: 'rgba(244, 132, 95, 0.14)',
+  pendingText: '#FFAA8E',
 } as const;
 
 export const MY_ITEMS_PRIMARY_GRADIENT = [

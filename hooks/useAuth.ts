@@ -11,19 +11,17 @@ import { RootStackParamList } from '@navigation/index';
 import { authApi } from '@services/auth';
 import { useToast } from '@contexts/ToastContext';
 import { useAuthContext } from '@contexts/AuthContext';
-import { normalizePhoneNumber } from '@services/firebase/phoneAuth';
 
 type AuthNavigationProp = StackNavigationProp<RootStackParamList>;
 
-const MOCK_TEST_PHONE_LOCAL = '0398624656';
 const AUTH_REGISTER_LOG_TAG = '[Auth:RegisterFlow]';
 
-const normalizePhoneDigits = (phoneNumber: string): string => phoneNumber.replace(/\D/g, '');
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
-const maskPhoneForLog = (phoneNumber: string): string => {
-  const digits = normalizePhoneDigits(phoneNumber);
-  if (digits.length < 3) return phoneNumber;
-  return `***${digits.slice(-3)}`;
+const maskEmailForLog = (email: string): string => {
+  const [localPart, domain] = normalizeEmail(email).split('@');
+  if (!localPart || !domain) return 'invalid-email';
+  return `${localPart.slice(0, 1)}***@${domain}`;
 };
 
 const serializeError = (error: unknown) => {
@@ -41,11 +39,6 @@ const logRegisterFlow = (event: string, details?: Record<string, unknown>) => {
   console.log(`${AUTH_REGISTER_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
 };
 
-const isMockTestPhone = (phoneNumber: string): boolean => {
-  const digits = normalizePhoneDigits(phoneNumber);
-  return digits === MOCK_TEST_PHONE_LOCAL || digits === `84${MOCK_TEST_PHONE_LOCAL.slice(1)}`;
-};
-
 interface UseAuthReturn {
   isLoading: boolean;
   error: string | null;
@@ -56,14 +49,13 @@ interface UseAuthReturn {
     displayName: string,
     email: string,
     password: string,
-    phoneNumber: string,
     photoURL?: string
   ) => Promise<boolean>;
-  verifyOtp: (phoneNumber: string, code: string) => Promise<boolean>;
-  resendOtp: (phoneNumber: string) => Promise<boolean>;
+  verifyOtp: (email: string, code: string) => Promise<boolean>;
+  resendOtp: (email: string) => Promise<boolean>;
   // Backward-compatible aliases
-  verifyEmail: (phoneNumber: string, code: string) => Promise<boolean>;
-  resendVerification: (phoneNumber: string) => Promise<boolean>;
+  verifyEmail: (email: string, code: string) => Promise<boolean>;
+  resendVerification: (email: string) => Promise<boolean>;
   forgotPassword: (email: string) => Promise<boolean>;
   resetPassword: (token: string, newPassword: string) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -71,7 +63,7 @@ interface UseAuthReturn {
   navigateToLogin: () => void;
   navigateToRegister: () => void;
   navigateToForgotPassword: () => void;
-  navigateToCodeVerify: (phoneNumber: string) => void;
+  navigateToCodeVerify: (email: string) => void;
   navigateToMainApp: () => void;
   navigateToResetPassword: (token: string) => void;
   // Utility
@@ -125,22 +117,17 @@ export const useAuth = (): UseAuthReturn => {
           return true;
         } else {
           // Check if email not verified
-          if (response.message?.includes('verify')) {
-            const unverifiedPhone = (response as any)?.data?.phoneNumber;
+          if (/(verify|verification|xác thực|xác minh|chưa xác)/i.test(response.message || '')) {
             Alert.alert(
               'Tài khoản chưa xác thực',
-              'Vui lòng xác thực tài khoản của bạn trước khi đăng nhập.',
+              'Vui lòng xác thực email của bạn trước khi đăng nhập.',
               [
                 { text: 'Để sau', style: 'cancel' },
-                ...(unverifiedPhone
-                  ? [
-                      {
-                        text: 'Xác thực ngay',
-                        onPress: () =>
-                          navigation.navigate('CodeVerify', { phoneNumber: unverifiedPhone }),
-                      },
-                    ]
-                  : []),
+                {
+                  text: 'Xác thực ngay',
+                  onPress: () =>
+                    navigation.navigate('CodeVerify', { email: normalizeEmail(email) }),
+                },
               ]
             );
           } else {
@@ -218,19 +205,16 @@ export const useAuth = (): UseAuthReturn => {
       displayName: string,
       email: string,
       password: string,
-      phoneNumber: string,
       photoURL?: string
     ): Promise<boolean> => {
       const requestId = `reg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const startedAt = Date.now();
-
-      const normalizedPhone = normalizePhoneNumber(phoneNumber);
+      const normalizedEmail = normalizeEmail(email);
 
       logRegisterFlow('register_start', {
         requestId,
         displayNameLength: displayName.trim().length,
-        email,
-        phoneMasked: maskPhoneForLog(normalizedPhone),
+        emailMasked: maskEmailForLog(normalizedEmail),
         passwordLength: password.length,
         hasPhotoURL: Boolean(photoURL),
       });
@@ -240,10 +224,9 @@ export const useAuth = (): UseAuthReturn => {
 
       try {
         const response = await authApi.register({
-          email,
+          email: normalizedEmail,
           password,
-          displayName,
-          phoneNumber: normalizedPhone,
+          displayName: displayName.trim(),
           photoURL,
         });
 
@@ -261,34 +244,16 @@ export const useAuth = (): UseAuthReturn => {
             requestId,
             durationMs: Date.now() - startedAt,
             nextStep: 'navigate_to_code_verify',
-            phoneMasked: maskPhoneForLog(normalizedPhone),
+            emailMasked: maskEmailForLog(normalizedEmail),
           });
           return true;
         } else {
-          const shouldBypassForMockPhone =
-            isMockTestPhone(normalizedPhone) &&
-            /(đã được đăng ký|already|exists|duplicate)/i.test(
-              `${response.message || ''} ${response.error || ''}`
-            );
-
           logRegisterFlow('register_failure_detected', {
             requestId,
             durationMs: Date.now() - startedAt,
             message: response.message,
             error: response.error,
-            shouldBypassForMockPhone,
-            isMockPhone: isMockTestPhone(normalizedPhone),
           });
-
-          if (shouldBypassForMockPhone) {
-            logRegisterFlow('register_mock_bypass_enabled', {
-              requestId,
-              phoneMasked: maskPhoneForLog(normalizedPhone),
-              reason: 'phone_exists_in_backend_and_mock_mode_enabled',
-            });
-            toast.success('Chế độ test OTP', 'Bỏ qua bước đăng ký, dùng mã test 123456 ở màn OTP.');
-            return true;
-          }
 
           logRegisterFlow('register_fail_return_false', {
             requestId,
@@ -323,20 +288,20 @@ export const useAuth = (): UseAuthReturn => {
         });
       }
     },
-    [toast]
+    []
   );
 
   /**
-   * Verify OTP with phone number
+   * Verify the OTP sent to the registration email.
    */
   const verifyOtp = useCallback(
-    async (phoneNumber: string, code: string): Promise<boolean> => {
-      const normalizedPhone = normalizePhoneNumber(phoneNumber);
+    async (email: string, code: string): Promise<boolean> => {
+      const normalizedEmail = normalizeEmail(email);
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await authApi.verifyOtp({ phoneNumber: normalizedPhone, code });
+        const response = await authApi.verifyOtp({ email: normalizedEmail, code });
 
         if (response.success) {
           if (response.data?.user) {
@@ -384,18 +349,18 @@ export const useAuth = (): UseAuthReturn => {
   );
 
   /**
-   * Resend OTP code
+   * Resend OTP code to the registration email.
    */
-  const resendOtp = useCallback(async (phoneNumber: string): Promise<boolean> => {
-    const normalizedPhone = normalizePhoneNumber(phoneNumber);
+  const resendOtp = useCallback(async (email: string): Promise<boolean> => {
+    const normalizedEmail = normalizeEmail(email);
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await authApi.resendOtp({ phoneNumber: normalizedPhone });
+      const response = await authApi.resendOtp({ email: normalizedEmail });
 
       if (response.success) {
-        Alert.alert('Thành công', 'Mã OTP mới đã được gửi đến số điện thoại của bạn.');
+        Alert.alert('Đã gửi mã', 'Mã OTP mới đã được gửi đến email của bạn.');
         return true;
       } else {
         setError(response.message || 'Không thể gửi lại mã. Vui lòng thử lại.');
@@ -539,8 +504,8 @@ export const useAuth = (): UseAuthReturn => {
   }, [navigation]);
 
   const navigateToCodeVerify = useCallback(
-    (phoneNumber: string) => {
-      navigation.navigate('CodeVerify', { phoneNumber });
+    (email: string) => {
+      navigation.navigate('CodeVerify', { email: normalizeEmail(email) });
     },
     [navigation]
   );

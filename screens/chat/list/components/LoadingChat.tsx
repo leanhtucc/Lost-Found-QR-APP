@@ -10,9 +10,9 @@ import { FIND_BACK } from '@constants/theme';
 
 export const LoadingChat: React.FC = () => {
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center">
+    <SafeAreaView className="flex-1 items-center justify-center bg-fb-neutral">
       <ActivityIndicator size="large" color={FIND_BACK.primary} />
-      <Text className="text-gray-500 mt-4">Đang tải tin nhắn...</Text>
+      <Text className="mt-4 text-sm text-fb-muted">Đang tải tin nhắn...</Text>
     </SafeAreaView>
   );
 };

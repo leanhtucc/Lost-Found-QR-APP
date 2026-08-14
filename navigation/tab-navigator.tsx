@@ -10,10 +10,11 @@ import {
   ChatListScreen,
 } from '@screens/index';
 import { IconQrScan } from '@/components/icons';
+import { FIND_BACK } from '@/constants/theme';
 
 const Tab = createBottomTabNavigator();
-const TAB_ACTIVE_COLOR = '#6C4CF1';
-const TAB_INACTIVE_COLOR = '#9AA0B3';
+const TAB_ACTIVE_COLOR = FIND_BACK.primary;
+const TAB_INACTIVE_COLOR = FIND_BACK.mutedText;
 
 interface TabBarIconProps {
   color: string;
@@ -35,7 +36,7 @@ export const TabNavigator = () => {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: 'Trang chủ',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
             <Home
               size={size}
@@ -50,7 +51,7 @@ export const TabNavigator = () => {
         name="MyItems"
         component={MyItemsScreen}
         options={{
-          tabBarLabel: 'My Items',
+          tabBarLabel: 'Đồ dùng',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
             <Package size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
@@ -60,7 +61,7 @@ export const TabNavigator = () => {
         name="Scan"
         component={ScanScreen}
         options={{
-          tabBarLabel: 'Scan',
+          tabBarLabel: 'Quét',
           tabBarStyle: { display: 'none' }, // Ẩn tab bar khi ở màn scan
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
             <IconQrScan width={size} height={size} color={color} strokeWidth={focused ? 2.5 : 2} />
@@ -68,10 +69,10 @@ export const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Chat"
+        name="ChatInbox"
         component={ChatListScreen}
         options={{
-          tabBarLabel: 'Chat',
+          tabBarLabel: 'Tin nhắn',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
             <MessageCircle size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
@@ -81,7 +82,7 @@ export const TabNavigator = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Profile',
+          tabBarLabel: 'Tài khoản',
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
             <User size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),

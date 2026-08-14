@@ -47,12 +47,13 @@ export const ChatListScreen: React.FC = () => {
   }, []);
 
   const handleConversationPress = (conversation: Conversation) => {
-    navigation.navigate('Chat' as any, {
+    const parentNavigation = navigation.getParent<ChatListNavigationProp>();
+    (parentNavigation ?? navigation).navigate('Chat', {
       channelId: conversation.id,
       itemName: conversation.itemName,
       userName: conversation.userName,
       userAvatar: conversation.userAvatar,
-      isVerified: conversation.isVerified, // Pass verified status
+      isVerified: conversation.isVerified,
     });
   };
 
@@ -65,7 +66,7 @@ export const ChatListScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
       {/* Header */}
       <ChatListHeader
         onBack={handleBack}
@@ -88,7 +89,7 @@ export const ChatListScreen: React.FC = () => {
             />
           }
         >
-          <View className="py-2">
+          <View className="px-4 py-3">
             {conversations.map((conversation, index) => (
               <ConversationCard
                 key={conversation.id}

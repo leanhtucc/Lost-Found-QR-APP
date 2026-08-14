@@ -34,13 +34,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <View className="bg-white border-t border-gray-100 px-4 py-3">
+      <View className="border-t border-fb-border-subtle bg-fb-surface px-4 py-3">
         <View className="flex-row items-center gap-2">
           {/* Attach Button */}
           {onAttachPress && (
             <TouchableOpacity
               onPress={onAttachPress}
-              className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
+              accessibilityLabel="Đính kèm ảnh"
+              className="h-11 w-11 items-center justify-center rounded-2xl bg-fb-surface-elevated"
             >
               <Image size={20} color={FIND_BACK.mutedText} />
             </TouchableOpacity>
@@ -53,7 +54,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               onChangeText={onChangeText}
               placeholder="Nhập tin nhắn..."
               placeholderTextColor={FIND_BACK.mutedText}
-              className="h-11 rounded-full bg-gray-100 px-4 pr-10 text-gray-900"
+              className="max-h-28 min-h-[44px] rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated px-4 pr-10 text-fb-content"
               multiline
               maxLength={1000}
             />
@@ -68,11 +69,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           <TouchableOpacity
             onPress={handleSend}
             disabled={!value.trim()}
-            className={`w-11 h-11 rounded-full items-center justify-center shadow-lg ${
-              value.trim() ? 'bg-blue-500 shadow-blue-500/25' : 'bg-gray-300 shadow-transparent'
+            accessibilityRole="button"
+            accessibilityLabel="Gửi tin nhắn"
+            className={`h-11 w-11 items-center justify-center rounded-2xl ${
+              value.trim() ? 'bg-fb-primary' : 'bg-fb-surface-elevated'
             }`}
           >
-            <Send size={20} color={FIND_BACK.bodyText} />
+            <Send size={19} color={value.trim() ? FIND_BACK.bodyText : FIND_BACK.labelText} />
           </TouchableOpacity>
         </View>
       </View>

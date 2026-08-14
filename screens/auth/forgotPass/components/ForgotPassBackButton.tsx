@@ -11,9 +11,11 @@ export const ForgotPassBackButton: React.FC<ForgotPassBackButtonProps> = ({ onPr
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="w-10 h-10 rounded-xl bg-gray-100 items-center justify-center mb-8"
+      accessibilityRole="button"
+      accessibilityLabel="Quay lại"
+      className="mb-8 h-11 w-11 items-center justify-center rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated"
     >
-      <ChevronLeft size={24} color={FIND_BACK.neutral} />
+      <ChevronLeft size={24} color={FIND_BACK.bodyText} />
     </TouchableOpacity>
   );
 };

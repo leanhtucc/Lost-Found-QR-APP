@@ -11,14 +11,14 @@ import { FIND_BACK } from '@constants/theme';
 export const EmptyChat: React.FC = () => {
   return (
     <View className="flex-1 items-center justify-center px-8">
-      <View className="w-24 h-24 rounded-full bg-gray-100 items-center justify-center mb-4">
-        <MessageCircle size={48} color={FIND_BACK.mutedText} />
+      <View className="mb-5 h-24 w-24 items-center justify-center rounded-3xl border border-fb-primary/20 bg-fb-primary/10">
+        <MessageCircle size={42} color={FIND_BACK.primaryLight} />
       </View>
 
-      <Text className="text-xl font-bold text-gray-900 mb-2 text-center">Chưa có tin nhắn</Text>
+      <Text className="mb-2 text-center text-xl font-bold text-fb-content">Chưa có tin nhắn</Text>
 
-      <Text className="text-base text-gray-500 text-center leading-6">
-        Khi bạn quét mã QR của món đồ, cuộc hội thoại với chủ sở hữu sẽ được tạo tự động
+      <Text className="text-center text-base leading-6 text-fb-muted">
+        Khi một mã QR được quét, cuộc trò chuyện an toàn với chủ sở hữu sẽ xuất hiện tại đây.
       </Text>
     </View>
   );

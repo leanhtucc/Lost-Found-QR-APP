@@ -13,7 +13,7 @@ import { FIND_BACK } from '@constants/theme';
 export const LoginScreen: React.FC = () => {
   const { isLoading, login, navigateToRegister, navigateToForgotPassword, navigateToMainApp } =
     useAuth();
-  const toast = useToast();
+  const { success: showSuccessToast, error: showErrorToast } = useToast();
   const [loginError, setLoginError] = useState<string | null>(null);
 
   // Lấy hàm SignIn từ useGoogleAuth
@@ -27,12 +27,12 @@ export const LoginScreen: React.FC = () => {
   React.useEffect(() => {
     if (googleUser && googleIsNewUser !== null) {
       if (googleIsNewUser) {
-        toast.success(
+        showSuccessToast(
           'Đăng ký thành công!',
           `Chào mừng ${googleUser.displayName} đến với Lost & Found QR!`
         );
       } else {
-        toast.success(
+        showSuccessToast(
           'Đăng nhập thành công!',
           `Chào mừng bạn quay lại, ${googleUser.displayName}!`
         );
@@ -41,13 +41,13 @@ export const LoginScreen: React.FC = () => {
         navigateToMainApp();
       }, 500);
     }
-  }, [googleUser, googleIsNewUser, navigateToMainApp, toast]);
+  }, [googleUser, googleIsNewUser, navigateToMainApp, showSuccessToast]);
 
   React.useEffect(() => {
     if (googleError) {
-      toast.error('Đăng nhập Google thất bại', googleError);
+      showErrorToast('Đăng nhập Google thất bại', googleError);
     }
-  }, [googleError, toast]);
+  }, [googleError, showErrorToast]);
 
   const handleLogin = async (email: string, password: string) => {
     setLoginError(null);
@@ -99,12 +99,12 @@ export const LoginScreen: React.FC = () => {
           />
 
           {/* Social Login */}
-          <SocialLoginButtons onGooglePress={signInWithGoogle} onApplePress={() => {}} />
+          <SocialLoginButtons onGooglePress={signInWithGoogle} />
 
           {/* Register Link */}
           <View className="flex-row justify-center mt-10 mb-4">
             <Text className="text-sm font-medium text-fb-muted">Bạn chưa có tài khoản?</Text>
-            <TouchableOpacity onPress={navigateToRegister}>
+            <TouchableOpacity onPress={navigateToRegister} className="ml-1">
               <Text className="text-sm font-bold text-fb-primary">Tham gia ngay</Text>
             </TouchableOpacity>
           </View>

@@ -181,9 +181,11 @@ export const HomeScreen: React.FC = () => {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleReportLost}
-          className="h-16 w-16 items-center justify-center rounded-2xl bg-[#c7bfff] shadow-[0_12px_36px_rgba(96,83,210,0.45)]"
+          accessibilityRole="button"
+          accessibilityLabel="Báo mất món đồ"
+          className="h-16 w-16 items-center justify-center rounded-2xl bg-fb-primary-light"
         >
-          <Plus size={28} color="#25008c" strokeWidth={2.4} />
+          <Plus size={28} color={FIND_BACK.neutral} strokeWidth={2.4} />
         </TouchableOpacity>
       </View>
     </View>

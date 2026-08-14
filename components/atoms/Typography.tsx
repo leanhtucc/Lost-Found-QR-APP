@@ -21,7 +21,7 @@ const variantClass: Record<TypographyVariant, string> = {
 };
 
 const TypographyInner = forwardRef<Text, TypographyProps>(function Typography(
-  { variant = 'body', className, emphasis, allowFontScaling = false, children, ...rest },
+  { variant = 'body', className, emphasis, allowFontScaling = true, children, ...rest },
   ref
 ) {
   const weight = emphasis && (variant === 'body' || variant === 'bodySm') ? ' font-semibold' : '';

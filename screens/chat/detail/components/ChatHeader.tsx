@@ -32,22 +32,24 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onMorePress,
 }) => {
   return (
-    <View className="bg-white border-b border-gray-100">
+    <View className="border-b border-fb-border-subtle bg-fb-surface">
       {/* Header Bar */}
       <View className="px-4 py-3">
         <View className="flex-row items-center gap-3">
           {/* Back Button */}
           <TouchableOpacity
             onPress={onBack}
-            className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
+            accessibilityRole="button"
+            accessibilityLabel="Quay lại"
+            className="h-11 w-11 items-center justify-center rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated"
           >
-            <ArrowLeft size={20} color={FIND_BACK.neutral} />
+            <ArrowLeft size={20} color={FIND_BACK.bodyText} />
           </TouchableOpacity>
 
           {/* User Info */}
           <View className="flex-1 flex-row items-center gap-3">
             <View className="relative">
-              <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center border-2 border-blue-200">
+              <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-fb-primary/30 bg-fb-primary/15">
                 {avatarUrl ? (
                   <Image
                     source={{ uri: avatarUrl }}
@@ -55,20 +57,20 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                     resizeMode="cover"
                   />
                 ) : (
-                  <Text className="text-blue-600 font-bold text-sm">
+                  <Text className="text-sm font-bold text-fb-primary-light">
                     {userName.charAt(0).toUpperCase()}
                   </Text>
                 )}
               </View>
               {isOnline && (
-                <View className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                <View className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-fb-surface bg-fb-secondary" />
               )}
             </View>
 
             <View className="flex-1">
               {/* Name with Verified Badge */}
               <View className="flex-row items-center gap-1">
-                <Text className="font-semibold text-gray-900" numberOfLines={1}>
+                <Text className="font-semibold text-fb-content" numberOfLines={1}>
                   {userName}
                 </Text>
                 {isVerified && (
@@ -76,8 +78,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 )}
               </View>
               <View className="flex-row items-center gap-1">
-                {isOnline && <View className="w-1.5 h-1.5 rounded-full bg-green-500" />}
-                <Text className="text-xs text-gray-500" numberOfLines={1}>
+                {isOnline && <View className="h-1.5 w-1.5 rounded-full bg-fb-secondary" />}
+                <Text className="text-xs text-fb-muted" numberOfLines={1}>
                   {itemName}
                 </Text>
               </View>
@@ -89,7 +91,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             {onCallPress && (
               <TouchableOpacity
                 onPress={onCallPress}
-                className="w-9 h-9 rounded-full items-center justify-center active:bg-gray-100"
+                accessibilityLabel="Gọi điện"
+                className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated"
               >
                 <Phone size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
@@ -97,7 +100,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             {onVideoPress && (
               <TouchableOpacity
                 onPress={onVideoPress}
-                className="w-9 h-9 rounded-full items-center justify-center active:bg-gray-100"
+                accessibilityLabel="Gọi video"
+                className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated"
               >
                 <Video size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
@@ -105,7 +109,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             {onMorePress && (
               <TouchableOpacity
                 onPress={onMorePress}
-                className="w-9 h-9 rounded-full items-center justify-center active:bg-gray-100"
+                accessibilityLabel="Tùy chọn cuộc trò chuyện"
+                className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated"
               >
                 <MoreVertical size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
@@ -115,10 +120,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       </View>
 
       {/* Item Badge */}
-      <View className="bg-blue-50 border-t border-blue-100 py-2">
+      <View className="border-t border-fb-primary/15 bg-fb-primary/10 py-2.5">
         <View className="flex-row items-center justify-center gap-2">
-          <View className="w-2 h-2 rounded-full bg-blue-500" />
-          <Text className="text-xs text-blue-600 font-medium">Đang hỗ trợ trả lại: {itemName}</Text>
+          <View className="h-2 w-2 rounded-full bg-fb-primary-light" />
+          <Text className="text-xs font-medium text-fb-primary-light">
+            Đang hỗ trợ hoàn trả: {itemName}
+          </Text>
         </View>
       </View>
     </View>

@@ -35,7 +35,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ type, onAddClick }) => {
       <Text style={styles.title}>Chưa có món đồ nào</Text>
       <Text style={styles.subtitle}>Hãy thêm món đồ đầu tiên để bảo vệ tài sản</Text>
 
-      <TouchableOpacity activeOpacity={0.9} onPress={onAddClick}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onAddClick}
+        accessibilityRole="button"
+        accessibilityLabel="Thêm món đồ"
+      >
         <LinearGradient
           colors={MY_ITEMS_PRIMARY_GRADIENT}
           start={{ x: 0, y: 0 }}

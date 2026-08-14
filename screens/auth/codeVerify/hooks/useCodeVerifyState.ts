@@ -11,32 +11,23 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useFirebasePhoneAuth } from '@hooks/useFirebasePhoneAuth';
+import { useAuth } from '@hooks/useAuth';
 import { OTP_LENGTH, RESEND_COUNTDOWN } from '../constants/constants';
-import { logCodeVerify, maskPhoneForLog, maskPhoneNumber } from '../constants/helpers';
+import { logCodeVerify, maskEmailAddress, maskEmailForLog } from '../constants/helpers';
 
 interface UseCodeVerifyStateParams {
-  phoneNumber: string;
+  email: string;
   onGoBack: () => void;
 }
 
-export const useCodeVerifyState = ({ phoneNumber, onGoBack }: UseCodeVerifyStateParams) => {
+export const useCodeVerifyState = ({ email, onGoBack }: UseCodeVerifyStateParams) => {
   const otpInputRef = useRef<TextInput>(null);
-
-  const {
-    isLoading,
-    error,
-    normalizedPhone,
-    sendOtp,
-    verifyOtpAndAuthenticate,
-    resendOtp,
-    clearError,
-  } = useFirebasePhoneAuth();
+  const { isLoading, error, verifyOtp, resendOtp, clearError } = useAuth();
 
   const [otp, setOtp] = useState('');
   const [countdown, setCountdown] = useState(RESEND_COUNTDOWN);
   const [canResend, setCanResend] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
+  const otpSent = true;
 
   const shakeOffset = useSharedValue(0);
   const verifyButtonGlow = useSharedValue(0);
@@ -44,40 +35,15 @@ export const useCodeVerifyState = ({ phoneNumber, onGoBack }: UseCodeVerifyState
   const countdownScale = useSharedValue(1);
 
   useEffect(() => {
-    logCodeVerify('screen_mount', { routePhoneMasked: maskPhoneForLog(phoneNumber) });
+    logCodeVerify('screen_mount', { emailMasked: maskEmailForLog(email) });
+    progressWidth.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) });
+
     return () => {
-      logCodeVerify('screen_unmount', { routePhoneMasked: maskPhoneForLog(phoneNumber) });
+      logCodeVerify('screen_unmount', { emailMasked: maskEmailForLog(email) });
     };
-  }, [phoneNumber]);
+  }, [email, progressWidth]);
 
   useEffect(() => {
-    if (!phoneNumber || otpSent) return;
-
-    const requestId = `code-init-${Date.now()}`;
-    logCodeVerify('init_send_otp_start', {
-      requestId,
-      phoneMasked: maskPhoneForLog(phoneNumber),
-    });
-
-    const initSendOtp = async () => {
-      const success = await sendOtp(phoneNumber);
-      if (success) {
-        setOtpSent(true);
-        progressWidth.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) });
-        return;
-      }
-
-      Alert.alert('Không thể gửi mã OTP', 'Vui lòng kiểm tra số điện thoại và thử lại.', [
-        { text: 'Quay lại', onPress: onGoBack },
-        { text: 'Thử lại', onPress: () => setOtpSent(false) },
-      ]);
-    };
-
-    initSendOtp();
-  }, [onGoBack, otpSent, phoneNumber, progressWidth, sendOtp]);
-
-  useEffect(() => {
-    if (!otpSent) return;
     if (countdown > 0) {
       countdownScale.value = withSequence(
         withSpring(1.15, { damping: 6 }),
@@ -87,13 +53,12 @@ export const useCodeVerifyState = ({ phoneNumber, onGoBack }: UseCodeVerifyState
       return () => clearTimeout(timer);
     }
     setCanResend(true);
-  }, [countdown, countdownScale, otpSent]);
+  }, [countdown, countdownScale]);
 
   useEffect(() => {
-    if (!otpSent) return;
     const timer = setTimeout(() => otpInputRef.current?.focus(), 250);
     return () => clearTimeout(timer);
-  }, [otpSent]);
+  }, []);
 
   const isOtpComplete = otp.length === OTP_LENGTH;
   useEffect(() => {
@@ -132,28 +97,28 @@ export const useCodeVerifyState = ({ phoneNumber, onGoBack }: UseCodeVerifyState
 
   const handleVerify = useCallback(async () => {
     if (!isOtpComplete || isLoading) return;
-    if (!phoneNumber) {
-      Alert.alert('Lỗi', 'Số điện thoại không hợp lệ. Vui lòng thử lại.');
+    if (!email) {
+      Alert.alert('Lỗi', 'Email không hợp lệ. Vui lòng đăng ký lại.');
       onGoBack();
       return;
     }
 
-    const success = await verifyOtpAndAuthenticate(otp);
+    const success = await verifyOtp(email, otp);
     if (!success) {
       setOtp('');
       otpInputRef.current?.focus();
     }
-  }, [isLoading, isOtpComplete, onGoBack, otp, phoneNumber, verifyOtpAndAuthenticate]);
+  }, [email, isLoading, isOtpComplete, onGoBack, otp, verifyOtp]);
 
   const handleResendOtp = useCallback(async () => {
     if (!canResend || isLoading) return;
-    const success = await resendOtp();
+    const success = await resendOtp(email);
     if (!success) return;
     setCountdown(RESEND_COUNTDOWN);
     setCanResend(false);
     setOtp('');
     otpInputRef.current?.focus();
-  }, [canResend, isLoading, resendOtp]);
+  }, [canResend, email, isLoading, resendOtp]);
 
   const focusOtpInput = useCallback(() => otpInputRef.current?.focus(), []);
 
@@ -170,8 +135,6 @@ export const useCodeVerifyState = ({ phoneNumber, onGoBack }: UseCodeVerifyState
     transform: [{ scale: countdownScale.value }],
   }));
 
-  const displayPhone = normalizedPhone || phoneNumber;
-
   return {
     otp,
     isLoading,
@@ -181,7 +144,7 @@ export const useCodeVerifyState = ({ phoneNumber, onGoBack }: UseCodeVerifyState
     otpSent,
     isOtpComplete,
     currentFocusIndex: Math.min(otp.length, OTP_LENGTH - 1),
-    maskedPhone: maskPhoneNumber(displayPhone),
+    maskedEmail: maskEmailAddress(email),
     otpInputRef,
     shakeOffset,
     progressBarStyle,

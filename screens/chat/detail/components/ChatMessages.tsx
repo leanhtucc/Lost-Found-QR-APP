@@ -43,7 +43,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   return (
     <ScrollView
       ref={scrollViewRef}
-      className="flex-1 bg-gray-50"
+      className="flex-1 bg-fb-neutral"
       contentContainerStyle={{ padding: 16 }}
       showsVerticalScrollIndicator={false}
     >

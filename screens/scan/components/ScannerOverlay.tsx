@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { View, Dimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FIND_BACK } from '@constants/theme';
 import Animated, {
@@ -23,10 +23,9 @@ interface ScannerOverlayProps {
   hasCodeInFrame: boolean;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SCANNER_SIZE = Math.min(SCREEN_WIDTH * 0.8, 320);
-
 export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ isScanning, hasCodeInFrame }) => {
+  const { width } = useWindowDimensions();
+  const scannerSize = Math.min(width * 0.78, 320);
   const scanLinePosition = useSharedValue(0.1);
 
   useEffect(() => {
@@ -47,19 +46,18 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ isScanning, hasC
   }, [isScanning, hasCodeInFrame, scanLinePosition]);
 
   const scanLineStyle = useAnimatedStyle(() => {
-    const scannerHeight = SCANNER_SIZE;
     return {
       transform: [
         {
-          translateY: scanLinePosition.value * scannerHeight,
+          translateY: scanLinePosition.value * scannerSize,
         },
       ],
       opacity: interpolate(scanLinePosition.value, [0.1, 0.5, 0.9], [0.6, 1, 0.6]),
     };
-  });
+  }, [scannerSize]);
 
   return (
-    <View style={{ position: 'absolute', top: -150, left: 0, right: 0, bottom: 0 }}>
+    <View className="absolute inset-0">
       {/* Dark Overlay */}
       <View className="absolute inset-0 bg-black/80" />
 
@@ -69,13 +67,14 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ isScanning, hasC
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
+          transform: [{ translateY: -36 }],
         }}
       >
         <Animated.View
           entering={FadeIn.duration(400)}
           style={{
-            width: SCANNER_SIZE,
-            height: SCANNER_SIZE,
+            width: scannerSize,
+            height: scannerSize,
             position: 'relative',
           }}
         >
@@ -84,13 +83,13 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ isScanning, hasC
 
           {/* Corner Frames - Clean Design with Tailwind */}
           {/* Top Left */}
-          <View className="absolute top-4 left-4 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-2xl" />
+          <View className="absolute left-4 top-4 h-12 w-12 rounded-tl-2xl border-l-4 border-t-4 border-fb-primary-light" />
           {/* Top Right */}
-          <View className="absolute top-4 right-4 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-2xl" />
+          <View className="absolute right-4 top-4 h-12 w-12 rounded-tr-2xl border-r-4 border-t-4 border-fb-primary-light" />
           {/* Bottom Left */}
-          <View className="absolute bottom-4 left-4 w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-2xl" />
+          <View className="absolute bottom-4 left-4 h-12 w-12 rounded-bl-2xl border-b-4 border-l-4 border-fb-primary-light" />
           {/* Bottom Right */}
-          <View className="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-2xl" />
+          <View className="absolute bottom-4 right-4 h-12 w-12 rounded-br-2xl border-b-4 border-r-4 border-fb-primary-light" />
 
           {/* Scanning Line - Only show when QR code is detected */}
           {isScanning && hasCodeInFrame && (
@@ -109,11 +108,11 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ isScanning, hasC
             >
               <LinearGradient
                 colors={[
-                  'rgba(59, 130, 246, 0)',
-                  'rgba(59, 130, 246, 0.4)',
-                  'rgba(59, 130, 246, 1)',
-                  'rgba(59, 130, 246, 0.4)',
-                  'rgba(59, 130, 246, 0)',
+                  'rgba(124, 106, 246, 0)',
+                  'rgba(124, 106, 246, 0.4)',
+                  'rgba(124, 106, 246, 1)',
+                  'rgba(124, 106, 246, 0.4)',
+                  'rgba(124, 106, 246, 0)',
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}

@@ -38,8 +38,8 @@ export const ForgotPasswordScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor={FIND_BACK.bodyText} />
+    <SafeAreaView className="flex-1 bg-fb-neutral">
+      <StatusBar barStyle="light-content" backgroundColor={FIND_BACK.canvas} />
 
       <KeyboardAwareScrollView
         className="flex-1"

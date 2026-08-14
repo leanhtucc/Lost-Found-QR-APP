@@ -4,10 +4,11 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FIND_BACK } from '@constants/theme';
 
-const FALLBACK_ACTIVE_COLOR = '#6C4CF1';
-const FALLBACK_INACTIVE_COLOR = '#9AA0B3';
-const SCAN_ICON_COLOR = '#F6F0FF';
+const FALLBACK_ACTIVE_COLOR = FIND_BACK.primary;
+const FALLBACK_INACTIVE_COLOR = FIND_BACK.mutedText;
+const SCAN_ICON_COLOR = FIND_BACK.bodyText;
 
 function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
@@ -44,7 +45,7 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
           ? String(options.title)
           : routeName;
 
-    return rawLabel.toUpperCase();
+    return rawLabel;
   };
 
   const createTabHandlers = (routeKey: string, routeName: string, isFocused: boolean) => {
@@ -94,7 +95,6 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
         <View style={[styles.iconWrap, isFocused ? styles.iconWrapActive : null]}>{icon}</View>
         {showLabel ? (
           <Text
-            allowFontScaling={false}
             numberOfLines={1}
             style={[styles.label, { color: tabColor }, isFocused ? styles.activeLabel : null]}
           >
@@ -129,7 +129,7 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
         style={styles.scanTabButton}
       >
         <LinearGradient
-          colors={['#6C4CF1', '#8E6CFF']}
+          colors={[FIND_BACK.primary, FIND_BACK.primaryLight]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.scanFab}
@@ -138,7 +138,6 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
         </LinearGradient>
         {showLabel ? (
           <Text
-            allowFontScaling={false}
             numberOfLines={1}
             style={[styles.label, styles.scanLabel, { color: inactiveTintColor }]}
           >
@@ -169,19 +168,19 @@ export const BottomTabBar = memo(BottomTabBarInner);
 
 const styles = StyleSheet.create({
   outer: {
-    backgroundColor: '#0B0A13',
+    backgroundColor: FIND_BACK.canvas,
     paddingHorizontal: 16,
     paddingTop: 24,
   },
   shell: {
     height: 82,
     borderRadius: 26,
-    backgroundColor: 'rgba(16, 16, 24, 0.94)',
+    backgroundColor: FIND_BACK.glassBackground,
     borderWidth: 1,
     borderColor: 'rgba(142, 108, 255, 0.22)',
     justifyContent: 'center',
     overflow: 'visible',
-    shadowColor: '#000000',
+    shadowColor: FIND_BACK.neutral,
     shadowOffset: { width: 0, height: 18 },
     shadowOpacity: 0.28,
     shadowRadius: 24,
@@ -227,7 +226,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#6C4CF1',
+    shadowColor: FIND_BACK.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.48,
     shadowRadius: 16,
@@ -235,15 +234,14 @@ const styles = StyleSheet.create({
   },
   label: {
     marginTop: 4,
-    fontFamily: FONT_FAMILY.label,
+    fontFamily: FONT_FAMILY.semibold,
     fontSize: 10,
     lineHeight: 15,
-    fontWeight: '600',
-    letterSpacing: 1,
+    letterSpacing: 0.2,
     textAlign: 'center',
   },
   activeLabel: {
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
   scanLabel: {
     marginTop: 4,

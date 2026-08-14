@@ -22,7 +22,7 @@ type CodeVerifyNavigationProp = StackNavigationProp<RootStackParamList>;
 export const CodeVerifyScreen: React.FC = () => {
   const navigation = useNavigation<CodeVerifyNavigationProp>();
   const route = useRoute<CodeVerifyRouteProp>();
-  const phoneNumber = route.params?.phoneNumber || '';
+  const email = route.params.email;
 
   const handleGoBack = useCallback(() => {
     navigation.goBack();
@@ -37,7 +37,7 @@ export const CodeVerifyScreen: React.FC = () => {
     otpSent,
     isOtpComplete,
     currentFocusIndex,
-    maskedPhone,
+    maskedEmail,
     otpInputRef,
     shakeOffset,
     progressBarStyle,
@@ -48,7 +48,7 @@ export const CodeVerifyScreen: React.FC = () => {
     handleResendOtp,
     focusOtpInput,
   } = useCodeVerifyState({
-    phoneNumber,
+    email,
     onGoBack: handleGoBack,
   });
 
@@ -59,7 +59,7 @@ export const CodeVerifyScreen: React.FC = () => {
       <ResponsiveContainer className="flex-1 px-6 mt-4" variant="form">
         <CodeVerifyProgress progressBarStyle={progressBarStyle} />
         <CodeVerifyIllustration />
-        <CodeVerifyTitle maskedPhone={maskedPhone} />
+        <CodeVerifyTitle maskedEmail={maskedEmail} />
 
         <CodeVerifyError error={error || undefined} shakeOffset={shakeOffset} />
 
@@ -87,7 +87,7 @@ export const CodeVerifyScreen: React.FC = () => {
           isOtpComplete={isOtpComplete}
           isLoading={isLoading}
           onVerify={handleVerify}
-          onChangePhone={handleGoBack}
+          onChangeEmail={handleGoBack}
         />
       </ResponsiveContainer>
     </SafeAreaView>

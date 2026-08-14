@@ -3,7 +3,7 @@
  * Global toast notification system
  */
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { Toast, ToastConfig } from '@components/Toast';
 
 interface ToastContextType {
@@ -63,14 +63,17 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [showToast]
   );
 
-  const value: ToastContextType = {
-    showToast,
-    hideToast,
-    success,
-    error,
-    warning,
-    info,
-  };
+  const value = useMemo<ToastContextType>(
+    () => ({
+      showToast,
+      hideToast,
+      success,
+      error,
+      warning,
+      info,
+    }),
+    [error, hideToast, info, showToast, success, warning]
+  );
 
   return (
     <ToastContext.Provider value={value}>

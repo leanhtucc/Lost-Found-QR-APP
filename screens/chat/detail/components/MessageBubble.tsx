@@ -40,13 +40,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         <View
           className={`px-4 py-2.5 ${
             isMine
-              ? `bg-blue-500 ${isLastInGroup ? 'rounded-2xl rounded-br-md' : 'rounded-2xl'}`
-              : `bg-gray-200 ${isLastInGroup ? 'rounded-2xl rounded-bl-md' : 'rounded-2xl'}`
+              ? `bg-fb-primary ${isLastInGroup ? 'rounded-2xl rounded-br-md' : 'rounded-2xl'}`
+              : `border border-fb-border-subtle bg-fb-surface-elevated ${isLastInGroup ? 'rounded-2xl rounded-bl-md' : 'rounded-2xl'}`
           }`}
         >
-          <Text className={`text-sm leading-relaxed ${isMine ? 'text-white' : 'text-gray-900'}`}>
-            {content}
-          </Text>
+          <Text className="text-sm leading-relaxed text-fb-content">{content}</Text>
         </View>
 
         {/* Time & Read Status */}
@@ -56,7 +54,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               isMine ? 'justify-end' : 'justify-start'
             }`}
           >
-            <Text className="text-[10px] text-gray-400">{formatTime(timestamp)}</Text>
+            <Text className="text-[10px] text-fb-label">{formatTime(timestamp)}</Text>
             {isMine && (
               <View>
                 {isRead ? (

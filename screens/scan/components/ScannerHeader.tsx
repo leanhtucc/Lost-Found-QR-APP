@@ -22,6 +22,8 @@ export const ScannerHeader: React.FC<ScannerHeaderProps> = ({ onClose }) => {
       <TouchableOpacity
         onPress={onClose}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Đóng trình quét"
         className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-md items-center justify-center"
       >
         <X size={24} color={FIND_BACK.bodyText} />

@@ -4,4 +4,4 @@
  */
 
 export { useAuth, default as useAuthDefault } from './useAuth';
-export { useGoogleAuth, default as useGoogleAuthDefault } from './useGoogleAuth';
+export { useGoogleAuth, checkGoogleSignIn, signOutGoogle } from './useGoogleAuth';

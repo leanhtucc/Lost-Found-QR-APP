@@ -14,7 +14,6 @@ import { COLORS } from '@constants/theme';
  *   "email": "user@example.com",
  *   "password": "Password123",
  *   "displayName": "John Doe",
- *   "phoneNumber": "0912345678",
  *   "photoURL": "https://example.com/avatar.jpg"
  * }
  */
@@ -22,7 +21,6 @@ export interface RegisterRequest {
   email: string;
   password: string;
   displayName: string;
-  phoneNumber: string;
   photoURL?: string;
 }
 
@@ -38,7 +36,7 @@ export interface LoginRequest {
  * Verify OTP request body
  */
 export interface VerifyOtpRequest {
-  phoneNumber: string;
+  email: string;
   code: string;
 }
 
@@ -46,7 +44,7 @@ export interface VerifyOtpRequest {
  * Resend OTP request body
  */
 export interface ResendOtpRequest {
-  phoneNumber: string;
+  email: string;
 }
 
 // Backward-compatible aliases for existing imports

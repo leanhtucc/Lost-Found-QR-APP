@@ -10,7 +10,7 @@ interface VerifyActionSectionProps {
   isOtpComplete: boolean;
   isLoading: boolean;
   onVerify: () => void;
-  onChangePhone: () => void;
+  onChangeEmail: () => void;
 }
 
 export const VerifyActionSection: React.FC<VerifyActionSectionProps> = ({
@@ -18,7 +18,7 @@ export const VerifyActionSection: React.FC<VerifyActionSectionProps> = ({
   isOtpComplete,
   isLoading,
   onVerify,
-  onChangePhone,
+  onChangeEmail,
 }) => {
   return (
     <>
@@ -48,13 +48,13 @@ export const VerifyActionSection: React.FC<VerifyActionSectionProps> = ({
       </Animated.View>
 
       <TouchableOpacity
-        onPress={onChangePhone}
+        onPress={onChangeEmail}
         disabled={isLoading}
         className="items-center mt-5 py-2"
-        accessibilityLabel="Đổi số điện thoại"
+        accessibilityLabel="Đổi email"
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Text className="text-sm font-semibold text-fb-primary">Đổi số điện thoại</Text>
+        <Text className="text-sm font-semibold text-fb-primary">Đổi email</Text>
       </TouchableOpacity>
     </>
   );

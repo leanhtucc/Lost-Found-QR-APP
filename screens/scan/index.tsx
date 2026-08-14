@@ -32,10 +32,11 @@ export const ScanScreen: React.FC = () => {
   // Handle successful scan
   const handleScanSuccess = (result: ScanResult) => {
     console.log('Scan result:', result);
+    const rootNavigation = navigation.getParent<ScanNavigationProp>() ?? navigation;
 
     if (result.action === 'open_chat') {
       if (result.channelId) {
-        navigation.replace('Chat', {
+        rootNavigation.navigate('Chat', {
           channelId: result.channelId,
           itemName: result.itemName || 'Vật dụng',
           userName: result.ownerDisplayName || 'Chủ sở hữu',
@@ -47,12 +48,12 @@ export const ScanScreen: React.FC = () => {
         'Không thể mở cuộc trò chuyện',
         'Đã quét thành công nhưng chưa nhận được kênh chat từ hệ thống. Vui lòng thử lại sau.'
       );
-      navigation.replace('ItemDetails', { itemId: result.itemId });
+      rootNavigation.navigate('ItemDetails', { itemId: result.itemId });
       return;
     }
 
     // Default: info_only or unknown response
-    navigation.replace('ItemDetails', { itemId: result.itemId });
+    rootNavigation.navigate('ItemDetails', { itemId: result.itemId });
   };
 
   // Use QR scanner hook

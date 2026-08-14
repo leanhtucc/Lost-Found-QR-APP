@@ -4,12 +4,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Alert } from 'react-native';
+import { ScrollView, Alert, ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Item, ItemStatus } from '@/types/item';
 import { itemsApi } from '@/services/items';
 import { ItemDetailHeader, ItemInfoCard, QRCodeCard, LostModeCard } from './components';
+import { FIND_BACK } from '@constants/theme';
 
 export default function ItemDetailScreen() {
   const route = useRoute();
@@ -93,14 +94,12 @@ export default function ItemDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
         <ItemDetailHeader itemId={itemId} onDelete={handleDelete} />
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ alignItems: 'center', justifyContent: 'center', padding: 24 }}
-        >
-          {/* Loading state could be added here */}
-        </ScrollView>
+        <View className="flex-1 items-center justify-center px-6">
+          <ActivityIndicator size="large" color={FIND_BACK.primary} />
+          <Text className="mt-4 text-sm text-fb-muted">Đang tải thông tin món đồ...</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -110,12 +109,12 @@ export default function ItemDetailScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
       <ItemDetailHeader itemId={itemId} onDelete={handleDelete} />
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Item Info */}

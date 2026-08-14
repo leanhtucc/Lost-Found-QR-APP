@@ -32,6 +32,9 @@ export const Header: React.FC<HeaderProps> = ({
       <View className="flex-row items-center gap-3">
         <TouchableOpacity
           activeOpacity={0.8}
+          onPress={onProfilePress}
+          accessibilityRole="button"
+          accessibilityLabel="Mở tài khoản"
           className="h-9 w-9 items-center justify-center rounded-full bg-fb-surface/80"
         >
           <Menu size={18} color={FIND_BACK.primaryLight} />
@@ -45,6 +48,8 @@ export const Header: React.FC<HeaderProps> = ({
       <View className="flex-row items-center gap-2">
         <TouchableOpacity
           onPress={onNotificationPress}
+          accessibilityRole="button"
+          accessibilityLabel="Mở thông báo"
           className="h-10 w-10 items-center justify-center rounded-full bg-fb-surface/75"
         >
           <Bell size={18} color={FIND_BACK.mutedText} />
@@ -59,6 +64,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         <TouchableOpacity
           onPress={onProfilePress}
+          accessibilityRole="button"
+          accessibilityLabel="Mở hồ sơ"
           className="h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-fb-primary/35 bg-fb-surface"
         >
           {userAvatar ? (

@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -48,8 +48,10 @@ export const MyItemsScreen: React.FC = () => {
   };
 
   const handleAddItem = () => {
-    // TODO: Navigate to add item screen or open modal
-    console.log('Add item');
+    Alert.alert(
+      'Đăng ký món đồ',
+      'Tính năng đăng ký món đồ mới đang được hoàn thiện. Bạn vẫn có thể báo mất các món đồ đã đăng ký.'
+    );
   };
 
   const handleReportLost = () => {
@@ -95,17 +97,14 @@ export const MyItemsScreen: React.FC = () => {
 
       <View pointerEvents="box-none" style={[styles.reportFabWrap, { bottom: reportFabBottom }]}>
         <TouchableOpacity
-          activeOpacity={0.88}
+          activeOpacity={0.86}
           onPress={handleReportLost}
-          style={styles.reportFabTouch}
+          accessibilityRole="button"
+          accessibilityLabel="Báo mất món đồ"
+          className="h-16 w-16 items-center justify-center rounded-2xl bg-fb-primary-light"
+          style={styles.reportFab}
         >
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleReportLost}
-            className="h-16 w-16 items-center justify-center rounded-2xl bg-[#c7bfff] shadow-[0_12px_36px_rgba(96,83,210,0.45)]"
-          >
-            <Plus size={28} color="#25008c" strokeWidth={2.4} />
-          </TouchableOpacity>
+          <Plus size={28} color="#25008c" strokeWidth={2.4} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -27,19 +27,19 @@ export const ScannerError: React.FC<ScannerErrorProps> = ({
   return (
     <Animated.View
       entering={FadeIn.duration(400)}
-      className="absolute inset-0 bg-gray-900 items-center justify-center px-6"
+      className="absolute inset-0 items-center justify-center bg-fb-neutral px-6"
     >
       {/* Error Icon */}
-      <View className="w-20 h-20 rounded-full bg-red-500/20 items-center justify-center mb-6">
+      <View className="mb-6 h-20 w-20 items-center justify-center rounded-3xl border border-fb-danger/20 bg-fb-danger/10">
         <AlertCircle size={48} color={FIND_BACK.danger} />
       </View>
 
       {/* Error Message */}
-      <Text className="text-white text-xl font-bold text-center mb-3">
+      <Text className="mb-3 text-center text-xl font-bold text-fb-content">
         {isPermissionError ? 'Cần quyền truy cập camera' : 'Đã có lỗi xảy ra'}
       </Text>
 
-      <Text className="text-white/70 text-base text-center mb-8 leading-6 px-4">{error}</Text>
+      <Text className="mb-8 px-4 text-center text-base leading-6 text-fb-muted">{error}</Text>
 
       {/* Action Buttons */}
       <View className="gap-3 w-full">
@@ -47,26 +47,28 @@ export const ScannerError: React.FC<ScannerErrorProps> = ({
           <TouchableOpacity
             onPress={handleOpenSettings}
             activeOpacity={0.8}
-            className="bg-blue-600 rounded-2xl py-4 flex-row items-center justify-center gap-2"
+            accessibilityRole="button"
+            className="flex-row items-center justify-center gap-2 rounded-2xl bg-fb-primary py-4"
           >
             <Settings size={20} color={FIND_BACK.bodyText} />
-            <Text className="text-white font-semibold text-base">Mở Cài đặt</Text>
+            <Text className="text-base font-semibold text-fb-content">Mở Cài đặt</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             onPress={onRetry}
             activeOpacity={0.8}
-            className="bg-blue-600 rounded-2xl py-4 flex-row items-center justify-center gap-2"
+            accessibilityRole="button"
+            className="flex-row items-center justify-center gap-2 rounded-2xl bg-fb-primary py-4"
           >
             <RefreshCw size={20} color={FIND_BACK.bodyText} />
-            <Text className="text-white font-semibold text-base">Thử lại</Text>
+            <Text className="text-base font-semibold text-fb-content">Thử lại</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* Additional Info */}
       {isPermissionError && (
-        <Text className="text-white/50 text-sm text-center mt-6 px-8 leading-5">
+        <Text className="mt-6 px-8 text-center text-sm leading-5 text-fb-label">
           Ứng dụng cần quyền camera để quét mã QR. Vui lòng cấp quyền trong cài đặt thiết bị.
         </Text>
       )}

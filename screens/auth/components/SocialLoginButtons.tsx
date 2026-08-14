@@ -5,7 +5,7 @@ import { COLORS, FIND_BACK } from '@constants/theme';
 
 interface SocialLoginButtonsProps {
   onGooglePress: () => void;
-  onApplePress: () => void;
+  onApplePress?: () => void;
 }
 
 const GoogleIcon = () => (
@@ -54,8 +54,9 @@ export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({
       <View className="flex-row justify-between space-x-4 gap-4">
         {/* Google Button */}
         <TouchableOpacity
-          className="flex-1 flex-row items-center justify-center h-[52px] rounded-2xl bg-fb-surface-muted active:opacity-70"
+          className="h-[52px] flex-1 flex-row items-center justify-center rounded-2xl bg-fb-surface-muted active:opacity-70"
           onPress={onGooglePress}
+          accessibilityRole="button"
         >
           <GoogleIcon />
           <Text className="text-sm font-semibold text-white ml-2">Google</Text>
@@ -63,11 +64,18 @@ export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({
 
         {/* Apple Button */}
         <TouchableOpacity
-          className="flex-1 flex-row items-center justify-center h-[52px] rounded-2xl bg-fb-surface-muted active:opacity-70"
+          className={`h-[52px] flex-1 flex-row items-center justify-center rounded-2xl bg-fb-surface-muted ${
+            onApplePress ? 'active:opacity-70' : 'opacity-50'
+          }`}
           onPress={onApplePress}
+          disabled={!onApplePress}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !onApplePress }}
         >
           <AppleIcon />
-          <Text className="text-sm font-semibold text-white ml-2">Apple</Text>
+          <Text className="ml-2 text-sm font-semibold text-white">
+            {onApplePress ? 'Apple' : 'Sắp có'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

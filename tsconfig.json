@@ -22,5 +22,6 @@
       "@contexts/*": ["./contexts/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts", "types/assets.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts", "types/assets.d.ts"],
+  "exclude": ["node_modules", "assets/svgs/output"]
 }

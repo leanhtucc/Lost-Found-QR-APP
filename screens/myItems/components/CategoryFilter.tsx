@@ -28,6 +28,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
               activeOpacity={0.9}
               onPress={() => onCategoryChange(value)}
               style={styles.pillButtonTouch}
+              accessibilityRole="button"
+              accessibilityState={{ selected: true }}
             >
               <Icon size={16} color="#FFFFFF" strokeWidth={2.4} />
               <Text style={styles.activeLabel}>{label}</Text>
@@ -38,6 +40,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
               activeOpacity={0.86}
               onPress={() => onCategoryChange(value)}
               style={styles.inactivePill}
+              accessibilityRole="button"
+              accessibilityState={{ selected: false }}
             >
               <Icon size={16} color={MY_ITEMS_COLORS.textSecondary} strokeWidth={2.2} />
               <Text style={styles.inactiveLabel}>{label}</Text>

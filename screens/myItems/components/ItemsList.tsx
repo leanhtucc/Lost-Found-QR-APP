@@ -5,6 +5,7 @@ import { Item } from '@/types/item';
 import { StatusFilterType } from '../hooks/useItemsFilter';
 import { EmptyState } from './EmptyState';
 import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_SHADOW } from '../constants/ui';
+import { getCategoryLabel } from '@/constants/categories';
 
 const isLostLike = (status: Item['status']): boolean =>
   status === 'LOST' || status === 'PENDING_PAYMENT';
@@ -92,7 +93,7 @@ export const ItemsList: React.FC<ItemsListProps> = ({
                     <Text numberOfLines={1} style={styles.itemName}>
                       {item.name}
                     </Text>
-                    <Text style={styles.itemCategory}>{item.category}</Text>
+                    <Text style={styles.itemCategory}>{getCategoryLabel(item.category)}</Text>
                     <Text style={styles.itemCode}>ID: {item.id}</Text>
                   </View>
 

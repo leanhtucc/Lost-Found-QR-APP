@@ -30,8 +30,8 @@ export const DateHeader: React.FC<DateHeaderProps> = ({ date }) => {
 
   return (
     <View className="flex-row justify-center py-2">
-      <View className="px-3 py-1 rounded-full bg-gray-200">
-        <Text className="text-xs text-gray-600 font-medium">{formatDateHeader(date)}</Text>
+      <View className="rounded-full border border-fb-border-subtle bg-fb-surface px-3 py-1">
+        <Text className="text-xs font-medium text-fb-muted">{formatDateHeader(date)}</Text>
       </View>
     </View>
   );

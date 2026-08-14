@@ -12,10 +12,10 @@ export const ScannerLoading: React.FC = () => {
   return (
     <Animated.View
       entering={FadeIn.duration(300)}
-      className="absolute inset-0 bg-gray-900 items-center justify-center"
+      className="absolute inset-0 items-center justify-center bg-fb-neutral"
     >
       <ActivityIndicator size="large" color={FIND_BACK.primary} />
-      <Text className="text-white/70 text-base mt-4">Đang khởi động camera...</Text>
+      <Text className="mt-4 text-base text-fb-muted">Đang khởi động camera...</Text>
     </Animated.View>
   );
 };

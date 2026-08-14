@@ -36,19 +36,19 @@ export const OwnerInfoCard: React.FC<OwnerInfoCardProps> = ({ owner, ownerInfo }
 
   return (
     <Animated.View entering={FadeInDown.duration(400).delay(100)} className="mb-5">
-      <View className="bg-white rounded-3xl p-6 shadow-md border border-indigo-100">
+      <View className="rounded-3xl border border-fb-border-subtle bg-fb-surface p-6">
         {/* Title */}
         <View className="flex-row items-center gap-2 mb-4">
-          <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center">
-            <UserIcon size={18} color={FIND_BACK.primary} />
+          <View className="h-8 w-8 items-center justify-center rounded-xl bg-fb-primary/15">
+            <UserIcon size={18} color={FIND_BACK.primaryLight} />
           </View>
-          <Text className="text-lg font-bold text-gray-900">Chủ sở hữu</Text>
+          <Text className="text-lg font-bold text-fb-content">Chủ sở hữu</Text>
         </View>
 
         {/* Owner Profile */}
         <View className="flex-row items-center gap-4 mb-5">
           {/* Avatar */}
-          <View className="w-16 h-16 rounded-full bg-gray-100 items-center justify-center overflow-hidden border-2 border-indigo-200">
+          <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-fb-primary/30 bg-fb-surface-elevated">
             {avatar ? (
               <Image source={{ uri: avatar }} className="w-full h-full" resizeMode="cover" />
             ) : (
@@ -59,14 +59,14 @@ export const OwnerInfoCard: React.FC<OwnerInfoCardProps> = ({ owner, ownerInfo }
           {/* Name & Verified Badge */}
           <View className="flex-1">
             <View className="flex-row items-center gap-2 mb-1">
-              <Text className="text-xl font-bold text-gray-900" numberOfLines={1}>
+              <Text className="text-xl font-bold text-fb-content" numberOfLines={1}>
                 {displayName}
               </Text>
               {isVerified && <BadgeCheck size={20} color={FIND_BACK.info} fill={FIND_BACK.info} />}
             </View>
             <View className="flex-row items-center gap-2">
               <Award size={14} color={FIND_BACK.primary} />
-              <Text className="text-sm text-indigo-600 font-semibold">
+              <Text className="text-sm font-semibold text-fb-primary-light">
                 Thành viên {levelInfo.label}
               </Text>
             </View>
@@ -74,31 +74,31 @@ export const OwnerInfoCard: React.FC<OwnerInfoCardProps> = ({ owner, ownerInfo }
         </View>
 
         {/* Trust Metrics */}
-        <View className="flex-row gap-3 bg-gray-50 rounded-2xl p-4">
+        <View className="flex-row gap-3 rounded-2xl bg-fb-surface-elevated p-4">
           {/* Trust Score */}
           <View className="flex-1 items-center">
             <View className="flex-row items-center gap-1 mb-1">
               <Star size={16} color={COLORS.trustGold} fill={COLORS.trustGold} />
-              <Text className="text-xs font-medium text-amber-700">Uy tín</Text>
+              <Text className="text-xs font-medium text-fb-muted">Uy tín</Text>
             </View>
-            <Text className="text-xl font-bold text-amber-900">{trustScore}</Text>
+            <Text className="text-xl font-bold text-fb-content">{trustScore}</Text>
           </View>
 
-          <View className="w-px bg-gray-200" />
+          <View className="w-px bg-fb-border-glass" />
 
           {/* Total Returned */}
           <View className="flex-1 items-center">
             <View className="flex-row items-center gap-1 mb-1">
               <Package size={16} color={FIND_BACK.secondary} />
-              <Text className="text-xs font-medium text-emerald-700">Đã trả</Text>
+              <Text className="text-xs font-medium text-fb-muted">Đã trả</Text>
             </View>
-            <Text className="text-xl font-bold text-emerald-900">{totalReturned}</Text>
+            <Text className="text-xl font-bold text-fb-content">{totalReturned}</Text>
           </View>
         </View>
 
         {/* Trust Level Indicator */}
-        <View className="mt-4 p-3 bg-indigo-50 rounded-xl">
-          <Text className="text-xs text-indigo-700 text-center">
+        <View className="mt-4 rounded-xl border border-fb-primary/20 bg-fb-primary/10 p-3">
+          <Text className="text-center text-xs text-fb-muted">
             Người dùng này có độ uy tín{' '}
             <Text className="font-bold">
               {trustScore >= 80 ? 'rất cao' : trustScore >= 60 ? 'cao' : 'trung bình'}

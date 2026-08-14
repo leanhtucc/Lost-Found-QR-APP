@@ -56,12 +56,13 @@ export type RootStackParamList = {
     userName: string;
     userAvatar?: string;
     memberId?: string; // For connecting with memberId
+    isVerified?: boolean;
   };
   // Auth screens
   Onboarding: undefined;
   Login: undefined;
   AuthRegister: undefined;
-  CodeVerify: { phoneNumber?: string };
+  CodeVerify: { email: string };
   ForgotPassword: undefined;
   ResetPassword: { token?: string };
   Congratulation: undefined;

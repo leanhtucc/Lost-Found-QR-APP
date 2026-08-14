@@ -138,7 +138,7 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
       <View className="flex-1">
         {/* Header */}
         <ChatHeader
