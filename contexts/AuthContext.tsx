@@ -9,6 +9,8 @@ import { AppState, AppStateStatus } from 'react-native';
 import { authStorage } from '@storage/auth';
 import { authApi } from '@services/auth';
 import { User } from '@services/auth/types';
+import { sessionEvents } from '@/lib/sessionEvents';
+import { SessionExpiredModal } from '@components/SessionExpiredModal';
 
 // Session timeout in milliseconds (7 days)
 const SESSION_TIMEOUT = 7 * 24 * 60 * 60 * 1000;
@@ -36,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [isSessionExpiredModalVisible, setIsSessionExpiredModalVisible] = useState(false);
   const appState = useRef(AppState.currentState);
 
   /**
@@ -83,6 +86,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(false);
       setUser(null);
     }
+  }, []);
+
+  const handleSessionExpiredConfirm = useCallback(async () => {
+    setIsSessionExpiredModalVisible(false);
+    await logout();
+  }, [logout]);
+
+  /**
+   * Listen for global session expiration events (e.g. 401 response from backend)
+   */
+  useEffect(() => {
+    const unsubscribe = sessionEvents.onSessionExpired(() => {
+      setIsSessionExpiredModalVisible(true);
+    });
+    return unsubscribe;
   }, []);
 
   /**
@@ -189,7 +207,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateLastActivity,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <SessionExpiredModal
+        visible={isSessionExpiredModalVisible}
+        onConfirm={handleSessionExpiredConfirm}
+      />
+    </AuthContext.Provider>
+  );
 };
 
 /**

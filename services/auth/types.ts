@@ -119,19 +119,80 @@ export type UserLevel = 'bronze' | 'silver' | 'gold' | 'platinum';
  */
 export interface User {
   id: string;
-  uid: string; // Firebase UID (legacy support)
-  memberId: string; // UUID - Primary identifier for professional users
+  uid?: string; // Firebase UID (legacy support)
+  memberId?: string; // UUID - Primary identifier for professional users
   email: string;
   displayName: string;
   photoURL?: string;
   phoneNumber?: string;
   address?: string; // User's address
   bio?: string; // User biography/description
-  trustScore: number; // Trust score (0-100)
-  isVerified: boolean; // Verified account status
-  totalReturned: number; // Number of items successfully returned
-  createdAt: string;
+  trustScore?: number; // Trust score (0-100)
+  isVerified?: boolean; // Verified account status
+  totalReturned?: number; // Number of items successfully returned
+  itemsLost?: number; // Number of lost items reported
+  createdAt?: string;
   updatedAt?: string;
+
+  // Backend compatibility properties
+  member_id?: string;
+  full_name?: string;
+  phone?: string;
+  avatar_url?: string;
+  is_verified?: boolean;
+  stats?: {
+    trust_score?: number;
+    items_lost?: number;
+    items_returned?: number;
+  };
+  stream_token?: string;
+}
+
+/**
+ * Utility function to normalize user object from backend response,
+ * supporting both camelCase and snake_case properties seamlessly.
+ */
+export function normalizeUser(raw: any): User {
+  if (!raw) return raw;
+  const stats = raw.stats || {};
+  return {
+    id: raw.id || raw.uid || raw.memberId || raw.member_id || '',
+    uid: raw.uid || raw.id || '',
+    memberId: raw.memberId || raw.member_id || (raw.id ? `USER_${raw.id}` : 'A3F2'),
+    email: raw.email || '',
+    displayName: raw.displayName || raw.full_name || raw.name || 'Người dùng',
+    photoURL: raw.photoURL || raw.avatar_url || raw.avatar || undefined,
+    phoneNumber: raw.phoneNumber || raw.phone || undefined,
+    address: raw.address || raw.addressCity || undefined,
+    bio: raw.bio || undefined,
+    trustScore:
+      typeof raw.trustScore === 'number'
+        ? raw.trustScore
+        : typeof stats.trust_score === 'number'
+        ? stats.trust_score
+        : 50,
+    isVerified:
+      typeof raw.isVerified === 'boolean'
+        ? raw.isVerified
+        : typeof raw.is_verified === 'boolean'
+        ? raw.is_verified
+        : false,
+    totalReturned:
+      typeof raw.totalReturned === 'number'
+        ? raw.totalReturned
+        : typeof stats.items_returned === 'number'
+        ? stats.items_returned
+        : 0,
+    itemsLost:
+      typeof raw.itemsLost === 'number'
+        ? raw.itemsLost
+        : typeof stats.items_lost === 'number'
+        ? stats.items_lost
+        : 0,
+    createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
+    updatedAt: raw.updatedAt || raw.updated_at || undefined,
+    ...raw,
+  };
 }
 
 /**

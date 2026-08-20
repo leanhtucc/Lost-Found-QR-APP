@@ -29,6 +29,7 @@ import {
   GoogleLoginResponseData,
   FirebaseVerifyResponseData,
   User,
+  normalizeUser,
 } from './types';
 import { authStorage } from '@storage/auth';
 import { buildAuthUrl } from '@services/shared/url';
@@ -234,11 +235,13 @@ export const authApi = {
 
       // Only save user if it exists in response
       if (response.data.user) {
-        await authStorage.saveUser(response.data.user);
+        const normalizedUser = normalizeUser(response.data.user);
+        response.data.user = normalizedUser;
+        await authStorage.saveUser(normalizedUser);
         logAuthApi('verify_otp_user_saved', {
           requestId,
-          userId: response.data.user.id,
-          emailMasked: maskEmailForLog(response.data.user.email),
+          userId: normalizedUser.id,
+          emailMasked: maskEmailForLog(normalizedUser.email),
         });
       } else {
         // If user is not in response, fetch profile to get user data
@@ -343,7 +346,11 @@ export const authApi = {
       }
 
       await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
-      await authStorage.saveUser(response.data.user);
+      if (response.data.user) {
+        const normalizedUser = normalizeUser(response.data.user);
+        response.data.user = normalizedUser;
+        await authStorage.saveUser(normalizedUser);
+      }
     }
 
     return response;
@@ -372,7 +379,11 @@ export const authApi = {
       }
 
       await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
-      await authStorage.saveUser(response.data.user);
+      if (response.data.user) {
+        const normalizedUser = normalizeUser(response.data.user);
+        response.data.user = normalizedUser;
+        await authStorage.saveUser(normalizedUser);
+      }
     }
 
     return response;
@@ -414,7 +425,9 @@ export const authApi = {
 
     // Update stored user on success
     if (response.success && response.data) {
-      await authStorage.saveUser(response.data);
+      const normalizedUser = normalizeUser(response.data);
+      response.data = normalizedUser;
+      await authStorage.saveUser(normalizedUser);
     }
 
     return response;
@@ -432,7 +445,9 @@ export const authApi = {
 
     // Update stored user on success
     if (response.success && response.data) {
-      await authStorage.saveUser(response.data);
+      const normalizedUser = normalizeUser(response.data);
+      response.data = normalizedUser;
+      await authStorage.saveUser(normalizedUser);
     }
 
     return response;

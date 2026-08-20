@@ -10,6 +10,8 @@ import {
 } from '@/types/radar';
 import { buildHomeUrl, buildMapUrl, buildV1Url } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
+import { authApi } from '@services/auth';
+import { sessionEvents } from '@/lib/sessionEvents';
 
 const DEFAULT_RADIUS = 5000;
 const MIN_RADIUS = 1;
@@ -31,13 +33,64 @@ const assertRange = (value: number, field: string, min: number, max: number): vo
 const createAuthHeaders = async (): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
   if (!token) {
-    throw new Error('No authentication token found');
+    sessionEvents.emitSessionExpired();
+    throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
   }
 
   return {
     Authorization: `Bearer ${token}`,
   };
 };
+
+const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  let headers: HeadersInit;
+  try {
+    headers = await createAuthHeaders();
+  } catch (err) {
+    throw err;
+  }
+
+  let response = await fetch(url, {
+    ...options,
+    headers: {
+      ...headers,
+      ...options.headers,
+    },
+  });
+
+  if (response.status === 401) {
+    console.log('[RadarAPI] 401 Unauthorized encountered, attempting refresh...');
+    try {
+      const refreshToken = await authStorage.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const refreshResult = await authApi.refreshToken({ refreshToken });
+      if (refreshResult.success && refreshResult.data) {
+        console.log('[RadarAPI] Refresh token successful, retrying request...');
+        const newHeaders = await createAuthHeaders();
+        response = await fetch(url, {
+          ...options,
+          headers: {
+            ...newHeaders,
+            ...options.headers,
+          },
+        });
+      } else {
+        throw new Error(refreshResult.message || 'Refresh failed');
+      }
+    } catch (refreshErr) {
+      console.warn('[RadarAPI] Refresh failed, emitting session expired:', refreshErr);
+      await authStorage.clearAll();
+      sessionEvents.emitSessionExpired();
+      throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+    }
+  }
+
+  return response;
+};
+
 
 const parseJsonSafely = async <T>(response: Response): Promise<T | null> => {
   try {
@@ -294,10 +347,8 @@ export const radarApi = {
       radius: String(radius),
     });
 
-    const headers = await createAuthHeaders();
-    const response = await fetch(`${buildV1Url('map', 'active-users')}?${params.toString()}`, {
+    const response = await fetchWithAuth(`${buildV1Url('map', 'active-users')}?${params.toString()}`, {
       method: 'GET',
-      headers,
     });
 
     const apiPayload = await parseJsonSafely<RadarApiResponse<ActiveUsersResponse>>(response);
@@ -357,11 +408,8 @@ export const radarApi = {
       });
     }
 
-    const headers = await createAuthHeaders();
-
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     const payload = await parseJsonSafely<RadarApiResponse<unknown>>(response);
@@ -388,11 +436,9 @@ export const radarApi = {
     });
 
     const url = `${buildMapUrl('nearby')}?${params.toString()}`;
-    const headers = await createAuthHeaders();
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     const payload = await parseJsonSafely<RadarApiResponse<unknown>>(response);
