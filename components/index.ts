@@ -8,4 +8,3 @@ export { SessionExpiredModal } from './SessionExpiredModal';
 
 export * from './atoms';
 export * from './molecules';
-

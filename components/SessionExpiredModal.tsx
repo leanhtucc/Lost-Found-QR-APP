@@ -26,16 +26,13 @@ export const SessionExpiredModal: React.FC<SessionExpiredModalProps> = ({ visibl
           </View>
 
           <Text style={styles.title}>Phiên đăng nhập hết hạn</Text>
-          
+
           <Text style={styles.description}>
-            Phiên làm việc của bạn đã hết hạn do đã lâu không truy cập hoặc token không còn hợp lệ. Vui lòng đăng nhập lại để tiếp tục sử dụng ứng dụng.
+            Phiên làm việc của bạn đã hết hạn do đã lâu không truy cập hoặc token không còn hợp lệ.
+            Vui lòng đăng nhập lại để tiếp tục sử dụng ứng dụng.
           </Text>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={onConfirm}
-            style={styles.button}
-          >
+          <TouchableOpacity activeOpacity={0.8} onPress={onConfirm} style={styles.button}>
             <LogIn size={20} color="#FFFFFF" style={styles.buttonIcon} />
             <Text style={styles.buttonText}>Đăng nhập lại</Text>
           </TouchableOpacity>

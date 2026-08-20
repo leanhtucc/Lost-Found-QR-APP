@@ -169,26 +169,26 @@ export function normalizeUser(raw: any): User {
       typeof raw.trustScore === 'number'
         ? raw.trustScore
         : typeof stats.trust_score === 'number'
-        ? stats.trust_score
-        : 50,
+          ? stats.trust_score
+          : 50,
     isVerified:
       typeof raw.isVerified === 'boolean'
         ? raw.isVerified
         : typeof raw.is_verified === 'boolean'
-        ? raw.is_verified
-        : false,
+          ? raw.is_verified
+          : false,
     totalReturned:
       typeof raw.totalReturned === 'number'
         ? raw.totalReturned
         : typeof stats.items_returned === 'number'
-        ? stats.items_returned
-        : 0,
+          ? stats.items_returned
+          : 0,
     itemsLost:
       typeof raw.itemsLost === 'number'
         ? raw.itemsLost
         : typeof stats.items_lost === 'number'
-        ? stats.items_lost
-        : 0,
+          ? stats.items_lost
+          : 0,
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.updated_at || undefined,
     ...raw,

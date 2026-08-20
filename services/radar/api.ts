@@ -91,7 +91,6 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Re
   return response;
 };
 
-
 const parseJsonSafely = async <T>(response: Response): Promise<T | null> => {
   try {
     return (await response.json()) as T;
@@ -347,9 +346,12 @@ export const radarApi = {
       radius: String(radius),
     });
 
-    const response = await fetchWithAuth(`${buildV1Url('map', 'active-users')}?${params.toString()}`, {
-      method: 'GET',
-    });
+    const response = await fetchWithAuth(
+      `${buildV1Url('map', 'active-users')}?${params.toString()}`,
+      {
+        method: 'GET',
+      }
+    );
 
     const apiPayload = await parseJsonSafely<RadarApiResponse<ActiveUsersResponse>>(response);
 
