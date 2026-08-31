@@ -7,10 +7,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { authStorage } from '@storage/auth';
+import { deviceStorage } from '@storage/device';
 import { authApi } from '@services/auth';
 import { User } from '@services/auth/types';
 import { sessionEvents } from '@/lib/sessionEvents';
 import { SessionExpiredModal } from '@components/SessionExpiredModal';
+import { pushNotificationService } from '@/services/notifications';
 
 // Session timeout in milliseconds (7 days)
 const SESSION_TIMEOUT = 7 * 24 * 60 * 60 * 1000;
@@ -77,6 +79,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const logout = useCallback(async () => {
     try {
+      await pushNotificationService.unregisterDevice().catch(error => {
+        console.warn('Unable to unregister push device during logout:', error);
+      });
+      const deviceId = await deviceStorage.getDeviceId();
+      if (deviceId) {
+        await authApi.unregisterDevice(deviceId).catch(error => {
+          console.warn('Unable to unregister this device during logout:', error);
+        });
+      }
       await authApi.logout();
     } catch (error) {
       console.error('Error during logout:', error);
@@ -188,6 +199,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription?.remove();
     };
   }, [isAuthenticated, checkSessionExpired, logout, updateLastActivity]);
+
+  /**
+   * Register push device token and listen for token refreshes when user is authenticated
+   */
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    void pushNotificationService.registerDeviceToken();
+    const unsubscribeRefresh = pushNotificationService.setupTokenRefreshListener();
+
+    return () => {
+      unsubscribeRefresh();
+    };
+  }, [isAuthenticated]);
 
   /**
    * Check auth status on mount

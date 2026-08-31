@@ -77,8 +77,66 @@ export interface RefreshTokenRequest {
  */
 export interface UpdateProfileRequest {
   displayName?: string;
-  photoURL?: string;
-  pushToken?: string;
+  photoURL?: string | null;
+  phoneNumber?: string | null;
+  address?: string | null;
+  bio?: string | null;
+}
+
+export type AuthProvider = 'password' | 'google' | 'firebase_phone' | 'apple';
+export type TrustLevel = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+export type ProfileLanguage = 'vi' | 'en';
+
+export interface ProfileTrust {
+  score: number;
+  level: TrustLevel;
+  isVerified: boolean;
+  completedReturns: number;
+}
+
+export interface ProfileStats {
+  protectedItems: number;
+  safeItems: number;
+  lostItems: number;
+  activeLostReports: number;
+  completedReturns: number;
+  qrScans: number;
+  trust_score?: number;
+  items_lost?: number;
+  items_returned?: number;
+}
+
+export interface ProfilePreferences {
+  pushEnabled: boolean;
+  emailEnabled: boolean;
+  proximityEnabled: boolean;
+  notificationRadiusMeters: number;
+  language: ProfileLanguage;
+  updatedAt?: string;
+}
+
+export type UpdateProfilePreferencesRequest = Partial<
+  Pick<
+    ProfilePreferences,
+    'pushEnabled' | 'emailEnabled' | 'proximityEnabled' | 'notificationRadiusMeters' | 'language'
+  >
+>;
+
+export interface RegisterDeviceRequest {
+  deviceId: string;
+  platform: 'android' | 'ios' | 'web';
+  pushToken: string;
+  appVersion?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface AccountDeletionResult {
+  scheduledDeletionAt: string;
+  recoverableUntil: string;
 }
 
 /**
@@ -105,9 +163,23 @@ export interface ApiResponse<T> {
   success: boolean;
   message?: string;
   data?: T;
-  error?: string;
+  error?:
+    | string
+    | {
+        code?: string;
+        fields?: Record<string, string>;
+        detail?: string;
+      };
   timestamp?: string;
 }
+
+export const getApiErrorCode = (response: ApiResponse<unknown>): string | undefined =>
+  typeof response.error === 'string' ? response.error : response.error?.code;
+
+export const getApiFieldErrors = (
+  response: ApiResponse<unknown>
+): Record<string, string> | undefined =>
+  typeof response.error === 'object' ? response.error.fields : undefined;
 
 /**
  * User Level/Tier based on trust score
@@ -123,10 +195,12 @@ export interface User {
   memberId?: string; // UUID - Primary identifier for professional users
   email: string;
   displayName: string;
-  photoURL?: string;
-  phoneNumber?: string;
-  address?: string; // User's address
-  bio?: string; // User biography/description
+  photoURL?: string | null;
+  phoneNumber?: string | null;
+  address?: string | null; // User's address
+  bio?: string | null; // User biography/description
+  authProvider?: AuthProvider;
+  emailVerified?: boolean;
   trustScore?: number; // Trust score (0-100)
   isVerified?: boolean; // Verified account status
   totalReturned?: number; // Number of items successfully returned
@@ -140,11 +214,9 @@ export interface User {
   phone?: string;
   avatar_url?: string;
   is_verified?: boolean;
-  stats?: {
-    trust_score?: number;
-    items_lost?: number;
-    items_returned?: number;
-  };
+  trust?: ProfileTrust;
+  stats?: ProfileStats;
+  preferences?: ProfilePreferences;
   stream_token?: string;
 }
 
@@ -155,34 +227,50 @@ export interface User {
 export function normalizeUser(raw: any): User {
   if (!raw) return raw;
   const stats = raw.stats || {};
+  const rawTrust = raw.trust || {};
+  const rawPreferences = raw.preferences || {};
+  const trustScore =
+    typeof rawTrust.score === 'number'
+      ? rawTrust.score
+      : typeof raw.trustScore === 'number'
+        ? raw.trustScore
+        : typeof stats.trust_score === 'number'
+          ? stats.trust_score
+          : 50;
+  const isVerified =
+    typeof rawTrust.isVerified === 'boolean'
+      ? rawTrust.isVerified
+      : typeof raw.isVerified === 'boolean'
+        ? raw.isVerified
+        : typeof raw.is_verified === 'boolean'
+          ? raw.is_verified
+          : false;
+  const completedReturns =
+    typeof rawTrust.completedReturns === 'number'
+      ? rawTrust.completedReturns
+      : typeof stats.completedReturns === 'number'
+        ? stats.completedReturns
+        : typeof raw.totalReturned === 'number'
+          ? raw.totalReturned
+          : typeof stats.items_returned === 'number'
+            ? stats.items_returned
+            : 0;
   return {
+    ...raw,
     id: raw.id || raw.uid || raw.memberId || raw.member_id || '',
     uid: raw.uid || raw.id || '',
     memberId: raw.memberId || raw.member_id || (raw.id ? `USER_${raw.id}` : 'A3F2'),
     email: raw.email || '',
     displayName: raw.displayName || raw.full_name || raw.name || 'Người dùng',
-    photoURL: raw.photoURL || raw.avatar_url || raw.avatar || undefined,
-    phoneNumber: raw.phoneNumber || raw.phone || undefined,
-    address: raw.address || raw.addressCity || undefined,
-    bio: raw.bio || undefined,
-    trustScore:
-      typeof raw.trustScore === 'number'
-        ? raw.trustScore
-        : typeof stats.trust_score === 'number'
-          ? stats.trust_score
-          : 50,
-    isVerified:
-      typeof raw.isVerified === 'boolean'
-        ? raw.isVerified
-        : typeof raw.is_verified === 'boolean'
-          ? raw.is_verified
-          : false,
-    totalReturned:
-      typeof raw.totalReturned === 'number'
-        ? raw.totalReturned
-        : typeof stats.items_returned === 'number'
-          ? stats.items_returned
-          : 0,
+    photoURL: raw.photoURL ?? raw.avatar_url ?? raw.avatar ?? null,
+    phoneNumber: raw.phoneNumber ?? raw.phone ?? null,
+    address: raw.address ?? raw.addressCity ?? null,
+    bio: raw.bio ?? null,
+    authProvider: raw.authProvider || 'password',
+    emailVerified: Boolean(raw.emailVerified),
+    trustScore,
+    isVerified,
+    totalReturned: completedReturns,
     itemsLost:
       typeof raw.itemsLost === 'number'
         ? raw.itemsLost
@@ -191,7 +279,31 @@ export function normalizeUser(raw: any): User {
           : 0,
     createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.updated_at || undefined,
-    ...raw,
+    trust: {
+      score: trustScore,
+      level: rawTrust.level || 'BRONZE',
+      isVerified,
+      completedReturns,
+    },
+    stats: {
+      protectedItems: stats.protectedItems ?? 0,
+      safeItems: stats.safeItems ?? 0,
+      lostItems: stats.lostItems ?? raw.itemsLost ?? stats.items_lost ?? 0,
+      activeLostReports: stats.activeLostReports ?? 0,
+      completedReturns,
+      qrScans: stats.qrScans ?? 0,
+      trust_score: stats.trust_score,
+      items_lost: stats.items_lost,
+      items_returned: stats.items_returned,
+    },
+    preferences: {
+      pushEnabled: rawPreferences.pushEnabled ?? true,
+      emailEnabled: rawPreferences.emailEnabled ?? false,
+      proximityEnabled: rawPreferences.proximityEnabled ?? true,
+      notificationRadiusMeters: rawPreferences.notificationRadiusMeters ?? 3000,
+      language: rawPreferences.language === 'en' ? 'en' : 'vi',
+      updatedAt: rawPreferences.updatedAt,
+    },
   };
 }
 

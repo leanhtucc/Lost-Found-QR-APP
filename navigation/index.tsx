@@ -17,6 +17,10 @@ import {
   ItemDetailScreen,
   NotificationsScreen,
   ProfileScreen,
+  EditProfileScreen,
+  NotificationSettingsScreen,
+  ChangePasswordScreen,
+  DeleteAccountScreen,
   ReportItemsScreen,
   ChatListScreen,
   ChatDetailScreen,
@@ -33,6 +37,8 @@ import AuthCodeVerifyScreen from '@/screens/auth/codeVerify';
 import AuthForgotPasswordScreen from '@/screens/auth/forgotPass';
 import AuthResetPasswordScreen from '@/screens/auth/resetPass';
 
+import { useNotificationHandler } from '@/hooks/useNotificationHandler';
+
 // Type definitions
 export type RootStackParamList = {
   TabNavigator: { screen?: string };
@@ -46,6 +52,10 @@ export type RootStackParamList = {
   ScanResult: { qrData: string };
   Settings: undefined;
   Profile: undefined;
+  EditProfile: undefined;
+  NotificationSettings: undefined;
+  ChangePassword: undefined;
+  DeleteAccount: undefined;
   EditItem: { itemId: string };
   Notifications: undefined;
   Help: undefined;
@@ -136,6 +146,11 @@ const screenOptions = {
   }),
 };
 
+function NotificationHandler() {
+  useNotificationHandler();
+  return null;
+}
+
 export default function RootStack() {
   const navigationRef = useRef<any>(null);
   const { isAuthenticated, isLoading: authLoading } = useAuthContext();
@@ -220,6 +235,7 @@ export default function RootStack() {
 
   return (
     <NavigationContainer ref={navigationRef} linking={linking} onReady={() => setIsNavReady(true)}>
+      <NotificationHandler />
       <Stack.Navigator initialRouteName={getInitialRoute()} screenOptions={screenOptions}>
         {/* Auth Screens */}
         <Stack.Screen
@@ -274,6 +290,26 @@ export default function RootStack() {
           options={{ headerShown: false, gestureEnabled: false }}
         />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="EditProfile"
+          component={EditProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="NotificationSettings"
+          component={NotificationSettingsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ChangePassword"
+          component={ChangePasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DeleteAccount"
+          component={DeleteAccountScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
         <Stack.Screen
           name="Notifications"
           component={NotificationsScreen}

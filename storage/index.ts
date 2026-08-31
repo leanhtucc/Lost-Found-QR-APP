@@ -4,3 +4,4 @@
  */
 
 export { authStorage, default as authStorageDefault } from './auth';
+export { deviceStorage, default as deviceStorageDefault } from './device';

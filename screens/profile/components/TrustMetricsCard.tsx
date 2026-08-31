@@ -6,7 +6,8 @@
 import React from 'react';
 import { View, Text, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Check, Star, User } from 'lucide-react-native';
+import { Check, ShieldCheck, User } from 'lucide-react-native';
+import type { TrustLevel } from '@/services/auth/types';
 import { FIND_BACK } from '@constants/theme';
 
 interface TrustMetricsCardProps {
@@ -14,8 +15,9 @@ interface TrustMetricsCardProps {
   memberId: string;
   memberSince: string;
   userAvatar?: string;
-  rating: number;
-  transactions: number;
+  trustScore: number;
+  trustLevel: TrustLevel;
+  completedReturns: number;
   isVerified?: boolean;
 }
 
@@ -24,11 +26,18 @@ export const TrustMetricsCard: React.FC<TrustMetricsCardProps> = ({
   memberId,
   memberSince,
   userAvatar,
-  rating,
-  transactions,
+  trustScore,
+  trustLevel,
+  completedReturns,
   isVerified = false,
 }) => {
-  const filledStars = Math.max(0, Math.min(5, Math.round(rating)));
+  const safeScore = Math.max(0, Math.min(100, trustScore));
+  const levelLabels: Record<TrustLevel, string> = {
+    BRONZE: 'Hạng Đồng',
+    SILVER: 'Hạng Bạc',
+    GOLD: 'Hạng Vàng',
+    PLATINUM: 'Hạng Bạch kim',
+  };
 
   return (
     <LinearGradient
@@ -73,23 +82,20 @@ export const TrustMetricsCard: React.FC<TrustMetricsCardProps> = ({
 
       <View className="items-center pt-4">
         <View className="flex-row items-center">
-          {[0, 1, 2, 3, 4].map(index => (
-            <Star
-              key={index}
-              size={17}
-              color={index < filledStars ? FIND_BACK.info : FIND_BACK.labelText}
-              fill={index < filledStars ? FIND_BACK.info : 'transparent'}
-            />
-          ))}
+          <ShieldCheck size={18} color={FIND_BACK.info} />
           <Text className="ml-2 text-sm font-semibold text-fb-content">
-            {rating.toFixed(1)} · {transactions} giao dịch
+            {safeScore}/100 điểm uy tín · {completedReturns} lần trả đồ
           </Text>
+        </View>
+
+        <View className="mt-3 h-2 w-full overflow-hidden rounded-full bg-fb-surface-elevated">
+          <View className="h-full rounded-full bg-fb-info" style={{ width: `${safeScore}%` }} />
         </View>
 
         <View className="mt-3 flex-row items-center rounded-full border border-fb-secondary/20 bg-fb-secondary/10 px-4 py-2">
           <View className="mr-2 h-2 w-2 rounded-full bg-fb-secondary" />
           <Text className="text-xs font-bold uppercase tracking-[0.5px] text-fb-secondary">
-            Người dùng tin cậy
+            {levelLabels[trustLevel]}
           </Text>
         </View>
       </View>

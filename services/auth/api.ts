@@ -28,6 +28,11 @@ import {
   ResetPasswordResponseData,
   GoogleLoginResponseData,
   FirebaseVerifyResponseData,
+  ProfilePreferences,
+  UpdateProfilePreferencesRequest,
+  RegisterDeviceRequest,
+  ChangePasswordRequest,
+  AccountDeletionResult,
   User,
   normalizeUser,
 } from './types';
@@ -125,13 +130,13 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       },
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       return {
         success: false,
         message: data.message || 'Request failed',
-        error: data.error,
+        error: data.error || { code: `HTTP_${response.status}` },
       };
     }
 
@@ -453,6 +458,45 @@ export const authApi = {
     return response;
   },
 
+  async getPreferences(): Promise<ApiResponse<ProfilePreferences>> {
+    return apiRequest<ProfilePreferences>('/profile/preferences', { method: 'GET' });
+  },
+
+  async updatePreferences(
+    data: UpdateProfilePreferencesRequest
+  ): Promise<ApiResponse<ProfilePreferences>> {
+    return apiRequest<ProfilePreferences>('/profile/preferences', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async registerDevice(data: RegisterDeviceRequest): Promise<ApiResponse<{ deviceId: string }>> {
+    return apiRequest<{ deviceId: string }>('/devices', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async unregisterDevice(deviceId: string): Promise<ApiResponse<{ success: boolean }>> {
+    return apiRequest<{ success: boolean }>(`/devices/${encodeURIComponent(deviceId)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async changePassword(data: ChangePasswordRequest): Promise<ApiResponse<null>> {
+    const response = await apiRequest<null>('/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if (response.success) await authStorage.clearAll();
+    return response;
+  },
+
+  async requestAccountDeletionOtp(): Promise<ApiResponse<{ expiresInSeconds: number }>> {
+    return apiRequest<{ expiresInSeconds: number }>('/account/deletion-otp', { method: 'POST' });
+  },
+
   /**
    * Logout current user
    * Clears local tokens
@@ -472,9 +516,10 @@ export const authApi = {
    * Delete user account
    * Requires authentication
    */
-  async deleteAccount(): Promise<ApiResponse<null>> {
-    const response = await apiRequest<null>('/account', {
+  async deleteAccount(otpCode: string): Promise<ApiResponse<AccountDeletionResult>> {
+    const response = await apiRequest<AccountDeletionResult>('/account', {
       method: 'DELETE',
+      body: JSON.stringify({ otpCode, confirmation: 'DELETE' }),
     });
 
     // Clear local storage on success

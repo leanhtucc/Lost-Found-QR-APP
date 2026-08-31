@@ -15,10 +15,10 @@ export default {
     assetBundlePatterns: ['**/*'],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.anhtu081204.lostandfoundqr',
+      bundleIdentifier: 'com.lostfound.app',
     },
     android: {
-      package: 'com.anhtu081204.lostandfoundqr',
+      package: 'com.lostfound.app',
       adaptiveIcon: {
         foregroundImage: './assets/logoApp.png',
         backgroundColor: '#000000',

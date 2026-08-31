@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import {
   Bell,
   ChevronRight,
@@ -13,9 +13,11 @@ import {
   Info,
   Mail,
   MapPin,
+  Radar,
   Shield,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
+import { AppToggle } from '@/components';
 import { FIND_BACK } from '@constants/theme';
 
 interface SettingsRowProps {
@@ -29,8 +31,10 @@ interface SettingsRowProps {
 interface SettingsCardProps {
   pushNotifications: boolean;
   emailNotifications: boolean;
+  proximityNotifications: boolean;
   onPushNotificationsChange: (value: boolean) => void;
   onEmailNotificationsChange: (value: boolean) => void;
+  onProximityNotificationsChange: (value: boolean) => void;
   onNotificationRadiusPress: () => void;
   onLanguagePress: () => void;
   onTermsPress: () => void;
@@ -52,15 +56,17 @@ function SettingsRow({
       activeOpacity={onPress ? 0.75 : 1}
       disabled={!onPress}
       onPress={onPress}
-      className={`flex-row items-center justify-between px-4 py-4 ${borderTop ? 'border-t border-fb-border-subtle' : ''}`}
+      className={`min-h-[58px] flex-row items-center justify-between px-4 py-3.5 ${borderTop ? 'border-t border-fb-border-subtle' : ''}`}
     >
-      <View className="flex-row items-center gap-4">
+      <View className="flex-1 flex-row items-center gap-3.5 pr-2">
         <View className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated">
           <Icon size={18} color={FIND_BACK.mutedText} />
         </View>
-        <Text className="text-base font-medium text-fb-content">{label}</Text>
+        <Text className="flex-1 text-[15px] font-medium text-fb-content" numberOfLines={1}>
+          {label}
+        </Text>
       </View>
-      {rightContent}
+      <View className="min-w-[50px] items-end justify-center">{rightContent}</View>
     </TouchableOpacity>
   );
 }
@@ -68,8 +74,10 @@ function SettingsRow({
 export const SettingsCard: React.FC<SettingsCardProps> = ({
   pushNotifications,
   emailNotifications,
+  proximityNotifications,
   onPushNotificationsChange,
   onEmailNotificationsChange,
+  onProximityNotificationsChange,
   onNotificationRadiusPress,
   onLanguagePress,
   onTermsPress,
@@ -79,7 +87,7 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
   versionLabel = '1.0.0',
 }) => {
   return (
-    <View className="mt-8 gap-8">
+    <View className="mt-6 gap-6">
       <View className="gap-3">
         <View className="px-2">
           <Text className="text-[13px] font-bold uppercase tracking-[1.3px] text-fb-muted">
@@ -87,17 +95,17 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
           </Text>
         </View>
 
-        <View className="overflow-hidden rounded-3xl bg-fb-surface">
+        <View className="overflow-hidden rounded-3xl border border-fb-border-subtle bg-fb-surface">
           <SettingsRow
             icon={Bell}
             label="Thông báo đẩy"
             onPress={() => onPushNotificationsChange(!pushNotifications)}
             rightContent={
-              <Switch
+              <AppToggle
                 value={pushNotifications}
                 onValueChange={onPushNotificationsChange}
-                trackColor={{ false: FIND_BACK.surfaceElevated, true: FIND_BACK.primaryDark }}
-                thumbColor={FIND_BACK.bodyText}
+                activeTrackColor={FIND_BACK.primary}
+                inactiveTrackColor={FIND_BACK.surfaceElevated}
               />
             }
           />
@@ -108,11 +116,26 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
             borderTop
             onPress={() => onEmailNotificationsChange(!emailNotifications)}
             rightContent={
-              <Switch
+              <AppToggle
                 value={emailNotifications}
                 onValueChange={onEmailNotificationsChange}
-                trackColor={{ false: FIND_BACK.surfaceElevated, true: FIND_BACK.primaryDark }}
-                thumbColor={FIND_BACK.bodyText}
+                activeTrackColor={FIND_BACK.primary}
+                inactiveTrackColor={FIND_BACK.surfaceElevated}
+              />
+            }
+          />
+
+          <SettingsRow
+            icon={Radar}
+            label="Cảnh báo ở gần"
+            borderTop
+            onPress={() => onProximityNotificationsChange(!proximityNotifications)}
+            rightContent={
+              <AppToggle
+                value={proximityNotifications}
+                onValueChange={onProximityNotificationsChange}
+                activeTrackColor={FIND_BACK.primary}
+                inactiveTrackColor={FIND_BACK.surfaceElevated}
               />
             }
           />
@@ -123,8 +146,10 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
             borderTop
             onPress={onNotificationRadiusPress}
             rightContent={
-              <View className="flex-row items-center gap-2">
-                <Text className="text-sm font-bold text-fb-info">{notificationRadiusLabel}</Text>
+              <View className="flex-row items-center gap-1.5">
+                <Text className="text-sm font-semibold text-fb-info">
+                  {notificationRadiusLabel}
+                </Text>
                 <ChevronRight size={16} color={FIND_BACK.mutedText} />
               </View>
             }
@@ -139,12 +164,14 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
           </Text>
         </View>
 
-        <View className="overflow-hidden rounded-3xl bg-fb-surface">
+        <View className="overflow-hidden rounded-3xl border border-fb-border-subtle bg-fb-surface">
           <SettingsRow
             icon={Globe}
             label="Ngôn ngữ"
             onPress={onLanguagePress}
-            rightContent={<Text className="text-sm text-fb-muted">{languageLabel}</Text>}
+            rightContent={
+              <Text className="text-sm font-medium text-fb-muted">{languageLabel}</Text>
+            }
           />
 
           <SettingsRow
@@ -167,7 +194,7 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
             icon={Info}
             label="Phiên bản"
             borderTop
-            rightContent={<Text className="text-sm text-fb-muted">{versionLabel}</Text>}
+            rightContent={<Text className="text-sm font-medium text-fb-muted">{versionLabel}</Text>}
           />
         </View>
       </View>

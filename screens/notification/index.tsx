@@ -14,6 +14,7 @@ import {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  markNotificationAsOpened,
 } from '@/services/notifications';
 import { NotificationHeader, NotificationCard, EmptyState, LoadingState } from './components';
 import { getMockNotifications, tabToCategory } from './utils';
@@ -110,42 +111,64 @@ export default function NotificationsScreen() {
   }, [activeTab, loadNotifications]);
 
   // ── Press notification → mark read via API + deep link ──
-  const handleNotificationPress = useCallback(async (notification: Notification) => {
-    // Optimistic read
-    if (!notification.is_read) {
-      setNotifications(prev =>
-        prev.map(n => (n.id === notification.id ? { ...n, is_read: true } : n))
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+  const handleNotificationPress = useCallback(
+    async (notification: Notification) => {
+      // Optimistic read
+      if (!notification.is_read) {
+        setNotifications(prev =>
+          prev.map(n => (n.id === notification.id ? { ...n, is_read: true } : n))
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
 
-      // Call API
-      try {
-        await markNotificationAsRead(notification.id);
-      } catch (error) {
-        console.warn('[NotifScreen] Failed to mark read:', error);
+        // Call API
+        try {
+          await markNotificationAsRead(notification.id);
+        } catch (error) {
+          console.warn('[NotifScreen] Failed to mark read:', error);
+        }
       }
-    }
 
-    // Deep link based on type
-    const meta = notification.metadata ?? {};
-    switch (notification.type) {
-      case 'MATCH_FOUND':
-        // navigation.navigate('RadarMap', { postId: (meta as any).post_id });
-        break;
-      case 'PROXIMITY':
-        // navigation.navigate('LiveTracking', { postId: (meta as any).post_id });
-        break;
-      case 'NEW_CHAT':
-      case 'QR_SCANNED':
-        // navigation.navigate('ChatRoom', { roomId: (meta as any).room_id });
-        break;
-      case 'ESCROW_LOCKED':
-      case 'REFUNDED':
-      case 'RELEASED':
-        // navigation.navigate('TransactionDetail', { txnId: (meta as any).transaction_id });
-        break;
-    }
-  }, []);
+      // Call opened API
+      try {
+        await markNotificationAsOpened(notification.id);
+      } catch (error) {
+        console.warn('[NotifScreen] Failed to mark opened:', error);
+      }
+
+      // Deep link based on type
+      const meta = (notification.metadata ?? {}) as Record<string, any>;
+      const itemId = meta.post_id || meta.item_id || meta.itemId;
+      const channelId = meta.room_id || meta.channel_id || meta.roomId;
+
+      switch (notification.type) {
+        case 'MATCH_FOUND':
+        case 'PROXIMITY':
+          if (itemId) {
+            navigation.navigate('ItemDetails', { itemId: String(itemId) });
+          }
+          break;
+        case 'NEW_CHAT':
+        case 'QR_SCANNED':
+          if (channelId) {
+            navigation.navigate('Chat', {
+              channelId: String(channelId),
+              itemName: meta.item_name || 'Đồ thất lạc',
+              userName: meta.user_name || meta.finder_name || 'Người dùng',
+              userAvatar: meta.user_avatar,
+              isVerified: Boolean(meta.is_verified),
+            });
+          } else {
+            navigation.navigate('ChatList');
+          }
+          break;
+        case 'ESCROW_LOCKED':
+        case 'REFUNDED':
+        case 'RELEASED':
+          break;
+      }
+    },
+    [navigation]
+  );
 
   // ── Mark all as read ──
   const handleMarkAllAsRead = useCallback(async () => {

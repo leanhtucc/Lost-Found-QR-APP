@@ -121,6 +121,51 @@ export interface UnreadCountResponse {
   timestamp: string;
 }
 
+// ─── Push Notification & Device Types ────────────────────────────────────────
+
+export interface RegisterPushDeviceRequest {
+  pushToken: string;
+  platform: 'android' | 'ios' | 'web';
+  deviceId: string;
+  appVersion?: string;
+}
+
+export interface RegisterPushDeviceResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    deviceId: string;
+    token: string;
+  };
+}
+
+export interface NotificationPreferences {
+  pushEnabled?: boolean;
+  emailEnabled?: boolean;
+  proximityEnabled?: boolean;
+  notificationRadiusMeters?: number;
+  language?: 'vi' | 'en';
+  importantEnabled?: boolean;
+  transactionEnabled?: boolean;
+  itemEnabled?: boolean;
+  socialEnabled?: boolean;
+  dailyDigestEnabled?: boolean;
+  nearbyAlertsEnabled?: boolean;
+  quietHoursEnabled?: boolean;
+  quietStart?: string;
+  quietEnd?: string;
+  timezone?: string;
+  dailyDigestTime?: string;
+  nearbyRadius?: number;
+}
+
+export interface NotificationPreferencesResponse {
+  success: boolean;
+  message: string;
+  data: NotificationPreferences;
+  timestamp?: string;
+}
+
 // ─── Legacy compat (kept for gradual migration elsewhere) ────────────────────
 
 /** @deprecated Use NotificationType instead */

@@ -8,6 +8,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } fro
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { MessageCircle } from 'lucide-react-native';
 import { Item } from '@/types/item';
+import { AppToggle } from '@/components';
 import { FIND_BACK } from '@constants/theme';
 
 interface LostModeCardProps {
@@ -73,17 +74,13 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
           </Text>
         </View>
 
-        {/* Custom Switch */}
-        <TouchableOpacity
-          onPress={handleToggle}
-          accessibilityRole="switch"
-          accessibilityState={{ checked: isLost }}
-          className={`h-8 w-14 rounded-full p-1 ${isLost ? 'bg-fb-danger' : 'bg-fb-surface-elevated'}`}
-        >
-          <View
-            className={`h-6 w-6 rounded-full bg-fb-content ${isLost ? 'self-end' : 'self-start'}`}
-          />
-        </TouchableOpacity>
+        {/* Custom Animated Toggle */}
+        <AppToggle
+          value={isLost}
+          onValueChange={handleToggle}
+          activeTrackColor={FIND_BACK.danger}
+          inactiveTrackColor={FIND_BACK.surfaceElevated}
+        />
       </View>
 
       {/* Lost Message Section */}

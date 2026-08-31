@@ -8,9 +8,9 @@ import { View, Text } from 'react-native';
 import { FIND_BACK } from '@constants/theme';
 
 interface StatsCardProps {
-  totalItems: number;
-  foundItems: number;
-  returnedItems: number;
+  protectedItems: number;
+  safeItems: number;
+  lostItems: number;
 }
 
 function MetricBox({ value, label, color }: { value: number; label: string; color: string }) {
@@ -26,12 +26,12 @@ function MetricBox({ value, label, color }: { value: number; label: string; colo
   );
 }
 
-export const StatsCard: React.FC<StatsCardProps> = ({ totalItems, foundItems, returnedItems }) => {
+export const StatsCard: React.FC<StatsCardProps> = ({ protectedItems, safeItems, lostItems }) => {
   return (
     <View className="mt-4 flex-row gap-3">
-      <MetricBox value={totalItems} label={`Vật được\nbảo vệ`} color={FIND_BACK.info} />
-      <MetricBox value={foundItems} label={`Lần tìm\nthấy`} color={FIND_BACK.primaryLight} />
-      <MetricBox value={returnedItems} label={`Lần trả\nđồ`} color={FIND_BACK.secondary} />
+      <MetricBox value={protectedItems} label={`Đồ được\nbảo vệ`} color={FIND_BACK.info} />
+      <MetricBox value={safeItems} label={`Đồ an\ntoàn`} color={FIND_BACK.secondary} />
+      <MetricBox value={lostItems} label={`Đồ đang\nmất`} color={FIND_BACK.danger} />
     </View>
   );
 };

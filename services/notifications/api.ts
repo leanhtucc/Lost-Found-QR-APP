@@ -15,6 +15,10 @@ import {
   MarkReadResponse,
   Notification,
   NotificationCategory,
+  NotificationPreferences,
+  NotificationPreferencesResponse,
+  RegisterPushDeviceRequest,
+  RegisterPushDeviceResponse,
   UnreadCountResponse,
 } from '@/types/notification';
 import { authStorage } from '@/storage/auth';
@@ -156,7 +160,129 @@ export const markAllNotificationsAsRead = async (): Promise<number> => {
 };
 
 /**
- * Cập nhật Push Token lên server (giữ lại cho FCM integration).
+ * POST /v1/notifications/devices
+ * Đăng ký Push Token thiết bị (FCM / APNs) với backend.
+ */
+export const registerPushDevice = async (
+  data: RegisterPushDeviceRequest
+): Promise<RegisterPushDeviceResponse> => {
+  const url = buildNotificationsUrl('devices');
+  const headers = await createHeaders();
+
+  console.log('[NotifAPI] POST devices', url, { platform: data.platform, deviceId: data.deviceId });
+  const response = await fetchWithAuth(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message || `HTTP ${response.status}`);
+  }
+
+  const result: RegisterPushDeviceResponse = await response.json();
+  return result;
+};
+
+/**
+ * DELETE /v1/notifications/devices/:deviceId
+ * Hủy đăng ký push token của thiết bị khi logout.
+ */
+export const unregisterPushDevice = async (
+  deviceId: string
+): Promise<{ success: boolean; message?: string }> => {
+  const url = buildNotificationsUrl('devices', encodeURIComponent(deviceId));
+  const headers = await createHeaders();
+
+  console.log('[NotifAPI] DELETE device', url);
+  const response = await fetchWithAuth(url, {
+    method: 'DELETE',
+    headers,
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message || `HTTP ${response.status}`);
+  }
+
+  return response.json();
+};
+
+/**
+ * POST /v1/notifications/:id/opened
+ * Ghi nhận user đã click mở notification.
+ */
+export const markNotificationAsOpened = async (
+  notificationId: string
+): Promise<{ success: boolean }> => {
+  const url = buildNotificationsUrl(notificationId, 'opened');
+  const headers = await createHeaders();
+
+  console.log('[NotifAPI] POST opened', url);
+  const response = await fetchWithAuth(url, {
+    method: 'POST',
+    headers,
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message || `HTTP ${response.status}`);
+  }
+
+  return response.json();
+};
+
+/**
+ * GET /v1/notifications/preferences
+ * Lấy cấu hình thông báo hiện tại của user.
+ */
+export const getNotificationPreferences = async (): Promise<NotificationPreferences> => {
+  const url = buildNotificationsUrl('preferences');
+  const headers = await createHeaders();
+
+  const response = await fetchWithAuth(url, {
+    method: 'GET',
+    headers,
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message || `HTTP ${response.status}`);
+  }
+
+  const result: NotificationPreferencesResponse = await response.json();
+  return result.data;
+};
+
+/**
+ * PATCH /v1/notifications/preferences
+ * Cập nhật cấu hình thông báo (push, email, proximity, quiet hours, ...).
+ */
+export const updateNotificationPreferences = async (
+  preferences: Partial<NotificationPreferences>
+): Promise<NotificationPreferences> => {
+  const url = buildNotificationsUrl('preferences');
+  const headers = await createHeaders();
+
+  console.log('[NotifAPI] PATCH preferences', url, preferences);
+  const response = await fetchWithAuth(url, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(preferences),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message || `HTTP ${response.status}`);
+  }
+
+  const result: NotificationPreferencesResponse = await response.json();
+  return result.data;
+};
+
+/**
+ * Cập nhật Push Token lên server (giữ lại cho tương thích).
  */
 export const updatePushToken = async (pushToken: string): Promise<void> => {
   try {

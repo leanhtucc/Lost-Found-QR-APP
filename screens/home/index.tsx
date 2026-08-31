@@ -145,7 +145,7 @@ export const HomeScreen: React.FC = () => {
         <Header
           userName={user?.displayName || 'User'}
           studentId={user?.uid || ''}
-          userAvatar={user?.photoURL}
+          userAvatar={user?.photoURL ?? undefined}
           notificationCount={0}
           onNotificationPress={handleOpenNotifications}
           onProfilePress={handleOpenProfile}

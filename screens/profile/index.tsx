@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ScrollView, Text, View, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import Constants from 'expo-constants';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { authApi } from '@/services/auth';
-import { itemsApi } from '@/services/items';
-import type { Item } from '@/types/item';
+import type { ProfilePreferences } from '@/services/auth/types';
+import type { RootStackParamList } from '@/navigation';
 import { FIND_BACK } from '@constants/theme';
 import {
   LogoutButton,
@@ -33,18 +36,11 @@ function getShortMemberId(memberId?: string, uid?: string) {
   return `#${normalized || 'A3F2'}`;
 }
 
-function mapTrustToRating(trustScore = 0) {
-  const safeScore = Math.max(0, Math.min(trustScore, 100));
-  return Number((3.8 + (safeScore / 100) * 1.2).toFixed(1));
-}
-
 export default function ProfileScreen() {
   const { user, logout, setUser } = useAuthContext();
-  const [items, setItems] = useState<Item[]>([]);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
-  const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(false);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -55,25 +51,14 @@ export default function ProfileScreen() {
     }
   }, [setUser]);
 
-  const loadItems = useCallback(async (isRef = false) => {
-    try {
-      if (!isRef) setLoading(true);
-      const data = await itemsApi.getItems();
-      setItems(data.items || []);
-    } catch (error) {
-      console.error('Error loading items:', error);
-      Alert.alert('Lỗi', 'Không thể tải danh sách vật phẩm');
-    } finally {
-      if (!isRef) setLoading(false);
-      if (isRef) setRefreshing(false);
-    }
-  }, []);
-
   const loadData = useCallback(
     async (isRef = false) => {
-      await Promise.all([loadProfile(), loadItems(isRef)]);
+      if (!isRef) setLoading(true);
+      await loadProfile();
+      setLoading(false);
+      if (isRef) setRefreshing(false);
     },
-    [loadProfile, loadItems]
+    [loadProfile]
   );
 
   useEffect(() => {
@@ -85,15 +70,6 @@ export default function ProfileScreen() {
     await loadData(true);
   };
 
-  const stats = useMemo(
-    () => ({
-      totalItems: items.length,
-      safeItems: items.filter(i => i.status === 'SAFE').length,
-      lostItems: items.filter(i => i.status === 'LOST' || i.status === 'PENDING_PAYMENT').length,
-    }),
-    [items]
-  );
-
   const handleLogout = async () => {
     try {
       await logout();
@@ -103,19 +79,24 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleNavigate = (screen: string) => {
-    Alert.alert('Thông báo', `Tính năng ${screen} đang được phát triển`);
-  };
-
   const memberSinceText = useMemo(() => formatMemberSince(user?.createdAt), [user?.createdAt]);
   const shortMemberId = useMemo(() => getShortMemberId(user?.memberId, user?.uid), [user]);
-  const ratingValue = useMemo(() => mapTrustToRating(user?.trustScore), [user?.trustScore]);
-  const transactions = useMemo(
-    () => Math.max(user?.totalReturned || 0, stats.safeItems),
-    [stats.safeItems, user?.totalReturned]
-  );
 
-  const showKycVerified = Boolean(user?.isVerified);
+  const updatePreference = async <K extends keyof ProfilePreferences>(
+    key: K,
+    value: ProfilePreferences[K]
+  ) => {
+    if (!user?.preferences) return;
+    const previous = user.preferences;
+    setUser({ ...user, preferences: { ...previous, [key]: value } });
+    const response = await authApi.updatePreferences({ [key]: value });
+    if (!response.success || !response.data) {
+      setUser({ ...user, preferences: previous });
+      Alert.alert('Không thể cập nhật', response.message || 'Vui lòng thử lại.');
+      return;
+    }
+    setUser({ ...user, preferences: response.data });
+  };
 
   const handleLogoutPress = () => {
     Alert.alert('Xác nhận đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
@@ -140,13 +121,13 @@ export default function ProfileScreen() {
     <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
       <View className="flex-1 bg-fb-neutral">
         <ProfileHeader
-          onMenuPress={() => handleNavigate('Menu')}
-          onSettingsPress={() => handleNavigate('Cài đặt')}
+          onMenuPress={() => navigation.navigate('MyItems')}
+          onSettingsPress={() => navigation.navigate('NotificationSettings')}
         />
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingTop: 80, paddingHorizontal: 16, paddingBottom: 140 }}
+          contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 16, paddingBottom: 24 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -167,35 +148,54 @@ export default function ProfileScreen() {
                 userName={user.displayName || 'Người dùng'}
                 memberId={shortMemberId}
                 memberSince={memberSinceText}
-                userAvatar={user.photoURL}
-                rating={ratingValue}
-                transactions={transactions}
-                isVerified={Boolean(user.isVerified)}
+                userAvatar={user.photoURL ?? undefined}
+                trustScore={user.trust?.score ?? 0}
+                trustLevel={user.trust?.level ?? 'BRONZE'}
+                completedReturns={user.trust?.completedReturns ?? 0}
+                isVerified={Boolean(user.trust?.isVerified)}
               />
               <StatsCard
-                totalItems={stats.totalItems}
-                foundItems={stats.safeItems}
-                returnedItems={user.totalReturned || 0}
+                protectedItems={user.stats?.protectedItems ?? 0}
+                safeItems={user.stats?.safeItems ?? 0}
+                lostItems={user.stats?.lostItems ?? 0}
               />
               <UserInfoCard
-                isVerified={showKycVerified}
-                onPersonalInfoPress={() => handleNavigate('Thông tin cá nhân')}
-                onChangePasswordPress={() => handleNavigate('Đổi mật khẩu')}
-                onKycPress={() => handleNavigate('KYC')}
+                onPersonalInfoPress={() => navigation.navigate('EditProfile')}
+                onMyItemsPress={() => navigation.navigate('MyItems')}
+                onNotificationsPress={() => navigation.navigate('Notifications')}
+                onChangePasswordPress={
+                  user.authProvider === 'password'
+                    ? () => navigation.navigate('ChangePassword')
+                    : undefined
+                }
+                onDeleteAccountPress={() => navigation.navigate('DeleteAccount')}
               />
               <SettingsCard
-                pushNotifications={pushNotificationsEnabled}
-                emailNotifications={emailNotificationsEnabled}
-                onPushNotificationsChange={setPushNotificationsEnabled}
-                onEmailNotificationsChange={setEmailNotificationsEnabled}
-                onNotificationRadiusPress={() => handleNavigate('Bán kính thông báo')}
-                onLanguagePress={() => handleNavigate('Ngôn ngữ')}
-                onTermsPress={() => handleNavigate('Điều khoản dịch vụ')}
-                onPrivacyPress={() => handleNavigate('Chính sách bảo mật')}
+                pushNotifications={user.preferences?.pushEnabled ?? true}
+                emailNotifications={user.preferences?.emailEnabled ?? false}
+                proximityNotifications={user.preferences?.proximityEnabled ?? true}
+                onPushNotificationsChange={value => void updatePreference('pushEnabled', value)}
+                onEmailNotificationsChange={value => void updatePreference('emailEnabled', value)}
+                onProximityNotificationsChange={value =>
+                  void updatePreference('proximityEnabled', value)
+                }
+                onNotificationRadiusPress={() => navigation.navigate('NotificationSettings')}
+                onLanguagePress={() => navigation.navigate('NotificationSettings')}
+                onTermsPress={() =>
+                  Alert.alert('Điều khoản dịch vụ', 'Nội dung đang được cập nhật.')
+                }
+                onPrivacyPress={() =>
+                  Alert.alert('Chính sách bảo mật', 'Nội dung đang được cập nhật.')
+                }
+                languageLabel={user.preferences?.language === 'en' ? 'English' : 'Tiếng Việt'}
+                notificationRadiusLabel={`${(user.preferences?.notificationRadiusMeters ?? 3000) / 1000}km`}
+                versionLabel={Constants.expoConfig?.version || '1.0.0'}
               />
               <LogoutButton onPress={handleLogoutPress} />
               <View className="pb-2 pt-6">
-                <Text className="text-center text-xs text-fb-label">FindBack v1.0.0</Text>
+                <Text className="text-center text-xs text-fb-label">
+                  FindBack v{Constants.expoConfig?.version || '1.0.0'}
+                </Text>
               </View>
             </>
           )}
