@@ -10,3 +10,5 @@ export { default as ChangePasswordScreen } from './profile/change-password';
 export { default as DeleteAccountScreen } from './profile/delete-account';
 export { ChatListScreen, ChatDetailScreen } from './chat';
 export { default as ReportItemsScreen } from './reportItems';
+export { default as FoundItemReportScreen } from './found-item-report';
+export { default as ManualFoundReportScreen } from './manual-found-report';

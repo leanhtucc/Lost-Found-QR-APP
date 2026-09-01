@@ -16,12 +16,21 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.lostfound.app',
+      config: {
+        googleMapsApiKey:
+          process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyCNgLlZO_-OSVz89vNxggZp8W8VPvzmnMg',
+      },
     },
     android: {
       package: 'com.lostfound.app',
       adaptiveIcon: {
         foregroundImage: './assets/logoApp.png',
         backgroundColor: '#000000',
+      },
+      config: {
+        googleMaps: {
+          apiKey: process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyCNgLlZO_-OSVz89vNxggZp8W8VPvzmnMg',
+        },
       },
       googleServicesFile:
         process.env.ENV === 'production'
@@ -55,6 +64,8 @@ export default {
       apiUrl: process.env.API_URL || 'https://backend-api-8rw9.onrender.com',
       environment: process.env.ENV || 'development',
       sentryDsn: process.env.SENTRY_DSN || '',
+      googleMapsApiKey:
+        process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyCNgLlZO_-OSVz89vNxggZp8W8VPvzmnMg',
       // Google OAuth Client IDs
       googleWebClientId:
         process.env.GOOGLE_WEB_CLIENT_ID ||

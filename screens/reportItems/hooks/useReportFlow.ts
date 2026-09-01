@@ -4,7 +4,8 @@ import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { itemsApi, SelectionSummaryResponse } from '@services/items';
 import { radarApi } from '@services/radar';
-import { reportsApi } from '@services/reports';
+import { reportsApi, ReportsApiError } from '@services/reports';
+import type { Item } from '@/types/item';
 import { REWARD_OPTIONS, REPORT_LOCATION } from '../constants/mockData';
 import {
   RadarSimulationState,
@@ -116,32 +117,35 @@ const mapItemToOption = (item: {
       serial,
     },
     hasInsurance: Boolean(item.has_insurance),
+    status: 'SAFE',
+    isEligible: true,
   };
 };
 
-const mapLegacyVaultItemToOption = (item: {
-  id: string;
-  itemId?: string;
-  name: string;
-  category: string;
-  description?: string;
-  imagePublicUrl?: string;
-}): ReportItemOption => {
-  const stableItemId = item.itemId || item.id;
+const mapVaultItemToOption = (
+  item: Item,
+  eligibleItems: Awaited<ReturnType<typeof itemsApi.getEligibleForReportItems>>
+): ReportItemOption => {
+  const matchingEligibleItem = eligibleItems.find(candidate => {
+    return candidate.item_id === item.id || candidate.item_id === item.itemId;
+  });
+  const reportItemId = matchingEligibleItem?.item_id || item.id;
 
   return {
-    id: stableItemId,
-    itemId: stableItemId,
-    name: item.name,
-    category: item.category.toUpperCase(),
+    id: reportItemId,
+    itemId: reportItemId,
+    name: item.name?.trim() || 'Vật phẩm chưa đặt tên',
+    category: (item.category || 'other').toUpperCase(),
     subtitle: item.description?.trim() || 'Vật dụng trong kho của bạn',
     imageUrl: item.imagePublicUrl || FALLBACK_REPORT_ITEM_IMAGE,
     details: {
       color: '',
       storage: '',
-      serial: stableItemId.slice(-8).toUpperCase(),
+      serial: item.itemId?.slice(-8).toUpperCase() || '',
     },
     hasInsurance: false,
+    status: item.status,
+    isEligible: Boolean(matchingEligibleItem),
   };
 };
 
@@ -158,6 +162,7 @@ export const useReportFlow = () => {
   const [step, setStep] = useState<ReportStep>(1);
   const [availableItems, setAvailableItems] = useState<ReportItemOption[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
+  const [itemsLoadError, setItemsLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSimulatingRadar, setIsSimulatingRadar] = useState(false);
   const [isCreatingItem, setIsCreatingItem] = useState(false);
@@ -185,17 +190,39 @@ export const useReportFlow = () => {
   const loadUserItems = useCallback(async (): Promise<ReportItemOption[]> => {
     console.log('[useReportFlow] Starting loadUserItems...');
     setIsLoadingItems(true);
+    setItemsLoadError(null);
 
     try {
-      const eligibleItems = await itemsApi.getEligibleForReportItems();
-      const normalizedItems = eligibleItems.map(mapItemToOption);
+      const [eligibleItems, firstPage] = await Promise.all([
+        itemsApi.getEligibleForReportItems(),
+        itemsApi.getItems({ page: 1, limit: 50 }),
+      ]);
+      const allVaultItems = [...firstPage.items];
+
+      for (let page = 2; page <= firstPage.totalPages; page += 1) {
+        const nextPage = await itemsApi.getItems({ page, limit: 50 });
+        allVaultItems.push(...nextPage.items);
+      }
+
+      const normalizedItems = allVaultItems.map(item => mapVaultItemToOption(item, eligibleItems));
+      const knownItemIds = new Set(
+        allVaultItems.flatMap(item => [item.id, item.itemId].filter(Boolean))
+      );
+
+      eligibleItems.forEach(item => {
+        if (!knownItemIds.has(item.item_id)) {
+          normalizedItems.push(mapItemToOption(item));
+        }
+      });
 
       if (normalizedItems.length > 0) {
         console.log(`[useReportFlow] Loaded ${normalizedItems.length} items from eligible API.`);
         setAvailableItems(normalizedItems);
         setSelectedItemId(prev => {
-          const hasPrevious = normalizedItems.some(item => item.id === prev);
-          const nextSelected = hasPrevious ? prev : normalizedItems[0].id;
+          const hasPrevious = normalizedItems.some(item => item.id === prev && item.isEligible);
+          const nextSelected = hasPrevious
+            ? prev
+            : normalizedItems.find(item => item.isEligible)?.id || '';
           console.log(`[useReportFlow] Setting selectedItemId to: ${nextSelected}`);
           return nextSelected;
         });
@@ -207,25 +234,12 @@ export const useReportFlow = () => {
 
       return normalizedItems;
     } catch (error) {
-      console.warn('[ReportFlow] Failed to load eligible report items, fallback to vault.', error);
-
-      try {
-        const response = await itemsApi.getMyVaultItems({ limit: 30, page: 1 });
-        const normalizedItems = response.items.map(mapLegacyVaultItemToOption);
-
-        setAvailableItems(normalizedItems);
-        setSelectedItemId(prev => {
-          const hasPrevious = normalizedItems.some(item => item.id === prev);
-          return hasPrevious ? prev : normalizedItems[0]?.id || '';
-        });
-
-        return normalizedItems;
-      } catch (fallbackError) {
-        console.warn('[ReportFlow] Failed to fallback user vault items.', fallbackError);
-        setAvailableItems([]);
-        setSelectedItemId('');
-        return [];
-      }
+      console.warn('[ReportFlow] Failed to load eligible report items.', error);
+      const message = error instanceof Error ? error.message : 'Không thể tải kho đồ lúc này.';
+      setItemsLoadError(message);
+      setAvailableItems([]);
+      setSelectedItemId('');
+      return [];
     } finally {
       setIsLoadingItems(false);
     }
@@ -246,7 +260,7 @@ export const useReportFlow = () => {
   }, [availableItems, localImages]);
 
   const selectedItem = useMemo(
-    () => itemsToDisplay.find(item => item.id === selectedItemId) ?? itemsToDisplay[0],
+    () => itemsToDisplay.find(item => item.id === selectedItemId),
     [itemsToDisplay, selectedItemId]
   );
 
@@ -422,6 +436,14 @@ export const useReportFlow = () => {
 
   const nextStep = useCallback(async () => {
     if (step === 1) {
+      const canReportSelectedItem = availableItems.some(
+        item => item.id === selectedItemId && item.isEligible
+      );
+      if (!canReportSelectedItem) {
+        Alert.alert('Chưa chọn đồ', 'Vui lòng chọn một vật dụng SAFE có thể báo mất.');
+        return;
+      }
+
       await simulateRadar();
       setStep(2);
       return;
@@ -430,14 +452,16 @@ export const useReportFlow = () => {
     if (step < 4) {
       setStep(prev => (prev < 4 ? ((prev + 1) as ReportStep) : prev));
     }
-  }, [simulateRadar, step]);
+  }, [availableItems, selectedItemId, simulateRadar, step]);
 
   const prevStep = useCallback(() => {
     setStep(prev => (prev > 1 ? ((prev - 1) as ReportStep) : prev));
   }, []);
 
   const submitReport = useCallback(async () => {
-    const hasValidSelectedItem = availableItems.some(item => item.id === selectedItemId);
+    const hasValidSelectedItem = availableItems.some(
+      item => item.id === selectedItemId && item.isEligible
+    );
 
     if (!selectedItemId || !hasValidSelectedItem) {
       Alert.alert('Thiếu dữ liệu', 'Vui lòng chọn vật dụng cần báo mất.');
@@ -500,6 +524,20 @@ export const useReportFlow = () => {
         reportId: reportResult.reportId,
       });
     } catch (error) {
+      const isNoLongerEligible =
+        error instanceof ReportsApiError &&
+        (error.status === 409 || error.code === 'ITEM_NOT_ELIGIBLE');
+
+      if (isNoLongerEligible) {
+        setStep(1);
+        await loadUserItems();
+        Alert.alert(
+          'Vật dụng không còn đủ điều kiện',
+          'Vật dụng này đã được báo mất hoặc đang có giao dịch Guardian. Vui lòng chọn vật dụng khác.'
+        );
+        return;
+      }
+
       const message = error instanceof Error ? error.message : 'Không thể gửi báo mất lúc này.';
       Alert.alert('Gửi báo mất thất bại', message);
     } finally {
@@ -507,6 +545,7 @@ export const useReportFlow = () => {
     }
   }, [
     availableItems,
+    loadUserItems,
     manualAddress,
     resolveCurrentLocation,
     customRewardAmount,
@@ -530,10 +569,9 @@ export const useReportFlow = () => {
   const handlePaymentSuccess = useCallback(
     (_url: string) => {
       closePaymentModal();
-      setShowRadarState(true);
       Alert.alert(
-        'Thanh toán thành công',
-        `Báo mất #${paymentSession.reportId} đã chuyển sang trạng thái SEARCHING.`
+        'Đã nhận kết quả thanh toán',
+        `Hệ thống đang xác minh thanh toán cho báo mất #${paymentSession.reportId}. Radar sẽ chỉ hoạt động sau khi backend xác nhận giao dịch.`
       );
     },
     [closePaymentModal, paymentSession.reportId]
@@ -679,6 +717,8 @@ export const useReportFlow = () => {
     setStep,
     items: itemsToDisplay,
     isLoadingItems,
+    itemsLoadError,
+    reloadEligibleItems: loadUserItems,
     isCreatingItem,
     isSubmitting,
     isSimulatingRadar,

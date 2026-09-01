@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -14,6 +14,7 @@ import { Header, MapSection } from './components';
 import { BottomSheetContent } from './components/BottomSheetContent';
 import { useHomeLostFeed } from './hooks/useHomeLostFeed';
 import { FIND_BACK } from '@constants/theme';
+import { ReportChoiceModal } from '@/components/molecules';
 
 type HomeNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -22,6 +23,7 @@ export const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { user } = useAuthContext();
   const { showToast } = useToast();
+  const [isReportChoiceVisible, setIsReportChoiceVisible] = useState(false);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['34%', '58%', '86%'], []);
@@ -97,9 +99,9 @@ export const HomeScreen: React.FC = () => {
     [navigation]
   );
 
-  const handleReportLost = useCallback(() => {
-    navigation.navigate('ReportItems');
-  }, [navigation]);
+  const handleOpenReportChoice = useCallback(() => {
+    setIsReportChoiceVisible(true);
+  }, []);
 
   const handleOpenProfile = useCallback(() => {
     navigation.navigate('Profile');
@@ -180,14 +182,27 @@ export const HomeScreen: React.FC = () => {
       <View pointerEvents="box-none" style={[styles.reportFabWrap, { bottom: reportFabBottom }]}>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={handleReportLost}
+          onPress={handleOpenReportChoice}
           accessibilityRole="button"
-          accessibilityLabel="Báo mất món đồ"
+          accessibilityLabel="Mở lựa chọn báo đồ"
           className="h-16 w-16 items-center justify-center rounded-2xl bg-fb-primary-light"
         >
           <Plus size={28} color={FIND_BACK.neutral} strokeWidth={2.4} />
         </TouchableOpacity>
       </View>
+
+      <ReportChoiceModal
+        visible={isReportChoiceVisible}
+        onClose={() => setIsReportChoiceVisible(false)}
+        onFoundItem={() => {
+          setIsReportChoiceVisible(false);
+          navigation.navigate('FoundItemReport');
+        }}
+        onLostOwnItem={() => {
+          setIsReportChoiceVisible(false);
+          navigation.navigate('ReportItems');
+        }}
+      />
     </View>
   );
 };

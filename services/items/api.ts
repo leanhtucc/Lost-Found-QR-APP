@@ -22,6 +22,8 @@ import { buildItemsUrl, buildScanUrl, buildV1Url, getFullImageUrl } from '@servi
 import { authStorage } from '@storage/auth';
 
 export interface EligibleForReportItem {
+  /** Temporary compatibility alias returned by the backend. */
+  id: string;
   item_id: string;
   name: string;
   category: string;
@@ -32,6 +34,17 @@ export interface EligibleForReportItem {
     serial: string | null;
   };
   has_insurance: boolean;
+}
+
+export class ItemsApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string
+  ) {
+    super(message);
+    this.name = 'ItemsApiError';
+  }
 }
 
 export interface AnalyzeItemImageResult {
@@ -100,8 +113,16 @@ export interface CreateGuardianItemResult {
   hasInsurance: boolean;
 }
 
-interface EligibleForReportEnvelope {
-  data?: EligibleForReportItem[];
+interface EligibleForReportApiItem extends Omit<EligibleForReportItem, 'id' | 'item_id'> {
+  id?: string;
+  item_id?: string;
+}
+
+type EligibleForReportPayload = EligibleForReportApiItem[] | { data?: EligibleForReportApiItem[] };
+
+interface UpdateStatusApiResponse extends Omit<ItemApiResponse<Item>, 'error'> {
+  code?: string;
+  error?: string | { code?: string; message?: string };
 }
 
 /** Response shape từ POST /v1/ai/analyze-item (Gemini 1.5 Flash) */
@@ -268,8 +289,7 @@ export const itemsApi = {
    * GET /v1/items/eligible-for-report
    */
   async getEligibleForReportItems(): Promise<EligibleForReportItem[]> {
-    // V2: đường dẫn là /api/items/eligible-for-report (không phải /v1)
-    const url = buildItemsUrl('eligible-for-report');
+    const url = buildV1Url('items', 'eligible-for-report');
     const headers = await createHeaders();
 
     const response = await fetch(url, {
@@ -277,27 +297,42 @@ export const itemsApi = {
       headers,
     });
 
-    const payload = await parseJsonSafely<ItemApiResponse<EligibleForReportEnvelope>>(response);
+    const payload = await parseJsonSafely<ItemApiResponse<EligibleForReportPayload>>(response);
 
     if (!response.ok || !payload?.success) {
       const fallbackMessage = `Failed to fetch eligible report items (HTTP ${response.status})`;
       throw new Error(payload?.message || payload?.error || fallbackMessage);
     }
 
-    const items = Array.isArray(payload.data?.data) ? payload.data.data : [];
+    const responseData = payload.data;
+    const items = Array.isArray(responseData)
+      ? responseData
+      : Array.isArray(responseData?.data)
+        ? responseData.data
+        : [];
 
-    return items.map(item => ({
-      item_id: String(item.item_id || ''),
-      name: String(item.name || 'Vật phẩm chưa đặt tên'),
-      category: String(item.category || 'other'),
-      image_url: typeof item.image_url === 'string' ? getFullImageUrl(item.image_url) : null,
-      details: {
-        color: typeof item.details?.color === 'string' ? item.details.color : null,
-        storage: typeof item.details?.storage === 'string' ? item.details.storage : null,
-        serial: typeof item.details?.serial === 'string' ? item.details.serial : null,
-      },
-      has_insurance: Boolean(item.has_insurance),
-    }));
+    return items.flatMap(item => {
+      const itemId = String(item.item_id || item.id || '').trim();
+      if (!itemId) {
+        return [];
+      }
+
+      return [
+        {
+          id: itemId,
+          item_id: itemId,
+          name: String(item.name || 'Vật phẩm chưa đặt tên'),
+          category: String(item.category || 'other'),
+          image_url: typeof item.image_url === 'string' ? getFullImageUrl(item.image_url) : null,
+          details: {
+            color: typeof item.details?.color === 'string' ? item.details.color : null,
+            storage: typeof item.details?.storage === 'string' ? item.details.storage : null,
+            serial: typeof item.details?.serial === 'string' ? item.details.serial : null,
+          },
+          has_insurance: Boolean(item.has_insurance),
+        },
+      ];
+    });
   },
 
   /**
@@ -826,15 +861,11 @@ export const itemsApi = {
 
   /**
    * Cập nhật status (Báo mất/Tìm thấy)
-   * PATCH /api/items/:id/status
+   * PATCH /v1/items/:id/status
    */
   async updateStatus(itemId: string, params: UpdateStatusParams): Promise<Item> {
-    const queryParams = new URLSearchParams();
-
-    queryParams.append('status', params.status);
-
-    if (params.lostMessage) {
-      queryParams.append('lostMessage', params.lostMessage);
+    if (params.status !== 'SAFE' && params.status !== 'LOST') {
+      throw new Error('Client can only set SAFE or LOST status');
     }
 
     const hasLatitude = typeof params.latitude === 'number';
@@ -844,28 +875,45 @@ export const itemsApi = {
       throw new Error('latitude and longitude must be provided together');
     }
 
-    if (hasLatitude && hasLongitude) {
-      queryParams.append('latitude', String(params.latitude));
-      queryParams.append('longitude', String(params.longitude));
-    }
-
-    const url = `${getItemsApiUrl()}/${itemId}/status?${queryParams.toString()}`;
+    const url = buildV1Url('items', itemId, 'status');
     const headers = await createHeaders();
+
+    const requestBody =
+      params.status === 'SAFE'
+        ? { status: 'SAFE' as const }
+        : {
+            status: 'LOST' as const,
+            lostMessage: params.lostMessage?.trim() || undefined,
+            lostAddress: params.lostAddress?.trim() || undefined,
+            latitude: hasLatitude ? params.latitude : undefined,
+            longitude: hasLongitude ? params.longitude : undefined,
+          };
 
     const response = await fetch(url, {
       method: 'PATCH',
       headers,
+      body: JSON.stringify(requestBody),
     });
 
+    const data = await parseJsonSafely<UpdateStatusApiResponse>(response);
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update status');
+      const errorCode =
+        data?.code ||
+        (typeof data?.error === 'object' ? data.error.code : undefined) ||
+        (typeof data?.error === 'string' && /^[A-Z][A-Z0-9_]+$/.test(data.error)
+          ? data.error
+          : undefined);
+      const errorMessage =
+        data?.message ||
+        (typeof data?.error === 'object' ? data.error.message : data?.error) ||
+        'Failed to update status';
+
+      throw new ItemsApiError(errorMessage, response.status, errorCode);
     }
 
-    const data: ItemApiResponse<Item> = await response.json();
-
-    if (!data.success || !data.data) {
-      throw new Error(data.message || 'Failed to update status');
+    if (!data?.success || !data.data) {
+      throw new ItemsApiError(data?.message || 'Failed to update status', response.status);
     }
 
     return normalizeItem(data.data);

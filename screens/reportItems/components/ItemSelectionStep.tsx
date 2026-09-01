@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { Check, Plus } from 'lucide-react-native';
+import { Check, Plus, RotateCcw } from 'lucide-react-native';
 import { REPORT_COLORS, REPORT_LAYOUT } from '../constants/theme';
 import { ReportItemOption } from '../types';
 import { SelectionSummaryResponse } from '@services/items';
@@ -14,6 +14,8 @@ interface ItemSelectionStepProps {
   onSelectItem: (itemId: string) => void;
   onAddNewItem?: () => void;
   isLoading?: boolean;
+  loadError?: string | null;
+  onRetry?: () => void;
   isCreatingItem?: boolean;
   selectionSummary?: SelectionSummaryResponse | null;
   isFetchingSelectionSummary?: boolean;
@@ -25,6 +27,8 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
   onSelectItem,
   onAddNewItem,
   isLoading = false,
+  loadError,
+  onRetry,
   isCreatingItem = false,
   selectionSummary,
   isFetchingSelectionSummary,
@@ -41,7 +45,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
         Bạn mất vật gì?
       </Text>
       <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 16, marginTop: 8 }}>
-        Chọn vật phẩm từ kho của bạn hoặc thêm mới.
+        Kho của bạn có {items.length} vật dụng. Chọn món đồ bạn vừa làm mất để tiếp tục.
       </Text>
 
       {isLoading ? (
@@ -50,9 +54,43 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
         </Text>
       ) : null}
 
-      {!isLoading && items.length === 0 ? (
+      {!isLoading && loadError ? (
+        <View
+          style={{
+            marginTop: 16,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: 'rgba(215, 51, 87, 0.35)',
+            backgroundColor: 'rgba(215, 51, 87, 0.1)',
+            padding: 14,
+          }}
+        >
+          <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 14, lineHeight: 21 }}>
+            Không thể tải đầy đủ kho đồ hoặc kiểm tra điều kiện báo mất. Vui lòng thử lại.
+          </Text>
+          <TouchableOpacity
+            onPress={onRetry}
+            activeOpacity={0.85}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}
+          >
+            <RotateCcw size={16} color={REPORT_COLORS.accent} />
+            <Text style={{ color: REPORT_COLORS.accent, fontSize: 14, fontWeight: '700' }}>
+              Thử tải lại
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      {!isLoading && !loadError && items.length === 0 ? (
         <Text style={{ color: REPORT_COLORS.textMuted, fontSize: 14, marginTop: 12 }}>
-          Kho của bạn chưa có vật dụng ở trạng thái an toàn để báo mất.
+          Kho của bạn chưa có vật dụng nào.
+        </Text>
+      ) : null}
+
+      {!isLoading && !loadError && items.length > 0 && !items.some(item => item.isEligible) ? (
+        <Text style={{ color: REPORT_COLORS.textMuted, fontSize: 14, marginTop: 12 }}>
+          Hiện không có vật dụng SAFE nào đủ điều kiện báo mất. Các vật dụng khác vẫn được hiển thị
+          để bạn kiểm tra trạng thái.
         </Text>
       ) : null}
 
@@ -118,6 +156,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
 
         {items.map(item => {
           const isSelected = item.id === selectedItemId;
+          const isDisabled = !item.isEligible;
 
           return (
             <TouchableOpacity
@@ -127,6 +166,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
                 console.log(`[ItemSelectionStep] Tapped item: ${item.id} - ${item.name}`);
                 onSelectItem(item.id);
               }}
+              disabled={isDisabled}
               style={{
                 width: 196,
                 borderRadius: 20,
@@ -135,6 +175,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
                 borderColor: isSelected ? REPORT_COLORS.accent : 'transparent',
                 padding: 12,
                 marginRight: 16,
+                opacity: isDisabled ? 0.52 : 1,
               }}
             >
               <Image
@@ -164,6 +205,34 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
               >
                 {item.category}
               </Text>
+
+              <View
+                style={{
+                  alignSelf: 'flex-start',
+                  marginTop: 8,
+                  borderRadius: 999,
+                  paddingHorizontal: 9,
+                  paddingVertical: 4,
+                  backgroundColor: item.isEligible
+                    ? 'rgba(46, 204, 139, 0.14)'
+                    : 'rgba(255, 255, 255, 0.08)',
+                }}
+              >
+                <Text
+                  style={{
+                    color: item.isEligible ? '#2ECC8B' : REPORT_COLORS.textMuted,
+                    fontSize: 10,
+                    fontWeight: '800',
+                    letterSpacing: 0.6,
+                  }}
+                >
+                  {item.isEligible
+                    ? 'CÓ THỂ BÁO MẤT'
+                    : item.status === 'SAFE'
+                      ? 'ĐANG CÓ GUARDIAN'
+                      : item.status}
+                </Text>
+              </View>
 
               {isSelected ? (
                 <View

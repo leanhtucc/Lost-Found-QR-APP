@@ -30,6 +30,8 @@ export default function ReportItemsScreen() {
     step,
     items,
     isLoadingItems,
+    itemsLoadError,
+    reloadEligibleItems,
     isCreatingItem,
     isSubmitting,
     isSimulatingRadar,
@@ -65,7 +67,7 @@ export default function ReportItemsScreen() {
   const footerLabel = useMemo(() => (step === 4 ? 'Báo mất ngay' : 'Tiếp theo'), [step]);
 
   const hasSelectedItem = useMemo(
-    () => items.some(item => item.id === selectedItemId),
+    () => items.some(item => item.id === selectedItemId && item.isEligible),
     [items, selectedItemId]
   );
 
@@ -150,6 +152,10 @@ export default function ReportItemsScreen() {
             onSelectItem={setSelectedItemId}
             onAddNewItem={handleAddNewItem}
             isLoading={isLoadingItems}
+            loadError={itemsLoadError}
+            onRetry={() => {
+              void reloadEligibleItems();
+            }}
             isCreatingItem={isCreatingItem}
             selectionSummary={selectionSummary}
             isFetchingSelectionSummary={isFetchingSelectionSummary}

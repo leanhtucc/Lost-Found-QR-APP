@@ -22,6 +22,8 @@ import {
   ChangePasswordScreen,
   DeleteAccountScreen,
   ReportItemsScreen,
+  FoundItemReportScreen,
+  ManualFoundReportScreen,
   ChatListScreen,
   ChatDetailScreen,
 } from '@screens/index';
@@ -48,6 +50,8 @@ export type RootStackParamList = {
   MyItems: undefined;
   ItemDetails: { itemId: string };
   ReportItems: undefined;
+  FoundItemReport: undefined;
+  ManualFoundReport: undefined;
   QRCodeView: { itemId: string };
   ScanResult: { qrData: string };
   Settings: undefined;
@@ -278,6 +282,16 @@ export default function RootStack() {
         />
         <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Scan" component={ScanScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="FoundItemReport"
+          component={FoundItemReportScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ManualFoundReport"
+          component={ManualFoundReportScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="MyItems" component={MyItemsScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="ItemDetails"

@@ -62,7 +62,7 @@ export const TabNavigator = () => {
         component={ScanScreen}
         options={{
           tabBarLabel: 'Quét',
-          tabBarStyle: { display: 'none' }, // Ẩn tab bar khi ở màn scan
+          tabBarStyle: { display: 'none' },
           tabBarIcon: ({ color, size, focused }: TabBarIconProps) => (
             <IconQrScan width={size} height={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),

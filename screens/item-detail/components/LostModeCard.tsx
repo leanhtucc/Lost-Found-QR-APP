@@ -27,7 +27,8 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
   const [lostMessage, setLostMessage] = useState(item.lostMessage || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const isLost = item.status === 'LOST' || item.status === 'PENDING_PAYMENT';
+  const isLost = item.status === 'LOST';
+  const isBackendManaged = item.status !== 'SAFE' && item.status !== 'LOST';
 
   const handleToggle = () => {
     Alert.alert(
@@ -78,10 +79,17 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
         <AppToggle
           value={isLost}
           onValueChange={handleToggle}
+          disabled={isBackendManaged}
           activeTrackColor={FIND_BACK.danger}
           inactiveTrackColor={FIND_BACK.surfaceElevated}
         />
       </View>
+
+      {isBackendManaged ? (
+        <Text className="mb-4 text-sm text-fb-muted">
+          Trạng thái {item.status} do hệ thống quản lý và không thể đổi thủ công.
+        </Text>
+      ) : null}
 
       {/* Lost Message Section */}
       {isLost && (

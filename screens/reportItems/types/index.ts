@@ -15,6 +15,8 @@ export interface ReportItemOption {
   imageUrl: string | null;
   details: ReportItemDetails;
   hasInsurance: boolean;
+  status: 'SAFE' | 'PENDING_PAYMENT' | 'LOST' | 'FOUND' | 'RESOLVED';
+  isEligible: boolean;
 }
 
 export interface ReportLocation {

@@ -24,7 +24,19 @@ interface ReportsApiResponse<T> {
   message?: string;
   errors?: { field?: string; message?: string }[];
   data?: T;
-  error?: string;
+  code?: string;
+  error?: string | { code?: string; message?: string };
+}
+
+export class ReportsApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string
+  ) {
+    super(message);
+    this.name = 'ReportsApiError';
+  }
 }
 
 interface GuardianReportLocation {
@@ -108,12 +120,30 @@ const toApiErrorMessage = <T>(
         .join('; ')
     : '';
 
+  const apiError =
+    typeof payload?.error === 'string'
+      ? payload.error
+      : typeof payload?.error?.message === 'string'
+        ? payload.error.message
+        : '';
+
   return (
-    validationMessage ||
-    payload?.message ||
-    payload?.error ||
-    `${fallback} (HTTP ${response.status})`
+    validationMessage || payload?.message || apiError || `${fallback} (HTTP ${response.status})`
   );
+};
+
+const toApiErrorCode = <T>(payload: ReportsApiResponse<T> | null): string | undefined => {
+  if (typeof payload?.code === 'string') {
+    return payload.code;
+  }
+
+  if (typeof payload?.error === 'string' && /^[A-Z][A-Z0-9_]+$/.test(payload.error)) {
+    return payload.error;
+  }
+
+  return typeof payload?.error === 'object' && typeof payload.error.code === 'string'
+    ? payload.error.code
+    : undefined;
 };
 
 export const reportsApi = {
@@ -169,7 +199,11 @@ export const reportsApi = {
     const json = await parseJsonSafely<ReportsApiResponse<GuardianReportApiPayload>>(response);
 
     if (!response.ok || !json?.success || !json.data) {
-      throw new Error(toApiErrorMessage(response, json, 'Failed to create report'));
+      throw new ReportsApiError(
+        toApiErrorMessage(response, json, 'Failed to create report'),
+        response.status,
+        toApiErrorCode(json)
+      );
     }
 
     const reportId = typeof json.data.report_id === 'string' ? json.data.report_id : '';
@@ -228,7 +262,11 @@ export const reportsApi = {
 
     if (!response.ok || !json?.success) {
       const fallbackMessage = `Failed to submit lost-item report (HTTP ${response.status})`;
-      throw new Error(json?.message || json?.error || fallbackMessage);
+      throw new ReportsApiError(
+        toApiErrorMessage(response, json, fallbackMessage),
+        response.status,
+        toApiErrorCode(json)
+      );
     }
 
     const data = json.data || {};

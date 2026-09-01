@@ -15,9 +15,22 @@ interface LocationStepProps {
   onLocationChange?: (lat: number, lng: number) => void;
 }
 
-// ─── Leaflet HTML builder (same dark-map style as MapSection) ────────────────
+/**
+ * Kiểm tra xem thời điểm hiện tại có phải ban ngày hay không
+ * Ban ngày: 6:00 - 18:00 (màu trắng/sáng)
+ * Ban đêm: 18:00 - 6:00 sáng hôm sau (màu đen/tối)
+ */
+const isDaytimeNow = (): boolean => {
+  const currentHour = new Date().getHours();
+  return currentHour >= 6 && currentHour < 18;
+};
 
-const buildLeafletHtml = (lat: number, lng: number): string => `
+// ─── Leaflet HTML builder (day/night map style matching MapSection) ──────────
+
+const buildLeafletHtml = (lat: number, lng: number, initialIsDaytime: boolean): string => {
+  const initialTheme = initialIsDaytime ? 'light' : 'dark';
+
+  return `
 <!DOCTYPE html>
 <html>
   <head>
@@ -38,11 +51,64 @@ const buildLeafletHtml = (lat: number, lng: number): string => `
         width: 100%;
         margin: 0;
         padding: 0;
+        transition: background-color 0.3s ease;
+      }
+
+      /* === THEME DARK === */
+      body.theme-dark,
+      body.theme-dark #map,
+      body.theme-dark .leaflet-container {
         background: #0a0a0f;
       }
 
+      body.theme-dark .center-pin-label {
+        background: rgba(8,8,15,0.92);
+        border: 1px solid rgba(167,139,250,0.35);
+      }
+
+      body.theme-dark .center-pin-label-text {
+        color: #a78bfa;
+      }
+
+      body.theme-dark .leaflet-tooltip.user-location-tooltip {
+        background: rgba(8,15,24,0.94);
+        color: #e6fffb;
+        border: 1px solid rgba(34,211,238,0.38);
+      }
+
+      body.theme-dark .leaflet-tooltip-top.user-location-tooltip:before {
+        border-top-color: rgba(34,211,238,0.38);
+      }
+
+      /* === THEME LIGHT === */
+      body.theme-light,
+      body.theme-light #map,
+      body.theme-light .leaflet-container {
+        background: #f4f5f8;
+      }
+
+      body.theme-light .center-pin-label {
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(139,92,246,0.35);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      }
+
+      body.theme-light .center-pin-label-text {
+        color: #7c3aed;
+      }
+
+      body.theme-light .leaflet-tooltip.user-location-tooltip {
+        background: rgba(255,255,255,0.96);
+        color: #0284c7;
+        border: 1px solid rgba(2,132,199,0.35);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      }
+
+      body.theme-light .leaflet-tooltip-top.user-location-tooltip:before {
+        border-top-color: rgba(2,132,199,0.35);
+      }
+
       .leaflet-container {
-        background: #0a0a0f;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       }
 
@@ -126,15 +192,12 @@ const buildLeafletHtml = (lat: number, lng: number): string => `
         transform: translate(-50%, 16px);
         z-index: 1000;
         pointer-events: none;
-        background: rgba(8,8,15,0.92);
-        border: 1px solid rgba(167,139,250,0.35);
         border-radius: 999px;
         padding: 4px 12px;
         white-space: nowrap;
       }
 
       .center-pin-label-text {
-        color: #a78bfa;
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 1px;
@@ -167,16 +230,9 @@ const buildLeafletHtml = (lat: number, lng: number): string => `
       }
 
       .leaflet-tooltip.user-location-tooltip {
-        background: rgba(8,15,24,0.94);
-        color: #e6fffb;
-        border: 1px solid rgba(34,211,238,0.38);
         border-radius: 9999px;
         box-shadow: 0 8px 18px rgba(0,0,0,0.35);
         padding: 4px 10px;
-      }
-
-      .leaflet-tooltip-top.user-location-tooltip:before {
-        border-top-color: rgba(34,211,238,0.38);
       }
 
       .user-location-text {
@@ -193,7 +249,7 @@ const buildLeafletHtml = (lat: number, lng: number): string => `
       }
     </style>
   </head>
-  <body>
+  <body class="theme-${initialTheme}">
     <div id="map"></div>
 
     <!-- Fixed center pin overlay -->
@@ -230,10 +286,33 @@ const buildLeafletHtml = (lat: number, lng: number): string => `
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        var currentTheme = '${initialTheme}';
+        var darkTileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        var lightTileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+        var currentTileLayer = L.tileLayer(currentTheme === 'light' ? lightTileUrl : darkTileUrl, {
           maxZoom: 20,
           subdomains: 'abcd',
         }).addTo(map);
+
+        window.__setMapTheme = function (themeOrIsDay) {
+          var nextTheme = typeof themeOrIsDay === 'boolean' ? (themeOrIsDay ? 'light' : 'dark') : themeOrIsDay;
+          if (nextTheme !== 'light' && nextTheme !== 'dark') return;
+          if (nextTheme === currentTheme && currentTileLayer) return;
+
+          currentTheme = nextTheme;
+          document.body.className = 'theme-' + nextTheme;
+
+          if (currentTileLayer) {
+            map.removeLayer(currentTileLayer);
+          }
+
+          currentTileLayer = L.tileLayer(nextTheme === 'light' ? lightTileUrl : darkTileUrl, {
+            maxZoom: 20,
+            subdomains: 'abcd',
+          }).addTo(map);
+          currentTileLayer.bringToBack();
+        };
 
         var userLayer = L.layerGroup().addTo(map);
 
@@ -290,6 +369,7 @@ const buildLeafletHtml = (lat: number, lng: number): string => `
   </body>
 </html>
 `;
+};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -304,13 +384,35 @@ export const LocationStep: React.FC<LocationStepProps> = ({
 }) => {
   const webViewRef = useRef<WebView>(null);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [isDaytime, setIsDaytime] = useState<boolean>(() => isDaytimeNow());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const nextDaytime = isDaytimeNow();
+      setIsDaytime(prev => (prev !== nextDaytime ? nextDaytime : prev));
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const leafletHtml = useMemo(
-    () => buildLeafletHtml(location.lat, location.lng),
+    () => buildLeafletHtml(location.lat, location.lng, isDaytime),
     // Only compute once on initial mount – we pan the map via injected JS afterwards
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
+
+  useEffect(() => {
+    if (!isMapReady) return;
+
+    const theme = isDaytime ? 'light' : 'dark';
+    webViewRef.current?.injectJavaScript(`
+      if (window.__setMapTheme) {
+        window.__setMapTheme('${theme}');
+      }
+      true;
+    `);
+  }, [isDaytime, isMapReady]);
 
   // When useCurrentLocation toggles on and resolves, pan map to the new location
   useEffect(() => {

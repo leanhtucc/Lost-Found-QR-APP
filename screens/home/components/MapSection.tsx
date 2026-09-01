@@ -29,7 +29,24 @@ const FALLBACK_REGION = {
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
-const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): string => `
+/**
+ * Kiểm tra xem thời điểm hiện tại có phải ban ngày hay không
+ * Ban ngày: 6:00 - 18:00 (màu trắng/sáng)
+ * Ban đêm: 18:00 - 6:00 sáng hôm sau (màu đen/tối)
+ */
+const isDaytimeNow = (): boolean => {
+  const currentHour = new Date().getHours();
+  return currentHour >= 6 && currentHour < 18;
+};
+
+const buildLeafletHtml = (
+  initialLatitude: number,
+  initialLongitude: number,
+  initialIsDaytime: boolean
+): string => {
+  const initialTheme = initialIsDaytime ? 'light' : 'dark';
+
+  return `
 <!DOCTYPE html>
 <html>
   <head>
@@ -52,30 +69,28 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
         width: 100%;
         margin: 0;
         padding: 0;
+        transition: background-color 0.3s ease;
+      }
+
+      /* === THEME DARK (Ban đêm) === */
+      body.theme-dark,
+      body.theme-dark #map,
+      body.theme-dark .leaflet-container {
         background: #0a0a0f;
       }
 
-      .leaflet-container {
-        background: #0a0a0f;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      }
-
-      .leaflet-control-attribution {
-        display: none;
-      }
-
-      .leaflet-popup-content-wrapper {
+      body.theme-dark .leaflet-popup-content-wrapper {
         background: rgba(19, 19, 25, 0.92);
         color: #f9f5fd;
         border: 1px solid rgba(199, 191, 255, 0.25);
         border-radius: 12px;
       }
 
-      .leaflet-popup-tip {
+      body.theme-dark .leaflet-popup-tip {
         background: rgba(19, 19, 25, 0.92);
       }
 
-      .leaflet-tooltip.lost-address-tooltip {
+      body.theme-dark .leaflet-tooltip.lost-address-tooltip {
         background: rgba(14, 14, 22, 0.94);
         color: #f8f6ff;
         border: 1px solid rgba(199, 191, 255, 0.45);
@@ -84,8 +99,74 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
         padding: 6px 10px;
       }
 
-      .leaflet-tooltip-top.lost-address-tooltip:before {
+      body.theme-dark .leaflet-tooltip-top.lost-address-tooltip:before {
         border-top-color: rgba(199, 191, 255, 0.45);
+      }
+
+      body.theme-dark .leaflet-tooltip.user-location-tooltip {
+        background: rgba(8, 15, 24, 0.94);
+        color: #e6fffb;
+        border: 1px solid rgba(34, 211, 238, 0.38);
+        border-radius: 9999px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+        padding: 4px 10px;
+      }
+
+      body.theme-dark .leaflet-tooltip-top.user-location-tooltip:before {
+        border-top-color: rgba(34, 211, 238, 0.38);
+      }
+
+      /* === THEME LIGHT (Ban ngày) === */
+      body.theme-light,
+      body.theme-light #map,
+      body.theme-light .leaflet-container {
+        background: #f4f5f8;
+      }
+
+      body.theme-light .leaflet-popup-content-wrapper {
+        background: rgba(255, 255, 255, 0.96);
+        color: #111116;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      }
+
+      body.theme-light .leaflet-popup-tip {
+        background: rgba(255, 255, 255, 0.96);
+      }
+
+      body.theme-light .leaflet-tooltip.lost-address-tooltip {
+        background: rgba(255, 255, 255, 0.96);
+        color: #1c1c28;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        padding: 6px 10px;
+      }
+
+      body.theme-light .leaflet-tooltip-top.lost-address-tooltip:before {
+        border-top-color: rgba(0, 0, 0, 0.15);
+      }
+
+      body.theme-light .leaflet-tooltip.user-location-tooltip {
+        background: rgba(255, 255, 255, 0.96);
+        color: #0284c7;
+        border: 1px solid rgba(2, 132, 199, 0.35);
+        border-radius: 9999px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        padding: 4px 10px;
+      }
+
+      body.theme-light .leaflet-tooltip-top.user-location-tooltip:before {
+        border-top-color: rgba(2, 132, 199, 0.35);
+      }
+
+      .leaflet-container {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      .leaflet-control-attribution {
+        display: none;
       }
 
       .lost-address-text {
@@ -163,19 +244,6 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
           0 8px 16px rgba(0, 0, 0, 0.35);
       }
 
-      .leaflet-tooltip.user-location-tooltip {
-        background: rgba(8, 15, 24, 0.94);
-        color: #e6fffb;
-        border: 1px solid rgba(34, 211, 238, 0.38);
-        border-radius: 9999px;
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
-        padding: 4px 10px;
-      }
-
-      .leaflet-tooltip-top.user-location-tooltip:before {
-        border-top-color: rgba(34, 211, 238, 0.38);
-      }
-
       .user-location-text {
         font-size: 11px;
         line-height: 1.2;
@@ -201,7 +269,7 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
       }
     </style>
   </head>
-  <body>
+  <body class="theme-${initialTheme}">
     <div id="map"></div>
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -223,10 +291,33 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        var currentTheme = '${initialTheme}';
+        var darkTileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        var lightTileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+        var currentTileLayer = L.tileLayer(currentTheme === 'light' ? lightTileUrl : darkTileUrl, {
           maxZoom: 20,
           subdomains: 'abcd',
         }).addTo(map);
+
+        window.__setMapTheme = function (themeOrIsDay) {
+          var nextTheme = typeof themeOrIsDay === 'boolean' ? (themeOrIsDay ? 'light' : 'dark') : themeOrIsDay;
+          if (nextTheme !== 'light' && nextTheme !== 'dark') return;
+          if (nextTheme === currentTheme && currentTileLayer) return;
+
+          currentTheme = nextTheme;
+          document.body.className = 'theme-' + nextTheme;
+
+          if (currentTileLayer) {
+            map.removeLayer(currentTileLayer);
+          }
+
+          currentTileLayer = L.tileLayer(nextTheme === 'light' ? lightTileUrl : darkTileUrl, {
+            maxZoom: 20,
+            subdomains: 'abcd',
+          }).addTo(map);
+          currentTileLayer.bringToBack();
+        };
 
         var radarLayer = L.layerGroup().addTo(map);
         var userLayer = L.layerGroup().addTo(map);
@@ -424,6 +515,7 @@ const buildLeafletHtml = (initialLatitude: number, initialLongitude: number): st
   </body>
 </html>
 `;
+};
 
 export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocationChange }) => {
   const webViewRef = useRef<WebView>(null);
@@ -434,11 +526,37 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
     accuracy: number;
   } | null>(null);
   const [isLeafletReady, setIsLeafletReady] = useState(false);
+  const [isDaytime, setIsDaytime] = useState<boolean>(() => isDaytimeNow());
+
+  // Kiểm tra & cập nhật trạng thái ban ngày / ban đêm định kỳ mỗi 60 giây
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const nextDaytime = isDaytimeNow();
+      setIsDaytime(prev => (prev !== nextDaytime ? nextDaytime : prev));
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const leafletHtml = useMemo(
-    () => buildLeafletHtml(FALLBACK_REGION.latitude, FALLBACK_REGION.longitude),
+    () => buildLeafletHtml(FALLBACK_REGION.latitude, FALLBACK_REGION.longitude, isDaytime),
     []
   );
+
+  // Cập nhật theme của map khi isDaytime thay đổi và webview đã sẵn sàng
+  useEffect(() => {
+    if (!isLeafletReady) {
+      return;
+    }
+
+    const theme = isDaytime ? 'light' : 'dark';
+    webViewRef.current?.injectJavaScript(`
+      if (window.__setMapTheme) {
+        window.__setMapTheme('${theme}');
+      }
+      true;
+    `);
+  }, [isDaytime, isLeafletReady]);
 
   const cardByItemId = useMemo(() => {
     const map = new Map<string, HomeLostFeedCard>();
@@ -598,7 +716,12 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
         style={StyleSheet.absoluteFillObject}
       />
 
-      <View className="pointer-events-none absolute inset-0 bg-[#0a0a0f]/55" />
+      {/* Lớp overlay tối chỉ phủ khi ban đêm, ban ngày trong suốt để giữ màu sáng rõ nét */}
+      <View
+        className={`pointer-events-none absolute inset-0 ${
+          isDaytime ? 'bg-transparent' : 'bg-[#0a0a0f]/55'
+        }`}
+      />
     </View>
   );
 };

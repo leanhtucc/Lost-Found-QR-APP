@@ -92,8 +92,9 @@ export interface ItemsSummary {
 
 // Update status params
 export interface UpdateStatusParams {
-  status: ItemStatus;
+  status: 'SAFE' | 'LOST';
   lostMessage?: string;
+  lostAddress?: string;
   latitude?: number;
   longitude?: number;
 }

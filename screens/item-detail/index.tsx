@@ -7,8 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, Alert, ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Item, ItemStatus } from '@/types/item';
-import { itemsApi } from '@/services/items';
+import { Item } from '@/types/item';
+import { itemsApi, ItemsApiError } from '@/services/items';
 import { ItemDetailHeader, ItemInfoCard, QRCodeCard, LostModeCard } from './components';
 import { FIND_BACK } from '@constants/theme';
 
@@ -40,9 +40,13 @@ export default function ItemDetailScreen() {
   const handleToggleLost = async () => {
     if (!item) return;
 
+    if (item.status !== 'SAFE' && item.status !== 'LOST') {
+      Alert.alert('Không thể đổi trạng thái', `Trạng thái ${item.status} do hệ thống quản lý.`);
+      return;
+    }
+
     try {
-      const isLostLike = item.status === 'LOST' || item.status === 'PENDING_PAYMENT';
-      const newStatus: ItemStatus = isLostLike ? 'SAFE' : 'LOST';
+      const newStatus: 'SAFE' | 'LOST' = item.status === 'LOST' ? 'SAFE' : 'LOST';
       const updatedItem = await itemsApi.updateStatus(item.id, {
         status: newStatus,
         lostMessage: newStatus === 'LOST' ? item.lostMessage : undefined,
@@ -52,17 +56,33 @@ export default function ItemDetailScreen() {
       setItem(updatedItem);
     } catch (error) {
       console.error('Error toggling lost status:', error);
-      Alert.alert('Lỗi', 'Không thể cập nhật trạng thái');
+      if (
+        error instanceof ItemsApiError &&
+        (error.status === 409 || error.code === 'ITEM_NOT_ELIGIBLE')
+      ) {
+        await loadItem();
+        Alert.alert(
+          'Vật dụng không còn đủ điều kiện',
+          'Vật dụng đã thay đổi trạng thái hoặc đang có Guardian report mở.'
+        );
+        return;
+      }
+
+      Alert.alert('Lỗi', error instanceof Error ? error.message : 'Không thể cập nhật trạng thái');
     }
   };
 
   const handleUpdateMessage = async (message: string) => {
     if (!item) return;
 
+    if (item.status !== 'LOST') {
+      Alert.alert('Không thể cập nhật', 'Chỉ vật dụng đang LOST mới có thể cập nhật lời nhắn.');
+      return;
+    }
+
     try {
-      const nextStatus: ItemStatus = item.status === 'PENDING_PAYMENT' ? 'PENDING_PAYMENT' : 'LOST';
       const updatedItem = await itemsApi.updateStatus(item.id, {
-        status: nextStatus,
+        status: 'LOST',
         lostMessage: message,
       });
 
