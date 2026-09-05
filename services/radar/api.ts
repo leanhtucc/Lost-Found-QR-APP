@@ -91,6 +91,56 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Re
   return response;
 };
 
+const fetchWithOptionalAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const token = await authStorage.getAccessToken();
+  const headers: Record<string, string> = {};
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  let response = await fetch(url, {
+    ...options,
+    headers: {
+      ...headers,
+      ...options.headers,
+    },
+  });
+
+  if (response.status === 401 && token) {
+    console.log('[RadarAPI] 401 on optional auth, attempting refresh...');
+    try {
+      const refreshToken = await authStorage.getRefreshToken();
+      if (refreshToken) {
+        const refreshResult = await authApi.refreshToken({ refreshToken });
+        if (refreshResult.success && refreshResult.data) {
+          const newToken = await authStorage.getAccessToken();
+          if (newToken) {
+            headers['Authorization'] = `Bearer ${newToken}`;
+          }
+          response = await fetch(url, {
+            ...options,
+            headers: {
+              ...headers,
+              ...options.headers,
+            },
+          });
+        }
+      }
+    } catch {
+      // If refresh fails for optional auth, retry anonymously
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+        },
+      });
+    }
+  }
+
+  return response;
+};
+
 const parseJsonSafely = async <T>(response: Response): Promise<T | null> => {
   try {
     return (await response.json()) as T;
@@ -410,7 +460,7 @@ export const radarApi = {
       });
     }
 
-    const response = await fetchWithAuth(url, {
+    const response = await fetchWithOptionalAuth(url, {
       method: 'GET',
     });
 

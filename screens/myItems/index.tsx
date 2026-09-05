@@ -13,6 +13,7 @@ import { SummaryCards } from './components/SummaryCards';
 import { CategoryFilter } from './components/CategoryFilter';
 import { SearchBar } from './components/SearchBar';
 import { ItemsList } from './components/ItemsList';
+import { AddItemModal } from './components/AddItemModal';
 import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_SHADOW } from './constants/ui';
 
 type RootStackParamList = {
@@ -25,10 +26,11 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 export const MyItemsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
-  const { items, loadItems } = useItems();
+  const { items, loadItems, addItem } = useItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<Item['category'] | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const reportFabBottom = useMemo(() => Math.max(insets.bottom, 8), [insets.bottom]);
 
   const { filteredItems, lostCount, safeCount } = useItemsFilter({
@@ -48,9 +50,29 @@ export const MyItemsScreen: React.FC = () => {
   };
 
   const handleAddItem = () => {
+    setIsAddModalVisible(true);
+  };
+
+  const handleCreateProtectedItem = async (data: {
+    name: string;
+    category: Item['category'];
+    description?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+  }) => {
+    await addItem({
+      name: data.name,
+      category: data.category,
+      description: data.description,
+      address: data.address,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      lastSeenLocation: data.address,
+    });
     Alert.alert(
-      'Đăng ký món đồ',
-      'Tính năng đăng ký món đồ mới đang được hoàn thiện. Bạn vẫn có thể báo mất các món đồ đã đăng ký.'
+      'Bảo vệ món đồ thành công',
+      `"${data.name}" đã được đưa vào hệ thống bảo vệ an toàn (SAFE) với vị trí xác thực.`
     );
   };
 
@@ -107,6 +129,12 @@ export const MyItemsScreen: React.FC = () => {
           <Plus size={28} color="#25008c" strokeWidth={2.4} />
         </TouchableOpacity>
       </View>
+
+      <AddItemModal
+        visible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
+        onSubmit={handleCreateProtectedItem}
+      />
     </SafeAreaView>
   );
 };

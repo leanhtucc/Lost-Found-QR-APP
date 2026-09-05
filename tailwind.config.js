@@ -39,6 +39,7 @@ module.exports = {
         },
         /** FindBack / Obsidian design system */
         fb: {
+          canvas: '#0E0E13',
           primary: '#7C6AF6',
           'primary-light': '#978CF8',
           'primary-dark': '#6B5AE8',
@@ -60,6 +61,7 @@ module.exports = {
           muted: '#ACAAB1',
           label: '#71717A',
           danger: '#D73357',
+          error: '#D73357',
           info: '#ADA3FF',
         },
       },

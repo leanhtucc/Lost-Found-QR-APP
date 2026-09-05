@@ -26,6 +26,10 @@ import {
   ManualFoundReportScreen,
   ChatListScreen,
   ChatDetailScreen,
+  LiveTrackingScreen,
+  HandoverConfirmScreen,
+  RewardStatusScreen,
+  RateFinderScreen,
 } from '@screens/index';
 import { LoginScreen } from '@screens/auth/login';
 import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
@@ -72,6 +76,10 @@ export type RootStackParamList = {
     memberId?: string; // For connecting with memberId
     isVerified?: boolean;
   };
+  LiveTracking: { returnSessionId: string };
+  HandoverConfirm: { returnSessionId: string };
+  RewardStatus: { returnSessionId: string };
+  RateFinder: { returnSessionId: string };
   // Auth screens
   Onboarding: undefined;
   Login: undefined;
@@ -122,8 +130,9 @@ const linking: LinkingOptions<RootStackParamList> = {
 // Screen options for smooth transitions
 const screenOptions = {
   headerShown: false,
-  gestureEnabled: true,
-  gestureDirection: 'horizontal' as const,
+  // Lock swipe-to-go-back on every stack screen. Navigation can only go back
+  // through an explicit button/action controlled by the app.
+  gestureEnabled: false,
   transitionSpec: {
     open: { animation: 'timing' as const, config: { duration: 300 } },
     close: { animation: 'timing' as const, config: { duration: 250 } },
@@ -331,6 +340,26 @@ export default function RootStack() {
         />
         <Stack.Screen name="ChatList" component={ChatListScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatDetailScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="LiveTracking"
+          component={LiveTrackingScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="HandoverConfirm"
+          component={HandoverConfirmScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="RewardStatus"
+          component={RewardStatusScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="RateFinder"
+          component={RateFinderScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

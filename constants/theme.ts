@@ -23,6 +23,16 @@ export const FIND_BACK = {
   glassBackground: 'rgba(19, 19, 25, 0.72)',
   danger: '#D73357',
   info: '#ADA3FF',
+  returnFlow: {
+    mapOverlay: 'rgba(10, 10, 15, 0.94)',
+    mapScrim: 'rgba(10, 10, 15, 0.42)',
+    tracking: '#7C6AF6',
+    arrived: '#2ECC8B',
+    warning: '#F4845F',
+    cardRadius: 24,
+    controlRadius: 16,
+    screenPadding: 16,
+  },
 } as const;
 
 export const THEME = {

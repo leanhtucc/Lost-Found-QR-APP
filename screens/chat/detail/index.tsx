@@ -1,15 +1,23 @@
 /**
  * Chat Screen
  * Màn hình chat 1-1 giữa owner và finder
- * Supports verified badge display
+ * Tích hợp ReturnProgressCard, MeetupModal và điều hướng đến Live Map, Bàn giao, Giải ngân, Đánh giá.
  */
 
 import React, { useState } from 'react';
-import { View, Alert } from 'react-native';
+import { View, Text, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '@/navigation';
 import { ChatHeader, ChatMessages, ChatInput } from './components';
 import { ChatMessage } from './types';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useReturnStore } from '@/services/returns/store';
+import { useReturnSession } from '@/hooks/useReturnSession';
+import { ReturnProgressCard, MeetupModal } from '@/screens/return-flow/components';
+import { Lock, FileText } from 'lucide-react-native';
+import { FIND_BACK } from '@constants/theme';
 
 type ChatRouteParams = {
   channelId: string;
@@ -17,11 +25,13 @@ type ChatRouteParams = {
   userName: string;
   userAvatar?: string;
   memberId?: string;
-  isVerified?: boolean; // Verified status of the other user
+  isVerified?: boolean;
 };
 
-// Mock data
-const MOCK_MESSAGES: ChatMessage[] = [
+type ChatNavProp = StackNavigationProp<RootStackParamList>;
+
+// Initial messages
+const INITIAL_MESSAGES: ChatMessage[] = [
   {
     id: '1',
     senderId: 'owner',
@@ -66,22 +76,54 @@ const MOCK_MESSAGES: ChatMessage[] = [
 
 export default function ChatScreen() {
   const route = useRoute();
-  const navigation = useNavigation();
+  const navigation = useNavigation<ChatNavProp>();
+  const { user } = useAuthContext();
 
   // Get params from route
   const params = (route.params as ChatRouteParams) || {};
-  const itemName = params.itemName || 'Đồ vật';
-  const userName = params.userName || 'Người dùng';
+  const channelId = params.channelId || 'default_channel';
+  const itemName = params.itemName || 'Ví da cầm tay';
+  const userName = params.userName || 'Marcus';
   const userAvatar = params.userAvatar;
   const isVerified = params.isVerified || false;
-  const currentUserId = 'finder';
 
-  const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
+  // Return Flow Session
+  const { session, currentRole } = useReturnSession({
+    channelId,
+  });
+
+  const proposeMeetup = useReturnStore(state => state.proposeMeetup);
+  const acceptMeetup = useReturnStore(state => state.acceptMeetup);
+  const rejectMeetup = useReturnStore(state => state.rejectMeetup);
+  const startTracking = useReturnStore(state => state.startTracking);
+  const isSubmitting = useReturnStore(state => state.isSubmitting);
+
+  const currentUserId = user?.id || user?.memberId || 'finder_user';
+
+  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isMeetupModalVisible, setIsMeetupModalVisible] = useState(false);
+
+  const isCompleted = session?.status === 'COMPLETED';
+
+  // Append system message
+  const addSystemMessage = (text: string) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: `sys_${Date.now()}`,
+        senderId: 'system',
+        content: text,
+        timestamp: new Date(),
+        isRead: true,
+        type: 'text',
+      },
+    ]);
+  };
 
   const handleSend = () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isCompleted) return;
 
     const message: ChatMessage = {
       id: Date.now().toString(),
@@ -95,22 +137,82 @@ export default function ChatScreen() {
     setMessages(prev => [...prev, message]);
     setNewMessage('');
 
-    // Simulate typing and response
+    // Simulate partner response if talking
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
+      const partnerRole = currentRole === 'OWNER' ? 'finder' : 'owner';
       setMessages(prev => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
-          senderId: 'owner',
-          content: 'Tuyệt vời! Mình có thể gặp bạn ở sảnh tòa A lúc 5h chiều được không? 🙏',
+          senderId: partnerRole,
+          content: 'Cảm ơn bạn! Mình sẽ đến đúng giờ đã hẹn nhé 👍',
           timestamp: new Date(),
           isRead: true,
           type: 'text',
         },
       ]);
-    }, 2000);
+    }, 1800);
+  };
+
+  const handleProposeMeetupSubmit = async (data: {
+    address: string;
+    name?: string;
+    latitude: number;
+    longitude: number;
+    scheduledTime: string;
+    notes?: string;
+  }) => {
+    setIsMeetupModalVisible(false);
+    const success = await proposeMeetup(data);
+    if (success) {
+      addSystemMessage(
+        `Đã gửi đề xuất gặp tại: ${data.name || data.address} (${data.scheduledTime})`
+      );
+    }
+  };
+
+  const handleAcceptMeetup = async () => {
+    const success = await acceptMeetup();
+    if (success) {
+      addSystemMessage('Điểm hẹn đã được chấp nhận. Bạn có thể bắt đầu di chuyển.');
+    }
+  };
+
+  const handleRejectMeetup = async () => {
+    const success = await rejectMeetup();
+    if (success) {
+      addSystemMessage('Đề xuất điểm hẹn đã bị hủy hoặc yêu cầu đổi địa điểm khác.');
+    }
+  };
+
+  const handleOpenLiveMap = async () => {
+    if (session) {
+      if (session.status === 'MEETUP_ACCEPTED') {
+        const started = await startTracking();
+        if (!started) return;
+      }
+      navigation.navigate('LiveTracking', { returnSessionId: session.id });
+    }
+  };
+
+  const handleOpenHandover = () => {
+    if (session) {
+      navigation.navigate('HandoverConfirm', { returnSessionId: session.id });
+    }
+  };
+
+  const handleOpenRewardStatus = () => {
+    if (session) {
+      navigation.navigate('RewardStatus', { returnSessionId: session.id });
+    }
+  };
+
+  const handleOpenRateFinder = () => {
+    if (session) {
+      navigation.navigate('RateFinder', { returnSessionId: session.id });
+    }
   };
 
   const handleBack = () => {
@@ -118,15 +220,11 @@ export default function ChatScreen() {
   };
 
   const handleCall = () => {
-    Alert.alert('Thông báo', 'Tính năng gọi điện đang được phát triển');
-  };
-
-  const handleVideo = () => {
-    Alert.alert('Thông báo', 'Tính năng gọi video đang được phát triển');
+    Alert.alert('Liên hệ', 'Vui lòng sử dụng số điện thoại đối tác trong màn hình Live Map');
   };
 
   const handleMore = () => {
-    Alert.alert('Thông báo', 'Tính năng này đang được phát triển');
+    Alert.alert('Tùy chọn', 'Kênh hỗ trợ an toàn FindBack: 1900-1234');
   };
 
   const handleAttach = () => {
@@ -149,22 +247,62 @@ export default function ChatScreen() {
           avatarUrl={userAvatar}
           onBack={handleBack}
           onCallPress={handleCall}
-          onVideoPress={handleVideo}
           onMorePress={handleMore}
         />
 
-        {/* Messages */}
+        {/* Messages ScrollView */}
         <ChatMessages messages={messages} currentUserId={currentUserId} isTyping={isTyping} />
 
-        {/* Input */}
-        <ChatInput
-          value={newMessage}
-          onChangeText={setNewMessage}
-          onSend={handleSend}
-          onAttachPress={handleAttach}
-          onEmojiPress={handleEmoji}
+        {/* Return Progress Card (Pinned above input) */}
+        <ReturnProgressCard
+          session={session}
+          currentRole={currentRole}
+          currentUserId={currentUserId}
+          onOpenMeetupModal={() => setIsMeetupModalVisible(true)}
+          onAcceptMeetup={handleAcceptMeetup}
+          onRejectMeetup={handleRejectMeetup}
+          onOpenLiveMap={handleOpenLiveMap}
+          onOpenHandover={handleOpenHandover}
+          onOpenRewardStatus={handleOpenRewardStatus}
+          onOpenRateFinder={handleOpenRateFinder}
+          isLoading={isSubmitting}
         />
+
+        {/* Chat Input or Read-Only State */}
+        {isCompleted ? (
+          <View className="border-t border-fb-border-subtle bg-fb-surface px-4 py-3 flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2 flex-1 mr-2">
+              <Lock size={16} color={FIND_BACK.mutedText} />
+              <Text className="text-xs text-fb-muted flex-1">
+                Phiên hoàn trả đã hoàn tất. Kênh chat chuyển sang chế độ chỉ đọc.
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={handleOpenRewardStatus}
+              className="flex-row items-center gap-1 rounded-xl border border-fb-border-subtle bg-fb-surface-elevated px-3 py-1.5"
+            >
+              <FileText size={14} color={FIND_BACK.primaryLight} />
+              <Text className="text-xs font-semibold text-fb-primary-light">Xem biên lai</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <ChatInput
+            value={newMessage}
+            onChangeText={setNewMessage}
+            onSend={handleSend}
+            onAttachPress={handleAttach}
+            onEmojiPress={handleEmoji}
+          />
+        )}
       </View>
+
+      {/* Meetup Modal */}
+      <MeetupModal
+        visible={isMeetupModalVisible}
+        onClose={() => setIsMeetupModalVisible(false)}
+        onSubmit={handleProposeMeetupSubmit}
+        isLoading={isSubmitting}
+      />
     </SafeAreaView>
   );
 }

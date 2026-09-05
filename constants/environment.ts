@@ -37,10 +37,7 @@ export const ENV = {
   SENTRY_DSN: expoExtra.sentryDsn || process.env.SENTRY_DSN || '',
 
   // Google Maps API Key
-  GOOGLE_MAPS_API_KEY:
-    expoExtra.googleMapsApiKey ||
-    process.env.GOOGLE_MAPS_API_KEY ||
-    'AIzaSyCNgLlZO_-OSVz89vNxggZp8W8VPvzmnMg',
+  GOOGLE_MAPS_API_KEY: expoExtra.googleMapsApiKey || process.env.GOOGLE_MAPS_API_KEY || '',
 
   // Google OAuth Client IDs
   // Lấy từ Firebase Console > Project Settings > General > Your apps

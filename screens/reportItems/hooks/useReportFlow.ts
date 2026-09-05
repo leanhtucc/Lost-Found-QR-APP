@@ -2,10 +2,17 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import { itemsApi, SelectionSummaryResponse } from '@services/items';
+import {
+  AnalyzeItemImageResult,
+  EligibleForReportItem,
+  itemsApi,
+  SelectionSummaryResponse,
+} from '@services/items';
+import { uploadApi } from '@/services/upload';
+import { mapApi } from '@/services/map';
 import { radarApi } from '@services/radar';
 import { reportsApi, ReportsApiError } from '@services/reports';
-import type { Item } from '@/types/item';
+import type { Item, ItemCategory } from '@/types/item';
 import { REWARD_OPTIONS, REPORT_LOCATION } from '../constants/mockData';
 import {
   RadarSimulationState,
@@ -124,12 +131,17 @@ const mapItemToOption = (item: {
 
 const mapVaultItemToOption = (
   item: Item,
-  eligibleItems: Awaited<ReturnType<typeof itemsApi.getEligibleForReportItems>>
+  eligibleItems: Awaited<ReturnType<typeof itemsApi.getEligibleForReportItems>>,
+  hasEligibleList = true
 ): ReportItemOption => {
   const matchingEligibleItem = eligibleItems.find(candidate => {
     return candidate.item_id === item.id || candidate.item_id === item.itemId;
   });
   const reportItemId = matchingEligibleItem?.item_id || item.id;
+
+  const isEligible = hasEligibleList
+    ? Boolean(matchingEligibleItem)
+    : item.status === 'SAFE' || item.status !== 'LOST';
 
   return {
     id: reportItemId,
@@ -145,7 +157,7 @@ const mapVaultItemToOption = (
     },
     hasInsurance: false,
     status: item.status,
-    isEligible: Boolean(matchingEligibleItem),
+    isEligible,
   };
 };
 
@@ -194,7 +206,10 @@ export const useReportFlow = () => {
 
     try {
       const [eligibleItems, firstPage] = await Promise.all([
-        itemsApi.getEligibleForReportItems(),
+        itemsApi.getEligibleForReportItems().catch(error => {
+          console.warn('[useReportFlow] Eligible items endpoint unavailable, fallback:', error);
+          return [] as EligibleForReportItem[];
+        }),
         itemsApi.getItems({ page: 1, limit: 50 }),
       ]);
       const allVaultItems = [...firstPage.items];
@@ -204,7 +219,10 @@ export const useReportFlow = () => {
         allVaultItems.push(...nextPage.items);
       }
 
-      const normalizedItems = allVaultItems.map(item => mapVaultItemToOption(item, eligibleItems));
+      const hasEligibleList = eligibleItems.length > 0;
+      const normalizedItems = allVaultItems.map(item =>
+        mapVaultItemToOption(item, eligibleItems, hasEligibleList)
+      );
       const knownItemIds = new Set(
         allVaultItems.flatMap(item => [item.id, item.itemId].filter(Boolean))
       );
@@ -382,9 +400,9 @@ export const useReportFlow = () => {
       let resolvedAddress = FALLBACK_ADDRESS;
 
       try {
-        const geocoded = await Location.reverseGeocodeAsync({ latitude, longitude });
-        if (geocoded.length > 0) {
-          resolvedAddress = toAddressString(geocoded[0]);
+        const reverseResult = await mapApi.reverseGeocode(latitude, longitude);
+        if (reverseResult?.formatted_address) {
+          resolvedAddress = reverseResult.formatted_address;
         }
       } catch (error) {
         console.warn('[ReportFlow] Reverse geocoding failed:', error);
@@ -408,16 +426,11 @@ export const useReportFlow = () => {
     // Update coordinates immediately so the submit flow can use them
     setSelectedLocation(prev => ({ ...prev, lat, lng }));
 
-    // Reverse geocode in the background
+    // Reverse geocode in the background via Google Maps API
     try {
-      const geocoded = await Location.reverseGeocodeAsync({
-        latitude: lat,
-        longitude: lng,
-      });
-
-      if (geocoded.length > 0) {
-        const address = toAddressString(geocoded[0]);
-        const nextLocation = toLocationView(lat, lng, address);
+      const reverseResult = await mapApi.reverseGeocode(lat, lng);
+      if (reverseResult?.formatted_address) {
+        const nextLocation = toLocationView(lat, lng, reverseResult.formatted_address);
         setSelectedLocation(nextLocation);
         setManualAddress(nextLocation.address || FALLBACK_ADDRESS);
       }
@@ -611,9 +624,8 @@ export const useReportFlow = () => {
         const pickerResult =
           source === 'camera'
             ? await ImagePicker.launchCameraAsync({
-                allowsEditing: true,
+                allowsEditing: false,
                 quality: 0.8,
-                mediaTypes: ['images'],
               })
             : await ImagePicker.launchImageLibraryAsync({
                 allowsEditing: true,
@@ -626,21 +638,50 @@ export const useReportFlow = () => {
         }
 
         const imageUri = pickerResult.assets[0].uri;
-        const aiResult = await itemsApi.analyzeItemImage(imageUri);
 
-        // V2: cảnh báo nếu AI không chắc chắn về kết quả phân tích
-        if (typeof aiResult.confidenceScore === 'number' && aiResult.confidenceScore < 0.5) {
-          Alert.alert(
-            'AI không chắc chắn',
-            `Độ chính xác AI: ${Math.round(aiResult.confidenceScore * 100)}%. Vui lòng kiểm tra lại thông tin vật phẩm.`
-          );
+        // Thử AI phân tích, có fallback an toàn nếu lỗi mạng / route
+        let aiResult: AnalyzeItemImageResult | null = null;
+        try {
+          aiResult = await itemsApi.analyzeItemImage(imageUri);
+          if (typeof aiResult.confidenceScore === 'number' && aiResult.confidenceScore < 0.5) {
+            Alert.alert(
+              'AI không chắc chắn',
+              `Độ chính xác AI: ${Math.round(aiResult.confidenceScore * 100)}%. Vui lòng kiểm tra lại thông tin vật phẩm.`
+            );
+          }
+        } catch (aiError) {
+          console.warn('[useReportFlow] AI analyze failed or unavailable, fallback:', aiError);
         }
 
+        // Upload ảnh lấy public URL nếu AI không trả về
+        let publicImageUrl = aiResult?.imagePublicUrl;
+        if (!publicImageUrl) {
+          try {
+            const uploadRes = await uploadApi.uploadImage(imageUri);
+            if (uploadRes.success && uploadRes.data?.url) {
+              publicImageUrl = uploadApi.getImageUrl(uploadRes.data.url);
+            }
+          } catch (uploadError) {
+            console.warn('[useReportFlow] Upload fallback failed:', uploadError);
+          }
+        }
+
+        const itemName = aiResult?.name?.trim() || 'Vật phẩm mới';
+        const itemCategory = (aiResult?.category as ItemCategory) || 'other';
+
         const createdItem = await itemsApi.createGuardianItem({
-          name: aiResult.name,
-          category: aiResult.category,
-          imagePublicUrl: aiResult.imagePublicUrl,
-          details: aiResult.details,
+          name: itemName,
+          category: itemCategory,
+          imagePublicUrl: publicImageUrl || '',
+          details: {
+            color: aiResult?.details.color || '',
+            storage: aiResult?.details.storage || '',
+            model: '',
+            serial: aiResult?.details.serial || '',
+            imei: '',
+            ai_visual_tags: aiResult?.details.ai_visual_tags || [],
+            ai_description: aiResult?.details.ai_description || '',
+          },
           hasInsurance: false,
         });
 
@@ -676,10 +717,11 @@ export const useReportFlow = () => {
         Alert.alert(
           'Đã thêm vật phẩm mới',
           hasCreatedItem
-            ? `AI đã gợi ý "${createdItem.name}" và đã tự động chọn cho bạn.`
-            : `AI đã gợi ý "${createdItem.name}". Vật phẩm chưa đủ điều kiện báo mất ngay nên chưa tự động chọn.`
+            ? `Đã thêm "${createdItem.name}" và tự động chọn cho bạn.`
+            : `Đã thêm "${createdItem.name}".`
         );
       } catch (error) {
+        console.error('[useReportFlow] Error adding new item:', error);
         const message = error instanceof Error ? error.message : 'Không thể thêm vật phẩm mới.';
         Alert.alert('Thêm vật phẩm thất bại', message);
       } finally {

@@ -12,8 +12,24 @@ interface PaymentWebViewModalProps {
   onPaymentCancel: (url: string) => void;
 }
 
-const SUCCESS_PATTERNS = ['vnpay-return', 'payment-success', 'status=success', 'result=success'];
-const CANCEL_PATTERNS = ['payment-cancel', 'vnpay-fail', 'status=failed', 'status=cancel'];
+const SUCCESS_PATTERNS = [
+  'payment-result',
+  'vnpay-return',
+  'payment-success',
+  'status=success',
+  'result=success',
+  'vnp_responsecode=00',
+  'vnp_transactionstatus=00',
+  'success',
+];
+const CANCEL_PATTERNS = [
+  'payment-cancel',
+  'vnpay-fail',
+  'status=failed',
+  'status=cancel',
+  'fail',
+  'cancel',
+];
 
 const containsAnyPattern = (url: string, patterns: string[]): boolean => {
   const normalized = url.toLowerCase();

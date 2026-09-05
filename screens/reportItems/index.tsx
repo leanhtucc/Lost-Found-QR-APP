@@ -144,6 +144,7 @@ export default function ReportItemsScreen() {
         style={styles.contentWrap}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {step === 1 ? (
           <ItemSelectionStep

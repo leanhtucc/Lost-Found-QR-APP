@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import { buildBaseUrl, buildReportsUrl } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
 
@@ -60,6 +61,7 @@ interface GuardianReportRequest {
   location: GuardianReportLocation;
   radar: GuardianReportRadar;
   reward: GuardianReportReward;
+  idempotencyKey?: string;
 }
 
 interface GuardianReportApiPayload {
@@ -78,15 +80,18 @@ export interface GuardianReportCreationResult {
   paymentUrl: string;
 }
 
-const createAuthHeaders = async (): Promise<HeadersInit> => {
+const createAuthHeaders = async (customIdempotencyKey?: string): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
   if (!token) {
     throw new Error('No authentication token found');
   }
 
+  const idempotencyKey = customIdempotencyKey || Crypto.randomUUID();
+
   return {
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
+    'Idempotency-Key': idempotencyKey,
   };
 };
 
@@ -174,7 +179,7 @@ export const reportsApi = {
       throw new Error('Minimum reward is 10,000đ');
     }
 
-    const headers = await createAuthHeaders();
+    const headers = await createAuthHeaders(payload.idempotencyKey);
     const response = await fetch(buildBaseUrl('v1', 'reports'), {
       method: 'POST',
       headers,

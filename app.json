@@ -15,20 +15,12 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.lostfound.app",
-      "config": {
-        "googleMapsApiKey": "AIzaSyCNgLlZO_-OSVz89vNxggZp8W8VPvzmnMg"
-      }
+      "bundleIdentifier": "com.lostfound.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/logoApp.png",
         "backgroundColor": "#000000"
-      },
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyCNgLlZO_-OSVz89vNxggZp8W8VPvzmnMg"
-        }
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,

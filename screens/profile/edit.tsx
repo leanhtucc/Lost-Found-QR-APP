@@ -3,12 +3,12 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -161,8 +161,11 @@ export default function EditProfileScreen() {
   return (
     <SafeAreaView className="flex-1 bg-fb-neutral">
       <SettingsScreenHeader title="Thông tin cá nhân" onBack={() => navigation.goBack()} />
-      <ScrollView
+      <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        bottomOffset={80}
+        extraKeyboardSpace={60}
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
       >
         <View className="mb-8 items-center">
@@ -243,7 +246,7 @@ export default function EditProfileScreen() {
             <Text className="text-base font-bold text-white">Lưu thay đổi</Text>
           )}
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Item, ItemsSummary, ItemStatus } from '@/types/item';
+import { Item, ItemsSummary, ItemStatus, CreateItemParams } from '@/types/item';
 import { itemsApi } from '@/services/items';
 
 const PRELOAD_RETRY_DELAY_MS = 900;
@@ -46,6 +46,7 @@ interface ItemsContextType {
     options?: { enableRetry?: boolean }
   ) => Promise<void>;
   refresh: (statusFilter?: ItemStatus | 'all') => Promise<void>;
+  addItem: (params: CreateItemParams) => Promise<Item>;
 }
 
 const ItemsContext = createContext<ItemsContextType | undefined>(undefined);
@@ -153,6 +154,21 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [loadItems]
   );
 
+  const addItem = useCallback(async (params: CreateItemParams): Promise<Item> => {
+    const newItem = await itemsApi.createItem(params);
+    setItems(prev => [newItem, ...prev]);
+    setSummary(prev =>
+      prev
+        ? {
+            ...prev,
+            totalItems: prev.totalItems + 1,
+            safeItems: prev.safeItems + 1,
+          }
+        : null
+    );
+    return newItem;
+  }, []);
+
   const value: ItemsContextType = {
     items,
     summary,
@@ -160,6 +176,7 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     refreshing,
     loadItems,
     refresh,
+    addItem,
   };
 
   return <ItemsContext.Provider value={value}>{children}</ItemsContext.Provider>;

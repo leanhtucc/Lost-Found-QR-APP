@@ -16,16 +16,18 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
   nearbyCount,
   onSelectItem,
 }) => {
+  const nearbyCards = useMemo(() => cards.filter(card => !card.isOwn), [cards]);
+
   const feedCount = useMemo(() => {
-    return nearbyCount > 0 ? nearbyCount : cards.length;
-  }, [cards.length, nearbyCount]);
+    return nearbyCount > 0 ? nearbyCount : nearbyCards.length;
+  }, [nearbyCards.length, nearbyCount]);
 
   useEffect(() => {
     if (!__DEV__) {
       return;
     }
 
-    const preview = cards.slice(0, 5).map(item => {
+    const preview = nearbyCards.slice(0, 5).map(item => {
       return {
         source: 'lost-feed',
         itemId: item.itemId,
@@ -40,10 +42,10 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
       feedCardsCount: cards.length,
       nearbyCount,
       myLostCount,
-      renderedCount: cards.length,
+      renderedCount: nearbyCards.length,
       preview,
     });
-  }, [cards, cards.length, myLostCount, nearbyCount]);
+  }, [cards.length, myLostCount, nearbyCards, nearbyCount]);
 
   const emptyStateText = 'Chưa có đồ thất lạc nearby.';
 
@@ -70,8 +72,8 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingRight: 24 }}
         >
-          {cards.length > 0 ? (
-            cards.map(item => (
+          {nearbyCards.length > 0 ? (
+            nearbyCards.map(item => (
               <HomeItemCard
                 key={`${item.itemId}-${item.reportedAt}`}
                 item={item}

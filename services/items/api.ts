@@ -18,7 +18,13 @@ import {
   UpdateItemParams,
   UpdateStatusParams,
 } from '@/types';
-import { buildItemsUrl, buildScanUrl, buildV1Url, getFullImageUrl } from '@services/shared/url';
+import {
+  buildApiUrl,
+  buildItemsUrl,
+  buildScanUrl,
+  buildV1Url,
+  getFullImageUrl,
+} from '@services/shared/url';
 import { authStorage } from '@storage/auth';
 
 export interface EligibleForReportItem {
@@ -289,7 +295,7 @@ export const itemsApi = {
    * GET /v1/items/eligible-for-report
    */
   async getEligibleForReportItems(): Promise<EligibleForReportItem[]> {
-    const url = buildV1Url('items', 'eligible-for-report');
+    const url = buildItemsUrl('eligible-for-report');
     const headers = await createHeaders();
 
     const response = await fetch(url, {
@@ -354,14 +360,35 @@ export const itemsApi = {
       type: 'image/jpeg',
     } as unknown as Blob);
 
-    // V2: endpoint đổi từ analyze-image → analyze-item
-    const response = await fetch(buildV1Url('ai', 'analyze-item'), {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+    // V2: endpoint đổi từ analyze-image → analyze-item (hỗ trợ cả /api và /v1)
+    let response: Response;
+    try {
+      response = await fetch(buildApiUrl('ai', 'analyze-item'), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok && (response.status === 404 || response.status === 405)) {
+        response = await fetch(buildV1Url('ai', 'analyze-item'), {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+      }
+    } catch {
+      response = await fetch(buildV1Url('ai', 'analyze-item'), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+    }
 
     const payload = await parseJsonSafely<ItemApiResponse<AnalyzeItemImageEnvelope>>(response);
 
@@ -742,34 +769,42 @@ export const itemsApi = {
    * POST /api/items
    */
   async createItem(params: CreateItemParams): Promise<Item> {
-    const queryParams = new URLSearchParams();
+    const headers = await createHeaders();
 
-    queryParams.append('name', params.name);
-    queryParams.append('category', params.category);
+    const bodyPayload: Record<string, any> = {
+      name: params.name,
+      category: params.category,
+    };
 
     if (params.description) {
-      queryParams.append('description', params.description);
+      bodyPayload.description = params.description;
     }
     if (params.imagePublicUrl) {
-      queryParams.append('imagePublicUrl', params.imagePublicUrl);
+      bodyPayload.imagePublicUrl = params.imagePublicUrl;
+    }
+    if (params.latitude !== undefined && params.latitude !== null) {
+      bodyPayload.latitude = params.latitude;
+    }
+    if (params.longitude !== undefined && params.longitude !== null) {
+      bodyPayload.longitude = params.longitude;
+    }
+    if (params.address) {
+      bodyPayload.address = params.address;
     }
     if (params.lastSeenLocation) {
-      const location =
+      bodyPayload.lastSeenLocation =
         typeof params.lastSeenLocation === 'string'
           ? params.lastSeenLocation
           : JSON.stringify(params.lastSeenLocation);
-      queryParams.append('lastSeenLocation', location);
     }
     if (params.securityPin) {
-      queryParams.append('securityPin', params.securityPin);
+      bodyPayload.securityPin = params.securityPin;
     }
 
-    const url = `${getItemsApiUrl()}?${queryParams.toString()}`;
-    const headers = await createHeaders();
-
-    const response = await fetch(url, {
+    const response = await fetch(getItemsApiUrl(), {
       method: 'POST',
       headers,
+      body: JSON.stringify(bodyPayload),
     });
 
     if (!response.ok) {
@@ -791,33 +826,28 @@ export const itemsApi = {
    * PATCH /api/items/:id
    */
   async updateItem(itemId: string, params: UpdateItemParams): Promise<Item> {
-    const queryParams = new URLSearchParams();
+    const headers = await createHeaders();
 
-    if (params.name) queryParams.append('name', params.name);
-    if (params.category) queryParams.append('category', params.category);
-    if (params.description !== undefined) {
-      queryParams.append('description', params.description);
-    }
-    if (params.imagePublicUrl !== undefined) {
-      queryParams.append('imagePublicUrl', params.imagePublicUrl);
-    }
-    if (params.lastSeenLocation) {
-      const location =
+    const bodyPayload: Record<string, any> = {};
+    if (params.name) bodyPayload.name = params.name;
+    if (params.category) bodyPayload.category = params.category;
+    if (params.description !== undefined) bodyPayload.description = params.description;
+    if (params.imagePublicUrl !== undefined) bodyPayload.imagePublicUrl = params.imagePublicUrl;
+    if (params.latitude !== undefined) bodyPayload.latitude = params.latitude;
+    if (params.longitude !== undefined) bodyPayload.longitude = params.longitude;
+    if (params.address !== undefined) bodyPayload.address = params.address;
+    if (params.lastSeenLocation !== undefined) {
+      bodyPayload.lastSeenLocation =
         typeof params.lastSeenLocation === 'string'
           ? params.lastSeenLocation
           : JSON.stringify(params.lastSeenLocation);
-      queryParams.append('lastSeenLocation', location);
     }
-    if (params.securityPin !== undefined) {
-      queryParams.append('securityPin', params.securityPin);
-    }
+    if (params.securityPin !== undefined) bodyPayload.securityPin = params.securityPin;
 
-    const url = `${getItemsApiUrl()}/${itemId}?${queryParams.toString()}`;
-    const headers = await createHeaders();
-
-    const response = await fetch(url, {
+    const response = await fetch(`${getItemsApiUrl()}/${itemId}`, {
       method: 'PATCH',
       headers,
+      body: JSON.stringify(bodyPayload),
     });
 
     if (!response.ok) {
@@ -875,7 +905,7 @@ export const itemsApi = {
       throw new Error('latitude and longitude must be provided together');
     }
 
-    const url = buildV1Url('items', itemId, 'status');
+    const url = buildItemsUrl(itemId, 'status');
     const headers = await createHeaders();
 
     const requestBody =

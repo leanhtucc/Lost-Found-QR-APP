@@ -74,6 +74,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                 timestamp={msg.timestamp}
                 isRead={msg.isRead}
                 isMine={isMine}
+                isSystem={msg.senderId === 'system'}
                 showTime={showTime}
                 isLastInGroup={isLastInGroup}
               />

@@ -14,6 +14,7 @@ interface MessageBubbleProps {
   timestamp: Date;
   isRead: boolean;
   isMine: boolean;
+  isSystem?: boolean;
   showTime: boolean;
   isLastInGroup: boolean;
 }
@@ -23,12 +24,26 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   timestamp,
   isRead,
   isMine,
+  isSystem,
   showTime,
   isLastInGroup,
 }) => {
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   };
+
+  if (isSystem) {
+    return (
+      <Animated.View
+        entering={FadeInUp.duration(300).springify()}
+        className="items-center my-2 px-4"
+      >
+        <View className="rounded-full border border-fb-primary/30 bg-fb-primary/10 px-4 py-1.5 shadow-sm">
+          <Text className="text-center text-xs font-medium text-fb-primary-light">{content}</Text>
+        </View>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.View

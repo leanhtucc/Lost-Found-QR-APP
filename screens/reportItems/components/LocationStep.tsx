@@ -1,7 +1,18 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { WebView, WebViewMessageEvent } from 'react-native-webview';
-import { Crosshair, MapPin } from 'lucide-react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Keyboard,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import MapView, { PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import { Crosshair, MapPin, Search, X } from 'lucide-react-native';
+import { DARK_GOOGLE_MAP_STYLE } from '@/constants/googleMapStyle';
+import { mapApi, MapAutocompletePrediction } from '@/services/map';
 import { REPORT_COLORS, REPORT_LAYOUT } from '../constants/theme';
 import { ReportLocation } from '../types';
 
@@ -15,363 +26,15 @@ interface LocationStepProps {
   onLocationChange?: (lat: number, lng: number) => void;
 }
 
-/**
- * Kiểm tra xem thời điểm hiện tại có phải ban ngày hay không
- * Ban ngày: 6:00 - 18:00 (màu trắng/sáng)
- * Ban đêm: 18:00 - 6:00 sáng hôm sau (màu đen/tối)
- */
 const isDaytimeNow = (): boolean => {
   const currentHour = new Date().getHours();
   return currentHour >= 6 && currentHour < 18;
 };
 
-// ─── Leaflet HTML builder (day/night map style matching MapSection) ──────────
-
-const buildLeafletHtml = (lat: number, lng: number, initialIsDaytime: boolean): string => {
-  const initialTheme = initialIsDaytime ? 'light' : 'dark';
-
-  return `
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-    />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
-    />
-    <style>
-      html, body, #map {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        transition: background-color 0.3s ease;
-      }
-
-      /* === THEME DARK === */
-      body.theme-dark,
-      body.theme-dark #map,
-      body.theme-dark .leaflet-container {
-        background: #0a0a0f;
-      }
-
-      body.theme-dark .center-pin-label {
-        background: rgba(8,8,15,0.92);
-        border: 1px solid rgba(167,139,250,0.35);
-      }
-
-      body.theme-dark .center-pin-label-text {
-        color: #a78bfa;
-      }
-
-      body.theme-dark .leaflet-tooltip.user-location-tooltip {
-        background: rgba(8,15,24,0.94);
-        color: #e6fffb;
-        border: 1px solid rgba(34,211,238,0.38);
-      }
-
-      body.theme-dark .leaflet-tooltip-top.user-location-tooltip:before {
-        border-top-color: rgba(34,211,238,0.38);
-      }
-
-      /* === THEME LIGHT === */
-      body.theme-light,
-      body.theme-light #map,
-      body.theme-light .leaflet-container {
-        background: #f4f5f8;
-      }
-
-      body.theme-light .center-pin-label {
-        background: rgba(255,255,255,0.95);
-        border: 1px solid rgba(139,92,246,0.35);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-      }
-
-      body.theme-light .center-pin-label-text {
-        color: #7c3aed;
-      }
-
-      body.theme-light .leaflet-tooltip.user-location-tooltip {
-        background: rgba(255,255,255,0.96);
-        color: #0284c7;
-        border: 1px solid rgba(2,132,199,0.35);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-      }
-
-      body.theme-light .leaflet-tooltip-top.user-location-tooltip:before {
-        border-top-color: rgba(2,132,199,0.35);
-      }
-
-      .leaflet-container {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      }
-
-      .leaflet-control-attribution { display: none; }
-
-      /* Fixed center pin */
-      .center-pin-wrapper {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        z-index: 1000;
-        pointer-events: none;
-        transform: translate(-50%, -100%);
-      }
-
-      .center-pin-shadow {
-        position: absolute;
-        bottom: -4px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 12px;
-        height: 4px;
-        border-radius: 50%;
-        background: rgba(0,0,0,0.35);
-      }
-
-      .center-pin-body {
-        width: 36px;
-        height: 44px;
-        position: relative;
-      }
-
-      .center-pin-head {
-        width: 36px;
-        height: 36px;
-        border-radius: 50% 50% 50% 0;
-        background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-        transform: rotate(-45deg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow:
-          0 0 0 3px rgba(139, 92, 246, 0.3),
-          0 4px 12px rgba(0,0,0,0.4);
-      }
-
-      .center-pin-inner {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #fff;
-        transform: rotate(45deg);
-      }
-
-      /* Pulse ring around pin */
-      .center-pin-pulse {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(139, 92, 246, 0.12);
-        animation: pin-pulse 2s ease-out infinite;
-        pointer-events: none;
-        z-index: 999;
-      }
-
-      @keyframes pin-pulse {
-        0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.8; }
-        70% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-        100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-      }
-
-      /* Label tag below pin */
-      .center-pin-label {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, 16px);
-        z-index: 1000;
-        pointer-events: none;
-        border-radius: 999px;
-        padding: 4px 12px;
-        white-space: nowrap;
-      }
-
-      .center-pin-label-text {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 1px;
-      }
-
-      /* User location dot */
-      .user-location-wrapper { background: transparent; border: none; }
-
-      .user-location-pulse {
-        position: absolute;
-        inset: 0;
-        border-radius: 9999px;
-        background: rgba(34, 211, 238, 0.16);
-        animation: user-loc-pulse 1.8s ease-out infinite;
-      }
-
-      .user-location-dot {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 12px;
-        height: 12px;
-        border-radius: 9999px;
-        transform: translate(-50%, -50%);
-        background: #22d3ee;
-        border: 2px solid rgba(255,255,255,0.95);
-        box-shadow:
-          0 0 0 3px rgba(8,15,24,0.65),
-          0 8px 16px rgba(0,0,0,0.35);
-      }
-
-      .leaflet-tooltip.user-location-tooltip {
-        border-radius: 9999px;
-        box-shadow: 0 8px 18px rgba(0,0,0,0.35);
-        padding: 4px 10px;
-      }
-
-      .user-location-text {
-        font-size: 11px;
-        line-height: 1.2;
-        font-weight: 700;
-        white-space: nowrap;
-      }
-
-      @keyframes user-loc-pulse {
-        0% { transform: scale(0.92); opacity: 0.95; }
-        70% { transform: scale(1.6); opacity: 0; }
-        100% { transform: scale(1.6); opacity: 0; }
-      }
-    </style>
-  </head>
-  <body class="theme-${initialTheme}">
-    <div id="map"></div>
-
-    <!-- Fixed center pin overlay -->
-    <div class="center-pin-pulse"></div>
-    <div class="center-pin-wrapper">
-      <div class="center-pin-body">
-        <div class="center-pin-head">
-          <div class="center-pin-inner"></div>
-        </div>
-      </div>
-      <div class="center-pin-shadow"></div>
-    </div>
-    <div class="center-pin-label">
-      <span class="center-pin-label-text">GHIM VỊ TRÍ</span>
-    </div>
-
-    <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-      crossorigin=""
-    ></script>
-    <script>
-      (function () {
-        var postToRN = function (payload) {
-          if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
-            window.ReactNativeWebView.postMessage(JSON.stringify(payload));
-          }
-        };
-
-        var map = L.map('map', {
-          zoomControl: false,
-          preferCanvas: true,
-        }).setView([${lat}, ${lng}], 16);
-
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-        var currentTheme = '${initialTheme}';
-        var darkTileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-        var lightTileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-
-        var currentTileLayer = L.tileLayer(currentTheme === 'light' ? lightTileUrl : darkTileUrl, {
-          maxZoom: 20,
-          subdomains: 'abcd',
-        }).addTo(map);
-
-        window.__setMapTheme = function (themeOrIsDay) {
-          var nextTheme = typeof themeOrIsDay === 'boolean' ? (themeOrIsDay ? 'light' : 'dark') : themeOrIsDay;
-          if (nextTheme !== 'light' && nextTheme !== 'dark') return;
-          if (nextTheme === currentTheme && currentTileLayer) return;
-
-          currentTheme = nextTheme;
-          document.body.className = 'theme-' + nextTheme;
-
-          if (currentTileLayer) {
-            map.removeLayer(currentTileLayer);
-          }
-
-          currentTileLayer = L.tileLayer(nextTheme === 'light' ? lightTileUrl : darkTileUrl, {
-            maxZoom: 20,
-            subdomains: 'abcd',
-          }).addTo(map);
-          currentTileLayer.bringToBack();
-        };
-
-        var userLayer = L.layerGroup().addTo(map);
-
-        // When map stops moving, send center coordinates to RN
-        var debounceTimer = null;
-        map.on('moveend', function () {
-          clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(function () {
-            var center = map.getCenter();
-            postToRN({
-              type: 'center_changed',
-              latitude: Number(center.lat.toFixed(6)),
-              longitude: Number(center.lng.toFixed(6)),
-            });
-          }, 300);
-        });
-
-        window.__setCenter = function (lat, lng) {
-          map.setView([lat, lng], Math.max(map.getZoom(), 16), { animate: true });
-        };
-
-        window.__updateUserLocation = function (latitude, longitude) {
-          if (typeof latitude !== 'number' || typeof longitude !== 'number') return;
-
-          userLayer.clearLayers();
-
-          var icon = L.divIcon({
-            className: 'user-location-wrapper',
-            html: '<div class="user-location-pulse"></div><div class="user-location-dot"></div>',
-            iconSize: [30, 30],
-            iconAnchor: [15, 15],
-            tooltipAnchor: [0, -18],
-          });
-
-          var marker = L.marker([latitude, longitude], {
-            icon: icon,
-            interactive: false,
-            keyboard: false,
-          }).addTo(userLayer);
-
-          marker.bindTooltip('<div class="user-location-text">Vị trí của bạn</div>', {
-            permanent: true,
-            direction: 'top',
-            offset: [0, -12],
-            opacity: 1,
-            className: 'user-location-tooltip',
-          });
-          marker.openTooltip();
-        };
-
-        postToRN({ type: 'map_ready' });
-      })();
-    </script>
-  </body>
-</html>
-`;
+const LOCATION_DELTA = {
+  latitudeDelta: 0.018,
+  longitudeDelta: 0.018,
 };
-
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export const LocationStep: React.FC<LocationStepProps> = ({
   location,
@@ -382,76 +45,102 @@ export const LocationStep: React.FC<LocationStepProps> = ({
   isResolvingCurrentLocation = false,
   onLocationChange,
 }) => {
-  const webViewRef = useRef<WebView>(null);
+  const mapRef = useRef<MapView>(null);
+  const lastMapCenterRef = useRef({ latitude: location.lat, longitude: location.lng });
   const [isMapReady, setIsMapReady] = useState(false);
   const [isDaytime, setIsDaytime] = useState<boolean>(() => isDaytimeNow());
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const nextDaytime = isDaytimeNow();
-      setIsDaytime(prev => (prev !== nextDaytime ? nextDaytime : prev));
-    }, 60000);
+  // Address Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<MapAutocompletePrediction[]>([]);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    const timer = setInterval(() => setIsDaytime(isDaytimeNow()), 60000);
     return () => clearInterval(timer);
   }, []);
 
-  const leafletHtml = useMemo(
-    () => buildLeafletHtml(location.lat, location.lng, isDaytime),
-    // Only compute once on initial mount – we pan the map via injected JS afterwards
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
   useEffect(() => {
     if (!isMapReady) return;
 
-    const theme = isDaytime ? 'light' : 'dark';
-    webViewRef.current?.injectJavaScript(`
-      if (window.__setMapTheme) {
-        window.__setMapTheme('${theme}');
-      }
-      true;
-    `);
-  }, [isDaytime, isMapReady]);
+    const latitudeChanged = Math.abs(lastMapCenterRef.current.latitude - location.lat) > 0.000001;
+    const longitudeChanged = Math.abs(lastMapCenterRef.current.longitude - location.lng) > 0.000001;
+    if (!latitudeChanged && !longitudeChanged) return;
 
-  // When useCurrentLocation toggles on and resolves, pan map to the new location
-  useEffect(() => {
-    if (!isMapReady) return;
-
-    webViewRef.current?.injectJavaScript(`
-      if (window.__setCenter) {
-        window.__setCenter(${location.lat}, ${location.lng});
-      }
-      true;
-    `);
+    lastMapCenterRef.current = { latitude: location.lat, longitude: location.lng };
+    mapRef.current?.animateToRegion(
+      { latitude: location.lat, longitude: location.lng, ...LOCATION_DELTA },
+      350
+    );
   }, [isMapReady, location.lat, location.lng]);
 
-  const handleWebMessage = useCallback(
-    (event: WebViewMessageEvent) => {
+  const handleRegionChangeComplete = (region: Region) => {
+    const latitude = Number(region.latitude.toFixed(6));
+    const longitude = Number(region.longitude.toFixed(6));
+    lastMapCenterRef.current = { latitude, longitude };
+    onLocationChange?.(latitude, longitude);
+  };
+
+  const handleSearchAddress = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const payload = JSON.parse(event.nativeEvent.data) as {
-          type?: string;
-          latitude?: number;
-          longitude?: number;
-        };
+        const predictions = await mapApi.autocomplete(query.trim());
+        setSearchResults(predictions);
+      } catch (error) {
+        console.warn('[LocationStep] Autocomplete search failed:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+  }, []);
 
-        if (payload?.type === 'map_ready') {
-          setIsMapReady(true);
-          return;
+  const handleSelectSearchResult = useCallback(
+    async (prediction: MapAutocompletePrediction) => {
+      Keyboard.dismiss();
+      setIsSearching(true);
+
+      try {
+        const details = await mapApi.getPlaceDetails(prediction.place_id);
+        const lat = details?.lat;
+        const lng = details?.lng;
+        const address = details?.formatted_address || prediction.description;
+
+        if (typeof lat === 'number' && typeof lng === 'number') {
+          lastMapCenterRef.current = { latitude: lat, longitude: lng };
+          mapRef.current?.animateToRegion(
+            {
+              latitude: lat,
+              longitude: lng,
+              latitudeDelta: 0.006,
+              longitudeDelta: 0.006,
+            },
+            350
+          );
+          onLocationChange?.(lat, lng);
         }
 
-        if (
-          payload?.type === 'center_changed' &&
-          typeof payload.latitude === 'number' &&
-          typeof payload.longitude === 'number'
-        ) {
-          onLocationChange?.(payload.latitude, payload.longitude);
-        }
-      } catch {
-        // ignore non-json messages
+        onChangeManualAddress(address);
+        setSearchQuery(address);
+        setSearchResults([]);
+      } catch (error) {
+        console.warn('[LocationStep] Get place details failed:', error);
+      } finally {
+        setIsSearching(false);
       }
     },
-    [onLocationChange]
+    [onChangeManualAddress, onLocationChange]
   );
 
   return (
@@ -460,36 +149,100 @@ export const LocationStep: React.FC<LocationStepProps> = ({
         Bạn mất ở đâu?
       </Text>
       <Text style={{ color: REPORT_COLORS.textSecondary, fontSize: 14, marginTop: 8 }}>
-        Kéo bản đồ để ghim vị trí chính xác vật dụng bị thất lạc.
+        Tìm kiếm địa chỉ hoặc kéo bản đồ để đặt ghim vị trí chính xác.
       </Text>
 
-      {/* ── Interactive Leaflet map ── */}
-      <View
-        style={{
-          marginTop: 24,
-          borderRadius: REPORT_LAYOUT.cardRadius,
-          overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: REPORT_COLORS.border,
-          backgroundColor: '#0a0a0f',
-          height: 320,
-        }}
-      >
-        <WebView
-          ref={webViewRef}
-          originWhitelist={['*']}
-          source={{ html: leafletHtml }}
-          onMessage={handleWebMessage}
-          javaScriptEnabled
-          domStorageEnabled
-          geolocationEnabled
-          setSupportMultipleWindows={false}
-          style={StyleSheet.absoluteFillObject}
-          scrollEnabled={false}
-        />
+      {/* Address Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputWrapper}>
+          <Search size={18} color={REPORT_COLORS.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm địa chỉ, toà nhà, khu vực..."
+            placeholderTextColor={REPORT_COLORS.textMuted}
+            value={searchQuery}
+            onChangeText={handleSearchAddress}
+            returnKeyType="search"
+            autoCorrect={false}
+          />
+          {isSearching && <ActivityIndicator size="small" color={REPORT_COLORS.accent} />}
+          {!isSearching && searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                setSearchQuery('');
+                setSearchResults([]);
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <X size={18} color={REPORT_COLORS.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {searchResults.length > 0 && (
+          <View style={styles.searchResultsWrapper}>
+            <ScrollView
+              style={styles.searchResultsList}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+            >
+              {searchResults.map((item, index) => (
+                <TouchableOpacity
+                  key={item.place_id || `${item.description}-${index}`}
+                  activeOpacity={0.7}
+                  onPress={() => void handleSelectSearchResult(item)}
+                  style={[
+                    styles.searchResultItem,
+                    index < searchResults.length - 1 && styles.searchResultItemBorder,
+                  ]}
+                >
+                  <MapPin size={16} color={REPORT_COLORS.accent} style={{ marginTop: 2 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.searchResultMainText} numberOfLines={1}>
+                      {item.main_text || item.description}
+                    </Text>
+                    {item.secondary_text ? (
+                      <Text style={styles.searchResultSecondaryText} numberOfLines={1}>
+                        {item.secondary_text}
+                      </Text>
+                    ) : null}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </View>
 
-      {/* ── Location info card ── */}
+      <View style={styles.mapCard}>
+        <MapView
+          ref={mapRef}
+          provider={PROVIDER_GOOGLE}
+          initialRegion={{
+            latitude: location.lat,
+            longitude: location.lng,
+            ...LOCATION_DELTA,
+          }}
+          customMapStyle={isDaytime ? [] : DARK_GOOGLE_MAP_STYLE}
+          mapType="standard"
+          toolbarEnabled={false}
+          loadingEnabled
+          onMapReady={() => setIsMapReady(true)}
+          onRegionChangeComplete={handleRegionChangeComplete}
+          style={StyleSheet.absoluteFillObject}
+        />
+
+        <View pointerEvents="none" style={styles.centerPinContainer}>
+          <View style={styles.centerPinPulse} />
+          <View style={styles.centerPinCircle}>
+            <MapPin size={24} color="#fff" fill="#fff" />
+          </View>
+          <View style={[styles.centerPinLabel, !isDaytime && styles.centerPinLabelDark]}>
+            <Text style={styles.centerPinLabelText}>GHIM VỊ TRÍ</Text>
+          </View>
+        </View>
+      </View>
+
       <View
         style={{
           marginTop: 16,
@@ -540,7 +293,6 @@ export const LocationStep: React.FC<LocationStepProps> = ({
         </View>
       </View>
 
-      {/* ── Manual address input ── */}
       <View
         style={{
           marginTop: 12,
@@ -571,7 +323,6 @@ export const LocationStep: React.FC<LocationStepProps> = ({
         />
       </View>
 
-      {/* ── Use current location toggle ── */}
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={onToggleUseCurrentLocation}
@@ -596,3 +347,115 @@ export const LocationStep: React.FC<LocationStepProps> = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  searchContainer: {
+    marginTop: 14,
+    zIndex: 20,
+  },
+  searchInputWrapper: {
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: REPORT_COLORS.border,
+    backgroundColor: REPORT_COLORS.surfaceSoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    color: REPORT_COLORS.textPrimary,
+    fontSize: 14,
+    paddingVertical: 0,
+  },
+  searchResultsWrapper: {
+    marginTop: 6,
+    maxHeight: 180,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: REPORT_COLORS.border,
+    backgroundColor: '#17171F',
+    overflow: 'hidden',
+  },
+  searchResultsList: {
+    maxHeight: 180,
+  },
+  searchResultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  searchResultItemBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: REPORT_COLORS.border,
+  },
+  searchResultMainText: {
+    color: REPORT_COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  searchResultSecondaryText: {
+    color: REPORT_COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  mapCard: {
+    height: 300,
+    marginTop: 14,
+    overflow: 'hidden',
+    borderRadius: REPORT_LAYOUT.cardRadius,
+    borderWidth: 1,
+    borderColor: REPORT_COLORS.border,
+    backgroundColor: '#0a0a0f',
+  },
+  centerPinContainer: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    alignItems: 'center',
+    transform: [{ translateX: -24 }, { translateY: -45 }],
+  },
+  centerPinPulse: {
+    position: 'absolute',
+    top: 2,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: 'rgba(139,92,246,0.18)',
+  },
+  centerPinCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8b5cf6',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.85)',
+    elevation: 8,
+  },
+  centerPinLabel: {
+    marginTop: 7,
+    marginLeft: -20,
+    marginRight: -20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.35)',
+  },
+  centerPinLabelDark: {
+    backgroundColor: 'rgba(8,8,15,0.92)',
+  },
+  centerPinLabelText: {
+    color: '#8b5cf6',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+});

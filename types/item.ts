@@ -52,6 +52,9 @@ export interface CreateItemParams {
   description?: string;
   imagePublicUrl?: string;
   lastSeenLocation?: Location | string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
   securityPin?: string;
 }
 
@@ -62,6 +65,9 @@ export interface UpdateItemParams {
   description?: string;
   imagePublicUrl?: string;
   lastSeenLocation?: Location | string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
   securityPin?: string;
 }
 
