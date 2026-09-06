@@ -1,3 +1,5 @@
+require('dotenv').config({ path: process.env.ENVFILE || '.env' });
+
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
 
 if (!googleMapsApiKey) {
@@ -56,6 +58,19 @@ export default {
         },
       ],
       'expo-secure-store',
+      [
+        'expo-image-picker',
+        {
+          photosPermission: 'Cho phép ứng dụng truy cập thư viện ảnh để chọn hình ảnh đồ vật.',
+          cameraPermission: 'Cho phép ứng dụng truy cập camera để chụp ảnh đồ vật.',
+        },
+      ],
+      [
+        'react-native-vision-camera',
+        {
+          cameraPermissionText: 'Cho phép ứng dụng truy cập camera để quét mã QR.',
+        },
+      ],
       [
         '@react-native-google-signin/google-signin',
         {

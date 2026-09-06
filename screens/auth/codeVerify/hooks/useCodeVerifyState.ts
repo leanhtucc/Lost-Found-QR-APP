@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, TextInput } from 'react-native';
+import { Alert, InteractionManager, TextInput } from 'react-native';
 import {
   Easing,
   cancelAnimation,
@@ -56,8 +56,11 @@ export const useCodeVerifyState = ({ email, onGoBack }: UseCodeVerifyStateParams
   }, [countdown, countdownScale]);
 
   useEffect(() => {
-    const timer = setTimeout(() => otpInputRef.current?.focus(), 250);
-    return () => clearTimeout(timer);
+    const task = InteractionManager.runAfterInteractions(() => {
+      const timer = setTimeout(() => otpInputRef.current?.focus(), 350);
+      return () => clearTimeout(timer);
+    });
+    return () => task.cancel();
   }, []);
 
   const isOtpComplete = otp.length === OTP_LENGTH;

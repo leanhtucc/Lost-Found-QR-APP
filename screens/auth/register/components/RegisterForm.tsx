@@ -1,12 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Keyboard } from 'react-native';
 import { Eye, EyeOff, User, Mail, Lock, CheckCircle2 } from 'lucide-react-native';
 import { Button } from '../../../../components/atoms/Button';
 import { validateEmail, validateDisplayName, validateConfirmPassword } from '@services/auth';
 import { FIND_BACK } from '@constants/theme';
 
 interface RegisterFormProps {
-  onSubmit: (displayName: string, email: string, password: string, photoURL?: string) => void;
+  onSubmit: (
+    displayName: string,
+    email: string,
+    password: string,
+    confirmPassword?: string,
+    photoURL?: string
+  ) => void;
   isLoading: boolean;
 }
 
@@ -20,10 +26,10 @@ interface PasswordRule {
 const passwordRules: PasswordRule[] = [
   {
     id: 'length',
-    label: '8-12 ký tự, có chữ và số',
+    label: 'Tối thiểu 8 ký tự, có chữ và số',
     isValid: (password: string) =>
       password.length >= 8 &&
-      password.length <= 12 &&
+      password.length <= 64 &&
       /[a-zA-Z]/.test(password) &&
       /\d/.test(password),
   },
@@ -89,8 +95,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
   };
 
   const handleSubmit = () => {
+    Keyboard.dismiss();
     if (validateForm()) {
-      onSubmit(displayName.trim(), email.trim().toLowerCase(), password, undefined);
+      onSubmit(
+        displayName.trim(),
+        email.trim().toLowerCase(),
+        password,
+        confirmPassword,
+        undefined
+      );
     }
   };
 

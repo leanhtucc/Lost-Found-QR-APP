@@ -20,7 +20,11 @@ import { COLORS } from '@constants/theme';
 export interface RegisterRequest {
   email: string;
   password: string;
+  password_confirmation?: string;
+  confirmPassword?: string;
   displayName: string;
+  full_name?: string;
+  phoneNumber?: string;
   photoURL?: string;
 }
 
@@ -351,9 +355,14 @@ export interface RegisterResponseData {
  * Some backends return `token`, others return access/refresh pair.
  */
 export interface VerifyOtpResponseData {
-  message: string;
+  message?: string;
   accessToken?: string;
   refreshToken?: string;
+  access_token?: string;
+  refresh_token?: string;
+  expire_in?: number;
+  refresh_token_expire_in?: number;
+  auth_type?: string;
   token?: string;
   user?: User;
   isNewUser?: boolean;

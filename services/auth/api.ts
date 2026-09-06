@@ -55,43 +55,73 @@ const logAuthApi = (event: string, details?: Record<string, unknown>) => {
 interface LegacyTokenPair {
   accessToken?: string;
   refreshToken?: string;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 type AuthTokenPayload = {
   accessToken?: string;
   refreshToken?: string;
+  access_token?: string;
+  refresh_token?: string;
   token?: string | LegacyTokenPair;
+  tokens?: {
+    accessToken?: string;
+    refreshToken?: string;
+    access_token?: string;
+    refresh_token?: string;
+    access?: { token?: string };
+    refresh?: { token?: string };
+  };
+  data?: AuthTokenPayload;
 };
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0;
 
-const extractAuthTokens = (
-  payload?: AuthTokenPayload
-): { accessToken: string; refreshToken: string } | null => {
-  if (!payload) return null;
+const extractAuthTokens = (payload?: any): { accessToken: string; refreshToken: string } | null => {
+  if (!payload || typeof payload !== 'object') return null;
 
-  if (isNonEmptyString(payload.accessToken) && isNonEmptyString(payload.refreshToken)) {
+  const target = payload.data && typeof payload.data === 'object' ? payload.data : payload;
+
+  const access =
+    target.accessToken ||
+    target.access_token ||
+    target.tokens?.accessToken ||
+    target.tokens?.access_token ||
+    target.tokens?.access?.token ||
+    (typeof target.token === 'object'
+      ? target.token?.accessToken || target.token?.access_token
+      : undefined);
+
+  const refresh =
+    target.refreshToken ||
+    target.refresh_token ||
+    target.tokens?.refreshToken ||
+    target.tokens?.refresh_token ||
+    target.tokens?.refresh?.token ||
+    (typeof target.token === 'object'
+      ? target.token?.refreshToken || target.token?.refresh_token
+      : undefined);
+
+  if (isNonEmptyString(access) && isNonEmptyString(refresh)) {
     return {
-      accessToken: payload.accessToken,
-      refreshToken: payload.refreshToken,
+      accessToken: access,
+      refreshToken: refresh,
     };
   }
 
-  if (payload.token && typeof payload.token === 'object') {
-    const tokenPayload = payload.token as LegacyTokenPair;
-    if (isNonEmptyString(tokenPayload.accessToken) && isNonEmptyString(tokenPayload.refreshToken)) {
-      return {
-        accessToken: tokenPayload.accessToken,
-        refreshToken: tokenPayload.refreshToken,
-      };
-    }
+  if (isNonEmptyString(target.token)) {
+    return {
+      accessToken: target.token,
+      refreshToken: isNonEmptyString(refresh) ? refresh : target.token,
+    };
   }
 
-  if (isNonEmptyString(payload.token)) {
+  if (isNonEmptyString(access)) {
     return {
-      accessToken: payload.token,
-      refreshToken: isNonEmptyString(payload.refreshToken) ? payload.refreshToken : payload.token,
+      accessToken: access,
+      refreshToken: isNonEmptyString(refresh) ? refresh : access,
     };
   }
 
@@ -162,6 +192,19 @@ export const authApi = {
     const requestId = `api-reg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const startedAt = Date.now();
 
+    const passwordConfirmation =
+      data.password_confirmation || data.confirmPassword || data.password;
+
+    const payload = {
+      displayName: data.displayName,
+      full_name: data.full_name || data.displayName,
+      email: data.email,
+      password: data.password,
+      password_confirmation: passwordConfirmation,
+      ...(data.photoURL ? { photoURL: data.photoURL } : {}),
+      ...(data.phoneNumber ? { phoneNumber: data.phoneNumber } : {}),
+    };
+
     logAuthApi('register_request_start', {
       requestId,
       endpoint: '/register',
@@ -169,11 +212,12 @@ export const authApi = {
       displayNameLength: data.displayName?.length,
       hasPhotoURL: Boolean(data.photoURL),
       passwordLength: data.password?.length,
+      hasPasswordConfirmation: Boolean(payload.password_confirmation),
     });
 
     const response = await apiRequest<RegisterResponseData>('/register', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     logAuthApi('register_request_result', {
@@ -236,6 +280,8 @@ export const authApi = {
         );
       }
 
+      response.data.accessToken = extractedTokens.accessToken;
+      response.data.refreshToken = extractedTokens.refreshToken;
       await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
 
       // Only save user if it exists in response

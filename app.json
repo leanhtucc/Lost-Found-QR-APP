@@ -61,6 +61,19 @@
       ],
       "expo-secure-store",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cho phép ứng dụng truy cập thư viện ảnh để chọn hình ảnh đồ vật.",
+          "cameraPermission": "Cho phép ứng dụng truy cập camera để chụp ảnh đồ vật."
+        }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Cho phép ứng dụng truy cập camera để quét mã QR."
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "Cho phep FindBack truy cap vi tri de hien thi radar do that lac gan ban"

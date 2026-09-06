@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StatusBar, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -39,8 +39,10 @@ export const RegisterScreen: React.FC = () => {
     displayName: string,
     email: string,
     password: string,
+    confirmPassword?: string,
     photoURL?: string
   ) => {
+    Keyboard.dismiss();
     const startedAt = Date.now();
     const attemptId = `ui-reg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -49,11 +51,12 @@ export const RegisterScreen: React.FC = () => {
       displayNameLength: displayName.trim().length,
       emailMasked: maskEmailForLog(email),
       passwordLength: password.length,
+      hasPasswordConfirmation: Boolean(confirmPassword),
       hasPhotoURL: Boolean(photoURL),
     });
 
     try {
-      const success = await register(displayName, email, password, photoURL);
+      const success = await register(displayName, email, password, confirmPassword, photoURL);
 
       logRegisterScreen('register_result_received', {
         attemptId,
@@ -62,6 +65,7 @@ export const RegisterScreen: React.FC = () => {
       });
 
       if (success) {
+        Keyboard.dismiss();
         logRegisterScreen('navigate_to_code_verify', {
           attemptId,
           routeName: 'CodeVerify',

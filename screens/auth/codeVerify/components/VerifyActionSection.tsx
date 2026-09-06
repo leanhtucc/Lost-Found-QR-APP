@@ -1,6 +1,7 @@
 import React from 'react';
-import { Platform, Text, TouchableOpacity } from 'react-native';
+import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { Mail } from 'lucide-react-native';
 import { Button } from '@components/atoms/Button';
 import { cn } from '@/lib/cn';
 import { FIND_BACK } from '@constants/theme';
@@ -21,7 +22,7 @@ export const VerifyActionSection: React.FC<VerifyActionSectionProps> = ({
   onChangeEmail,
 }) => {
   return (
-    <>
+    <View className="w-full mt-2">
       <Animated.View
         style={[
           glowWrapStyle,
@@ -41,8 +42,8 @@ export const VerifyActionSection: React.FC<VerifyActionSectionProps> = ({
             'bg-fb-secondary rounded-2xl w-full',
             !isOtpComplete || isLoading ? 'opacity-60' : 'opacity-100'
           )}
-          style={{ minHeight: 55 }}
-          title="Xác nhận >"
+          style={{ minHeight: 56 }}
+          title="Xác nhận"
           textClassName="text-fb-neutral text-[18px] font-bold"
         />
       </Animated.View>
@@ -50,12 +51,15 @@ export const VerifyActionSection: React.FC<VerifyActionSectionProps> = ({
       <TouchableOpacity
         onPress={onChangeEmail}
         disabled={isLoading}
-        className="items-center mt-5 py-2"
+        className="flex-row items-center justify-center mt-5 py-3.5 px-6 rounded-2xl bg-fb-surface-muted/70 border border-white/10 active:opacity-70 active:bg-fb-surface-muted"
         accessibilityLabel="Đổi email"
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Text className="text-sm font-semibold text-fb-primary">Đổi email</Text>
+        <Mail size={18} color={FIND_BACK.primaryLight} strokeWidth={2} />
+        <Text className="text-[16px] font-semibold text-fb-primary-light ml-2 tracking-wide">
+          Đổi email
+        </Text>
       </TouchableOpacity>
-    </>
+    </View>
   );
 };

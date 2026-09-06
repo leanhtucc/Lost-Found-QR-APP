@@ -35,6 +35,46 @@ const serializeError = (error: unknown) => {
   return { message: String(error) };
 };
 
+const formatAuthErrorMessage = (
+  response: { message?: string; error?: unknown },
+  fallbackMessage: string = 'Đã có lỗi xảy ra. Vui lòng thử lại.'
+): string => {
+  if (response.error && typeof response.error === 'object' && 'fields' in response.error) {
+    const fields = (response.error as { fields?: Record<string, string> }).fields;
+    if (fields && typeof fields === 'object') {
+      const messages = Object.values(fields).filter(Boolean);
+      if (messages.length > 0) {
+        return messages
+          .map(msg => {
+            if (/password confirmation is required/i.test(msg))
+              return 'Vui lòng xác nhận mật khẩu.';
+            if (/password confirmation does not match/i.test(msg))
+              return 'Mật khẩu xác nhận không khớp.';
+            if (/password must be at least 8/i.test(msg))
+              return 'Mật khẩu phải có ít nhất 8 ký tự.';
+            if (/password must contain/i.test(msg))
+              return 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số.';
+            if (/email.*required/i.test(msg)) return 'Email là bắt buộc.';
+            if (/email.*valid/i.test(msg)) return 'Email không hợp lệ.';
+            if (/already (exists|taken|registered|in use)/i.test(msg))
+              return 'Email này đã được sử dụng.';
+            return msg;
+          })
+          .join('\n');
+      }
+    }
+  }
+
+  if (response.message && response.message !== 'Request data is invalid') {
+    if (/already (exists|taken|registered|in use)/i.test(response.message)) {
+      return 'Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.';
+    }
+    return response.message;
+  }
+
+  return fallbackMessage;
+};
+
 const logRegisterFlow = (event: string, details?: Record<string, unknown>) => {
   console.log(`${AUTH_REGISTER_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
 };
@@ -49,6 +89,7 @@ interface UseAuthReturn {
     displayName: string,
     email: string,
     password: string,
+    confirmPassword?: string,
     photoURL?: string
   ) => Promise<boolean>;
   verifyOtp: (email: string, code: string) => Promise<boolean>;
@@ -205,6 +246,7 @@ export const useAuth = (): UseAuthReturn => {
       displayName: string,
       email: string,
       password: string,
+      confirmPassword?: string,
       photoURL?: string
     ): Promise<boolean> => {
       const requestId = `reg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -216,6 +258,7 @@ export const useAuth = (): UseAuthReturn => {
         displayNameLength: displayName.trim().length,
         emailMasked: maskEmailForLog(normalizedEmail),
         passwordLength: password.length,
+        hasPasswordConfirmation: Boolean(confirmPassword),
         hasPhotoURL: Boolean(photoURL),
       });
 
@@ -226,7 +269,9 @@ export const useAuth = (): UseAuthReturn => {
         const response = await authApi.register({
           email: normalizedEmail,
           password,
+          password_confirmation: confirmPassword || password,
           displayName: displayName.trim(),
+          full_name: displayName.trim(),
           photoURL,
         });
 
@@ -248,24 +293,27 @@ export const useAuth = (): UseAuthReturn => {
           });
           return true;
         } else {
+          const userMessage = formatAuthErrorMessage(
+            response,
+            'Đã có lỗi xảy ra. Vui lòng thử lại.'
+          );
+
           logRegisterFlow('register_failure_detected', {
             requestId,
             durationMs: Date.now() - startedAt,
             message: response.message,
             error: response.error,
+            userMessage,
           });
 
           logRegisterFlow('register_fail_return_false', {
             requestId,
             durationMs: Date.now() - startedAt,
-            userMessage: response.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.',
+            userMessage,
           });
 
-          setError(response.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
-          Alert.alert(
-            'Đăng ký thất bại',
-            response.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.'
-          );
+          setError(userMessage);
+          Alert.alert('Đăng ký thất bại', userMessage);
           return false;
         }
       } catch (err) {
@@ -325,13 +373,35 @@ export const useAuth = (): UseAuthReturn => {
           }, 500);
           return true;
         } else {
-          // Handle specific errors
-          if (response.message?.includes('expired')) {
+          // Check if the user was already verified previously
+          if (
+            response.message?.includes('No pending registration found') ||
+            response.message?.includes('không tìm thấy đăng ký')
+          ) {
+            Alert.alert(
+              'Tài khoản đã xác thực',
+              'Tài khoản này đã hoàn tất xác thực trước đó. Vui lòng đăng nhập để tiếp tục.',
+              [
+                {
+                  text: 'Đăng nhập ngay',
+                  onPress: () =>
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: 'Login' }],
+                    }),
+                },
+              ]
+            );
+            return false;
+          }
+
+          if (response.message?.includes('expired') || response.message?.includes('hết hạn')) {
             setError('Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.');
             Alert.alert('Mã hết hạn', 'Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.');
           } else {
-            setError(response.message || 'Mã xác thực không đúng.');
-            Alert.alert('Xác thực thất bại', response.message || 'Mã xác thực không đúng.');
+            const errorMessage = formatAuthErrorMessage(response, 'Mã xác thực không đúng.');
+            setError(errorMessage);
+            Alert.alert('Xác thực thất bại', errorMessage);
           }
           return false;
         }

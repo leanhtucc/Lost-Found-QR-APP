@@ -66,38 +66,40 @@ export const AnimatedOtpBox: React.FC<AnimatedOtpBoxProps> = ({
   }));
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 60).springify()} style={boxStyle}>
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            borderRadius: 16,
-            borderWidth: 1.5,
-            margin: -1,
-          },
-          glowStyle,
-        ]}
-      />
+    <Animated.View entering={FadeInDown.delay(index * 60).springify()}>
+      <Animated.View style={boxStyle}>
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              borderRadius: 16,
+              borderWidth: 1.5,
+              margin: -1,
+            },
+            glowStyle,
+          ]}
+        />
 
-      <View
-        className={cn(
-          'w-12 h-14 rounded-2xl items-center justify-center border',
-          isFocused
-            ? 'border-fb-primary bg-fb-neutral'
-            : hasValue
-              ? 'border-fb-border-subtle bg-fb-neutral'
-              : 'border-transparent bg-fb-neutral'
-        )}
-      >
-        <Text
+        <View
           className={cn(
-            'text-3xl font-semibold leading-none',
-            hasValue ? 'text-white' : 'text-white/30'
+            'w-12 h-14 rounded-2xl items-center justify-center border',
+            isFocused
+              ? 'border-fb-primary bg-fb-neutral'
+              : hasValue
+                ? 'border-fb-border-subtle bg-fb-neutral'
+                : 'border-transparent bg-fb-neutral'
           )}
         >
-          {hasValue ? digit : '-'}
-        </Text>
-      </View>
+          <Text
+            className={cn(
+              'text-3xl font-semibold leading-none',
+              hasValue ? 'text-white' : 'text-white/30'
+            )}
+          >
+            {hasValue ? digit : '-'}
+          </Text>
+        </View>
+      </Animated.View>
     </Animated.View>
   );
 };

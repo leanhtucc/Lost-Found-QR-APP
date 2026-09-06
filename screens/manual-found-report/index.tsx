@@ -160,6 +160,7 @@ export default function ManualFoundReportScreen() {
       }
     } catch (err) {
       console.error('[ManualFoundReport] Pick image error:', err);
+      Alert.alert('Không thể mở camera/thư viện', 'Đã xảy ra lỗi khi chọn ảnh. Vui lòng thử lại.');
     }
   }, []);
 
