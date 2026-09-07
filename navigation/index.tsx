@@ -36,6 +36,7 @@ import { RegisterScreen as AuthRegisterScreen } from '@screens/auth/register';
 import { CongratulationScreen } from '@screens/auth/congratulation';
 import { OnboardingScreen } from '@screens/onboarding';
 import { TabNavigator } from './tab-navigator';
+import FoundReportDetailScreen from '@/screens/found-report-detail';
 import { appStorage } from '@storage/app';
 import { useAuthContext } from '@contexts/AuthContext';
 import { FIND_BACK } from '@constants/theme';
@@ -56,6 +57,7 @@ export type RootStackParamList = {
   ReportItems: undefined;
   FoundItemReport: undefined;
   ManualFoundReport: undefined;
+  FoundReportDetails: { reportId: string };
   QRCodeView: { itemId: string };
   ScanResult: { qrData: string };
   Settings: undefined;
@@ -302,6 +304,11 @@ export default function RootStack() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="MyItems" component={MyItemsScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="FoundReportDetails"
+          component={FoundReportDetailScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="ItemDetails"
           component={ItemDetailScreen}

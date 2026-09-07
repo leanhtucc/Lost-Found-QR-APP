@@ -9,6 +9,7 @@ interface MapSectionProps {
   pins: HomeLostFeedPin[];
   cards: HomeLostFeedCard[];
   onUserLocationChange: (coords: { latitude: number; longitude: number }) => void;
+  onSelectItem?: (itemId: string) => void;
 }
 
 interface MapMarkerPayload {
@@ -19,6 +20,7 @@ interface MapMarkerPayload {
   name?: string;
   lostMessage?: string | null;
   address?: string | null;
+  reportType?: 'LOST' | 'FOUND';
 }
 
 const FALLBACK_REGION = {
@@ -55,7 +57,12 @@ const formatGeocodedAddress = (address: Location.LocationGeocodedAddress): strin
   return uniqueParts.join(', ');
 };
 
-export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocationChange }) => {
+export const MapSection: React.FC<MapSectionProps> = ({
+  pins,
+  cards,
+  onUserLocationChange,
+  onSelectItem,
+}) => {
   const mapRef = useRef<MapView>(null);
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const hasFocusedMarkersRef = useRef(false);
@@ -98,27 +105,27 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
         name: card?.name,
         lostMessage: card?.lostMessage,
         address: card?.address,
+        reportType: card?.reportType ?? (pin.itemId.startsWith('found:') ? 'FOUND' : 'LOST'),
       });
     }
 
     return Array.from(markerMap.values());
   }, [cardByItemId, pins]);
 
-  const nearbyMarkers = useMemo(() => markers.filter(marker => !marker.isOwn), [markers]);
   const selectedMarker = useMemo(
-    () => nearbyMarkers.find(marker => marker.itemId === selectedMarkerId) ?? null,
-    [nearbyMarkers, selectedMarkerId]
+    () => markers.find(marker => marker.itemId === selectedMarkerId) ?? null,
+    [markers, selectedMarkerId]
   );
 
   useEffect(() => {
-    if (!hasLocationPermission || nearbyMarkers.length === 0) return;
+    if (!hasLocationPermission || markers.length === 0) return;
 
     let isActive = true;
 
     const resolveDetailedAddresses = async () => {
       const updates: Record<string, string> = {};
 
-      for (const marker of nearbyMarkers) {
+      for (const marker of markers) {
         const coordinateKey = `${marker.latitude.toFixed(6)},${marker.longitude.toFixed(6)}`;
         if (geocodedCoordinatesRef.current.has(coordinateKey)) {
           const cachedAddress = geocodedCoordinatesRef.current.get(coordinateKey);
@@ -149,7 +156,7 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
     return () => {
       isActive = false;
     };
-  }, [hasLocationPermission, nearbyMarkers]);
+  }, [hasLocationPermission, markers]);
 
   const updateUserLocation = useCallback(
     (coords: Location.LocationObjectCoords) => {
@@ -200,35 +207,37 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
         });
         if (cachedLocation && isMounted) updateUserLocation(cachedLocation.coords);
       } catch (error) {
-        console.warn('[GoogleMap] Failed to read last known location:', error);
+        console.warn('[GoogleMap] Failed to retrieve cached location:', error);
       }
 
       try {
-        const initialLocation = await Location.getCurrentPositionAsync({
+        const liveLocation = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
           mayShowUserSettingsDialog: true,
         });
-        if (isMounted) updateUserLocation(initialLocation.coords);
+        if (liveLocation && isMounted) updateUserLocation(liveLocation.coords);
       } catch (error) {
-        // The watcher below must still start so the app can recover when GPS becomes available.
-        console.warn('[GoogleMap] Current location is not available yet:', error);
+        console.warn('[GoogleMap] Failed to retrieve live location:', error);
       }
 
       try {
         locationSubscriptionRef.current = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.Balanced,
-            timeInterval: 15000,
-            distanceInterval: 25,
+            distanceInterval: 10,
+            timeInterval: 5000,
           },
-          location => updateUserLocation(location.coords)
+          position => {
+            if (isMounted) updateUserLocation(position.coords);
+          }
         );
       } catch (error) {
-        console.warn('[GoogleMap] Failed to start location watcher:', error);
+        console.warn('[GoogleMap] Failed to subscribe to position updates:', error);
       }
     };
 
     void watchLocation();
+
     return () => {
       isMounted = false;
       locationSubscriptionRef.current?.remove();
@@ -237,26 +246,26 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
   }, [updateUserLocation]);
 
   useEffect(() => {
-    if (!isMapReady || userLocation || nearbyMarkers.length === 0 || hasFocusedMarkersRef.current) {
+    if (!isMapReady || userLocation || markers.length === 0 || hasFocusedMarkersRef.current) {
       return;
     }
 
     mapRef.current?.fitToCoordinates(
-      nearbyMarkers.map(marker => ({ latitude: marker.latitude, longitude: marker.longitude })),
+      markers.map(marker => ({ latitude: marker.latitude, longitude: marker.longitude })),
       {
         edgePadding: { top: 110, right: 24, bottom: 280, left: 24 },
         animated: true,
       }
     );
     hasFocusedMarkersRef.current = true;
-  }, [isMapReady, nearbyMarkers, userLocation]);
+  }, [isMapReady, markers, userLocation]);
 
   useEffect(() => {
     if (!isMapReady || !userLocation || hasFocusedUserRef.current) return;
 
     const visibleCoordinates = [
       { latitude: userLocation.latitude, longitude: userLocation.longitude },
-      ...nearbyMarkers.map(marker => ({ latitude: marker.latitude, longitude: marker.longitude })),
+      ...markers.map(marker => ({ latitude: marker.latitude, longitude: marker.longitude })),
     ];
 
     if (visibleCoordinates.length === 1) {
@@ -274,7 +283,7 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
 
     hasFocusedUserRef.current = true;
     hasFocusedMarkersRef.current = true;
-  }, [isMapReady, nearbyMarkers, userLocation]);
+  }, [isMapReady, markers, userLocation]);
 
   return (
     <View className="h-full w-full">
@@ -300,22 +309,57 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
           />
         )}
 
-        {nearbyMarkers.map(marker => (
-          <Marker
-            key={marker.itemId}
-            coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
-            pinColor="#f97316"
-            onPress={() => setSelectedMarkerId(marker.itemId)}
-          />
-        ))}
+        {markers.map(marker => {
+          const isFound = marker.reportType === 'FOUND' || marker.itemId.startsWith('found:');
+          const pinColor = isFound ? '#10b981' : marker.isOwn ? '#6366f1' : '#f97316';
+
+          return (
+            <Marker
+              key={marker.itemId}
+              coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+              pinColor={pinColor}
+              onPress={() => setSelectedMarkerId(marker.itemId)}
+            />
+          );
+        })}
       </MapView>
 
       {selectedMarker && (
         <View style={styles.detailCard}>
           <View style={styles.detailHeader}>
-            <Text numberOfLines={2} style={styles.detailTitle}>
-              {selectedMarker.name || 'Đồ thất lạc'}
-            </Text>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <View style={styles.badgeRow}>
+                <View
+                  style={[
+                    styles.tagBadge,
+                    selectedMarker.reportType === 'FOUND' ||
+                    selectedMarker.itemId.startsWith('found:')
+                      ? styles.tagBadgeFound
+                      : styles.tagBadgeLost,
+                  ]}
+                >
+                  <Text style={styles.tagBadgeText}>
+                    {selectedMarker.reportType === 'FOUND' ||
+                    selectedMarker.itemId.startsWith('found:')
+                      ? 'Nhặt được'
+                      : 'Báo mất'}
+                  </Text>
+                </View>
+                {selectedMarker.isOwn && (
+                  <View style={styles.tagBadgeOwn}>
+                    <Text style={styles.tagBadgeOwnText}>
+                      {selectedMarker.reportType === 'FOUND' ||
+                      selectedMarker.itemId.startsWith('found:')
+                        ? 'Bạn đã đăng'
+                        : 'Đồ của bạn'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text numberOfLines={2} style={styles.detailTitle}>
+                {selectedMarker.name || 'Đồ vật'}
+              </Text>
+            </View>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Đóng chi tiết vị trí"
@@ -340,6 +384,17 @@ export const MapSection: React.FC<MapSectionProps> = ({ pins, cards, onUserLocat
               {selectedMarker.lostMessage}
             </Text>
           )}
+
+          {onSelectItem && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Xem chi tiết bài đăng"
+              onPress={() => onSelectItem(selectedMarker.itemId)}
+              style={styles.detailActionButton}
+            >
+              <Text style={styles.detailActionButtonText}>Xem chi tiết bài đăng</Text>
+            </Pressable>
+          )}
         </View>
       )}
     </View>
@@ -361,7 +416,23 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   detailHeader: { flexDirection: 'row', alignItems: 'flex-start' },
-  detailTitle: { flex: 1, paddingRight: 12, color: '#17131f', fontSize: 17, fontWeight: '800' },
+  detailTitle: { marginTop: 4, color: '#17131f', fontSize: 17, fontWeight: '800' },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
+  tagBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  tagBadgeFound: { backgroundColor: 'rgba(16,185,129,0.14)' },
+  tagBadgeLost: { backgroundColor: 'rgba(249,115,22,0.14)' },
+  tagBadgeText: { fontSize: 10, fontWeight: '700', color: '#10b981' },
+  tagBadgeOwn: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: 'rgba(99,102,241,0.14)',
+  },
+  tagBadgeOwnText: { fontSize: 10, fontWeight: '700', color: '#6366f1' },
   closeButton: {
     width: 28,
     height: 28,
@@ -388,5 +459,18 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     borderTopWidth: 1,
     borderTopColor: '#eeeaf4',
+  },
+  detailActionButton: {
+    marginTop: 12,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#6366f1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailActionButtonText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

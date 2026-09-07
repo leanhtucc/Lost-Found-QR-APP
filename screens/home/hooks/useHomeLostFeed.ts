@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { HomeLostFeedCard, HomeLostFeedPin } from '@/types/radar';
 import { radarApi } from '@services/radar';
+import { foundReportsApi } from '@/services/reports/found';
 
 const DEFAULT_RADIUS_METERS = 5000;
 const MIN_RADIUS_METERS = 1;
@@ -80,6 +81,7 @@ export const useHomeLostFeed = ({
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastForegroundSyncAtRef = useRef(0);
   const lastTabFocusSyncAtRef = useRef(0);
+  const foundFeedRevisionRef = useRef(foundReportsApi.getFeedRevision());
   const onErrorRef = useRef(onError);
 
   useEffect(() => {
@@ -226,6 +228,12 @@ export const useHomeLostFeed = ({
   }, [syncLostFeedAtCurrentLocation]);
 
   const syncOnTabFocus = useCallback(async () => {
+    const revision = foundReportsApi.getFeedRevision();
+    if (revision !== foundFeedRevisionRef.current) {
+      foundFeedRevisionRef.current = revision;
+      await refreshLostFeed(locationRef.current ?? undefined);
+      return;
+    }
     // Không load lại data khi vào lại trang nếu đã có dữ liệu
     if (lastSnapshotRef.current) {
       return;
@@ -238,7 +246,7 @@ export const useHomeLostFeed = ({
 
     lastTabFocusSyncAtRef.current = now;
     await syncLostFeedAtCurrentLocation();
-  }, [syncLostFeedAtCurrentLocation]);
+  }, [refreshLostFeed, syncLostFeedAtCurrentLocation]);
 
   useEffect(() => {
     void refreshLostFeed();

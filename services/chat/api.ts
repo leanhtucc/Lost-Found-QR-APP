@@ -12,10 +12,13 @@ import {
 import { authStorage } from '@/storage/auth';
 import { buildStreamUrl } from '@services/shared/url';
 
+import { sessionEvents } from '@/lib/sessionEvents';
+
 const createHeaders = async (): Promise<HeadersInit> => {
   const token = await authStorage.getAccessToken();
 
   if (!token) {
+    sessionEvents.emitSessionExpired();
     throw new Error('No access token found');
   }
 
@@ -43,6 +46,9 @@ export const createChannel = async (
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        sessionEvents.emitSessionExpired();
+      }
       throw new Error(`HTTP ${response.status}`);
     }
 
@@ -68,6 +74,9 @@ export const getInbox = async (): Promise<{ total: number; channels: Conversatio
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        sessionEvents.emitSessionExpired();
+      }
       throw new Error(`HTTP ${response.status}`);
     }
 
@@ -119,6 +128,9 @@ export const closeChannel = async (channelId: string): Promise<void> => {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        sessionEvents.emitSessionExpired();
+      }
       throw new Error(`HTTP ${response.status}`);
     }
 
@@ -144,6 +156,9 @@ export const getChannelById = async (channelId: string): Promise<any> => {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        sessionEvents.emitSessionExpired();
+      }
       throw new Error(`HTTP ${response.status}`);
     }
 

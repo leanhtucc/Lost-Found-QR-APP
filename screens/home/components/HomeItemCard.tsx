@@ -63,11 +63,18 @@ export const HomeItemCard: React.FC<HomeItemCardProps> = ({ item, onPress }) => 
       </View>
 
       <View className="mt-2 w-full">
+        <Text className="text-[10px] font-semibold text-[#c7bfff]">
+          {item.reportType === 'FOUND' ? 'Nhặt được' : 'Báo mất'}
+        </Text>
         <Text className="text-base font-semibold text-[#e4e1e9]" numberOfLines={1}>
           {item.name}
         </Text>
         <Text className="mt-0.5 text-[11px] text-[#9f9aae]" numberOfLines={1}>
-          {item.isOwn ? 'Đồ của bạn' : item.ownerDisplayName}
+          {item.isOwn
+            ? item.reportType === 'FOUND'
+              ? 'Bạn đã đăng'
+              : 'Đồ của bạn'
+            : item.ownerDisplayName}
         </Text>
         <View className="mt-1 flex-row items-center">
           <MapPin size={11} color={FIND_BACK.mutedText} />

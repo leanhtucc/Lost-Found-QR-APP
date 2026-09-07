@@ -16,18 +16,18 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
   nearbyCount,
   onSelectItem,
 }) => {
-  const nearbyCards = useMemo(() => cards.filter(card => !card.isOwn), [cards]);
+  const feedCards = useMemo(() => cards, [cards]);
 
   const feedCount = useMemo(() => {
-    return nearbyCount > 0 ? nearbyCount : nearbyCards.length;
-  }, [nearbyCards.length, nearbyCount]);
+    return feedCards.length;
+  }, [feedCards.length]);
 
   useEffect(() => {
     if (!__DEV__) {
       return;
     }
 
-    const preview = nearbyCards.slice(0, 5).map(item => {
+    const preview = feedCards.slice(0, 5).map(item => {
       return {
         source: 'lost-feed',
         itemId: item.itemId,
@@ -42,12 +42,12 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
       feedCardsCount: cards.length,
       nearbyCount,
       myLostCount,
-      renderedCount: nearbyCards.length,
+      renderedCount: feedCards.length,
       preview,
     });
-  }, [cards.length, myLostCount, nearbyCards, nearbyCount]);
+  }, [cards.length, myLostCount, feedCards, nearbyCount]);
 
-  const emptyStateText = 'Chưa có đồ thất lạc nearby.';
+  const emptyStateText = 'Chưa có bài đăng đồ mất hoặc nhặt được gần đây.';
 
   return (
     <View className="flex-1 rounded-t-[32px] bg-[#131318] px-6 pb-6 pt-2">
@@ -56,7 +56,9 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
           activeOpacity={0.85}
           className="self-start rounded-full bg-[#c7bfff] px-5 py-2.5"
         >
-          <Text className="text-sm font-semibold text-[#25008c]">Mất gần đây ({feedCount})</Text>
+          <Text className="text-sm font-semibold text-[#25008c]">
+            Mất & nhặt được ({feedCount})
+          </Text>
         </TouchableOpacity>
 
         {myLostCount > 0 ? (
@@ -66,14 +68,14 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
         ) : null}
       </View>
 
-      <View className="mt-4 h-[196px]">
+      <View className="mt-4 h-[220px]">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingRight: 24 }}
         >
-          {nearbyCards.length > 0 ? (
-            nearbyCards.map(item => (
+          {feedCards.length > 0 ? (
+            feedCards.map(item => (
               <HomeItemCard
                 key={`${item.itemId}-${item.reportedAt}`}
                 item={item}

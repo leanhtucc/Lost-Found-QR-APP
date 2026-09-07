@@ -249,6 +249,7 @@ const normalizeHomeLostFeedCard = (payload: unknown): HomeLostFeedCard | null =>
         ? item.ownerPhotoURL || item.owner_photo_url
         : null,
     reportedAt,
+    reportType: item.reportType === 'FOUND' ? 'FOUND' : 'LOST',
   };
 };
 

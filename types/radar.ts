@@ -18,6 +18,7 @@ export interface HomeLostFeedPin {
 }
 
 export interface HomeLostFeedCard {
+  reportType?: 'LOST' | 'FOUND';
   itemId: string;
   name: string;
   category: RadarCategory | string;

@@ -94,6 +94,10 @@ export const HomeScreen: React.FC = () => {
 
   const handleSelectItem = useCallback(
     (itemId: HomeLostFeedCard['itemId']) => {
+      if (itemId.startsWith('found:')) {
+        navigation.navigate('FoundReportDetails', { reportId: itemId.slice(6) });
+        return;
+      }
       navigation.navigate('ItemDetails', { itemId });
     },
     [navigation]
@@ -136,6 +140,7 @@ export const HomeScreen: React.FC = () => {
         pins={mapPins}
         cards={lostFeedCards}
         onUserLocationChange={handleUserLocationChange}
+        onSelectItem={handleSelectItem}
       />
 
       <LinearGradient

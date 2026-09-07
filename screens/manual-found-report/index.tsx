@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -42,6 +42,8 @@ import { FIND_BACK } from '@constants/theme';
 import { FONT_FAMILY } from '@constants/fonts';
 import { mapApi, MapAutocompletePrediction } from '@/services/map';
 import { itemsApi } from '@/services/items';
+import { uploadApi } from '@/services/upload';
+import { foundReportsApi } from '@/services/reports/found';
 import { CATEGORY_CONFIG, ItemCategory } from '@/types/item';
 
 type ManualFoundReportNav = StackNavigationProp<RootStackParamList, 'ManualFoundReport'>;
@@ -86,6 +88,8 @@ export default function ManualFoundReportScreen() {
   const [locationText, setLocationText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlightRef = useRef(false);
+  const reportKeyRef = useRef<string | null>(null);
   const [imagePublicUrl, setImagePublicUrl] = useState<string | undefined>();
   const [isMapPickerVisible, setIsMapPickerVisible] = useState(false);
   const [mapRegion, setMapRegion] = useState<Region>(DEFAULT_MAP_REGION);
@@ -93,11 +97,25 @@ export default function ManualFoundReportScreen() {
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [isResolvingCurrentLocation, setIsResolvingCurrentLocation] = useState(false);
   const [isResolvingMapAddress, setIsResolvingMapAddress] = useState(false);
   const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [searchResults, setSearchResults] = useState<MapAutocompletePrediction[]>([]);
   const mapSearchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasValidLocation =
+    locationText.trim().length > 0 &&
+    selectedCoordinates !== null &&
+    Number.isFinite(selectedCoordinates.latitude) &&
+    Math.abs(selectedCoordinates.latitude) <= 90 &&
+    Number.isFinite(selectedCoordinates.longitude) &&
+    Math.abs(selectedCoordinates.longitude) <= 180;
+  const canSubmit =
+    Boolean(name.trim() && imageUri && hasValidLocation) &&
+    !isSubmitting &&
+    !isAnalyzing &&
+    !isResolvingMapAddress &&
+    !isResolvingCurrentLocation;
 
   const revealFocusedInput = useCallback(() => {
     // Run once after Android finishes opening the keyboard so multiline inputs
@@ -137,6 +155,7 @@ export default function ManualFoundReportScreen() {
 
       const uri = result.assets[0].uri;
       setImageUri(uri);
+      setImagePublicUrl(undefined);
 
       // AI phân tích tự động
       setIsAnalyzing(true);
@@ -259,6 +278,95 @@ export default function ManualFoundReportScreen() {
     }
   }, []);
 
+  const fetchCurrentLocation = useCallback(async (isSilent = false) => {
+    setIsResolvingCurrentLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        if (!isSilent) {
+          Alert.alert(
+            'Thiếu quyền vị trí',
+            'Vui lòng cấp quyền truy cập vị trí trong cài đặt thiết bị để lấy vị trí hiện tại.'
+          );
+        }
+        return;
+      }
+
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const coords = {
+        latitude: Number(position.coords.latitude.toFixed(6)),
+        longitude: Number(position.coords.longitude.toFixed(6)),
+      };
+
+      let address = `${coords.latitude}, ${coords.longitude}`;
+      try {
+        const reverseResult = await mapApi.reverseGeocode(coords.latitude, coords.longitude);
+        if (reverseResult?.formatted_address) {
+          address = reverseResult.formatted_address;
+        } else {
+          const [geo] = await Location.reverseGeocodeAsync(coords);
+          if (geo) {
+            const formatted = toAddressString(geo);
+            if (formatted) address = formatted;
+          }
+        }
+      } catch (err) {
+        console.warn('[ManualFoundReport] Reverse geocode failed:', err);
+      }
+
+      setSelectedCoordinates(coords);
+      setLocationText(address);
+      setMapRegion(prev => ({
+        ...prev,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      }));
+    } catch (err) {
+      console.warn('[ManualFoundReport] Get current position failed:', err);
+      if (!isSilent) {
+        Alert.alert('Lỗi định vị', 'Không thể lấy vị trí hiện tại. Vui lòng chọn trên bản đồ.');
+      }
+    } finally {
+      setIsResolvingCurrentLocation(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void Location.getForegroundPermissionsAsync().then(({ status }) => {
+      if (status === 'granted') {
+        void fetchCurrentLocation(true);
+      }
+    });
+  }, [fetchCurrentLocation]);
+
+  const handleLocationTextBlur = useCallback(async () => {
+    const query = locationText.trim();
+    if (!query) return;
+    if (selectedCoordinates) return;
+
+    try {
+      const results = await Location.geocodeAsync(query);
+      if (results.length > 0) {
+        const first = results[0];
+        const coords = {
+          latitude: Number(first.latitude.toFixed(6)),
+          longitude: Number(first.longitude.toFixed(6)),
+        };
+        setSelectedCoordinates(coords);
+        setMapRegion(prev => ({
+          ...prev,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        }));
+      }
+    } catch (err) {
+      console.warn('[ManualFoundReport] Geocode on blur failed:', err);
+    }
+  }, [locationText, selectedCoordinates]);
+
   const handleConfirmMapLocation = useCallback(async () => {
     setIsResolvingMapAddress(true);
     const coordinates = {
@@ -286,53 +394,73 @@ export default function ManualFoundReportScreen() {
   }, [mapRegion]);
 
   const handleSubmit = useCallback(async () => {
+    if (
+      submitInFlightRef.current ||
+      isAnalyzing ||
+      isResolvingMapAddress ||
+      isResolvingCurrentLocation
+    )
+      return;
+
     if (!name.trim()) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng nhập tên đồ vật.');
+      Alert.alert('Thiếu thông tin', 'Vui lòng nhập tên đồ vật nhặt được.');
       return;
     }
 
     if (!imageUri) {
-      Alert.alert('Thiếu hình ảnh', 'Vui lòng chụp hoặc chọn ảnh đồ vật.');
+      Alert.alert('Thiếu hình ảnh', 'Vui lòng chụp hoặc chọn ảnh đồ vật nhặt được.');
       return;
     }
 
+    if (!hasValidLocation || !selectedCoordinates) {
+      Alert.alert(
+        'Thiếu vị trí nhặt được',
+        'Vui lòng bấm "Vị trí hiện tại" hoặc "Chọn trên bản đồ" để xác nhận điểm nhặt được đồ.'
+      );
+      return;
+    }
+
+    submitInFlightRef.current = true;
     setIsSubmitting(true);
     try {
-      const locationDetails = locationText.trim()
-        ? [
-            `Vị trí nhặt được: ${locationText.trim()}`,
-            selectedCoordinates
-              ? `Tọa độ: ${selectedCoordinates.latitude}, ${selectedCoordinates.longitude}`
-              : '',
-          ]
-            .filter(Boolean)
-            .join('\n')
-        : '';
-      const persistedDescription = [description.trim(), locationDetails].filter(Boolean).join('\n');
-
-      // Tạo item mới với status sẽ là FOUND
-      await itemsApi.createGuardianItem({
+      let uploadedImageUrl = imagePublicUrl;
+      if (!uploadedImageUrl) {
+        const upload = await uploadApi.uploadImage(imageUri);
+        if (!upload.success || !upload.data?.url) {
+          throw new Error(upload.message || 'Không thể tải ảnh lên. Vui lòng thử lại.');
+        }
+        uploadedImageUrl = uploadApi.getImageUrl(upload.data.url);
+        setImagePublicUrl(uploadedImageUrl);
+      }
+      reportKeyRef.current ??= foundReportsApi.createKey();
+      await foundReportsApi.create({
+        idempotencyKey: reportKeyRef.current,
         name: name.trim(),
         category,
-        imagePublicUrl: imagePublicUrl || '',
-        details: {
-          color: '',
-          storage: '',
-          serial: '',
-          ai_description: persistedDescription || undefined,
+        imagePublicUrl: uploadedImageUrl,
+        description: description.trim(),
+        location: {
+          lat: selectedCoordinates.latitude,
+          lng: selectedCoordinates.longitude,
+          address: locationText.trim(),
         },
       });
 
-      Alert.alert('Thành công!', 'Đã thêm đồ nhặt được. Cảm ơn bạn đã giúp đỡ!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      Alert.alert(
+        'Đăng thành công',
+        'Bài đăng đồ nhặt được đã được lưu. Bạn có thể xem trên trang chủ.',
+        [
+          {
+            text: 'Về trang chủ',
+            onPress: () => navigation.navigate('TabNavigator', { screen: 'Home' }),
+          },
+        ]
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Không thể gửi báo cáo lúc này.';
       Alert.alert('Gửi thất bại', message);
     } finally {
+      submitInFlightRef.current = false;
       setIsSubmitting(false);
     }
   }, [
@@ -344,6 +472,10 @@ export default function ManualFoundReportScreen() {
     locationText,
     selectedCoordinates,
     navigation,
+    hasValidLocation,
+    isAnalyzing,
+    isResolvingMapAddress,
+    isResolvingCurrentLocation,
   ]);
 
   return (
@@ -473,31 +605,62 @@ export default function ManualFoundReportScreen() {
         <View style={styles.fieldGroup}>
           <View style={styles.fieldLabel}>
             <MapPin size={15} color={FIND_BACK.primaryLight} />
-            <Text style={styles.fieldLabelText}>Vị trí nhặt được (tuỳ chọn)</Text>
+            <Text style={styles.fieldLabelText}>Vị trí nhặt được (bắt buộc)</Text>
           </View>
           <TextInput
             style={styles.textInput}
-            placeholder="Ví dụ: Sảnh toà A, tầng 1..."
+            placeholder="Nhập địa chỉ hoặc toà nhà, tầng..."
             placeholderTextColor={FIND_BACK.labelText}
             value={locationText}
             onChangeText={setLocationText}
+            onBlur={() => void handleLocationTextBlur()}
             onFocus={revealFocusedInput}
             maxLength={200}
             multiline={false}
             numberOfLines={1}
           />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Chọn vị trí nhặt được trên bản đồ"
-            onPress={handleOpenMapPicker}
-            style={({ pressed }) => [styles.mapPickerButton, pressed && styles.buttonPressed]}
-          >
-            <MapPin size={18} color={FIND_BACK.primaryLight} />
-            <Text style={styles.mapPickerButtonText}>Chọn trên bản đồ</Text>
-          </Pressable>
+          <View style={styles.locationButtonRow}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Lấy vị trí hiện tại"
+              onPress={() => void fetchCurrentLocation(false)}
+              disabled={isResolvingCurrentLocation}
+              style={({ pressed }) => [
+                styles.currentLocationButton,
+                pressed && styles.buttonPressed,
+                isResolvingCurrentLocation && styles.submitButtonDisabled,
+              ]}
+            >
+              {isResolvingCurrentLocation ? (
+                <ActivityIndicator size="small" color={FIND_BACK.secondary} />
+              ) : (
+                <Crosshair size={16} color={FIND_BACK.secondary} />
+              )}
+              <Text style={styles.currentLocationButtonText}>
+                {isResolvingCurrentLocation ? 'Đang định vị...' : 'Vị trí hiện tại'}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Chọn vị trí nhặt được trên bản đồ"
+              onPress={handleOpenMapPicker}
+              style={({ pressed }) => [styles.mapPickerButton, pressed && styles.buttonPressed]}
+            >
+              <MapPin size={16} color={FIND_BACK.primaryLight} />
+              <Text style={styles.mapPickerButtonText}>Chọn trên bản đồ</Text>
+            </Pressable>
+          </View>
+
+          {!selectedCoordinates && (
+            <Text style={styles.unselectedCoordinatesText}>
+              ⚠️ Bắt buộc: Bấm &apos;Vị trí hiện tại&apos; hoặc &apos;Chọn trên bản đồ&apos; trước
+              khi đăng.
+            </Text>
+          )}
           {selectedCoordinates && (
             <Text style={styles.selectedCoordinatesText}>
-              Đã ghim: {selectedCoordinates.latitude.toFixed(6)},{' '}
+              ✓ Đã ghim: {selectedCoordinates.latitude.toFixed(6)},{' '}
               {selectedCoordinates.longitude.toFixed(6)}
             </Text>
           )}
@@ -510,11 +673,14 @@ export default function ManualFoundReportScreen() {
           accessibilityRole="button"
           accessibilityLabel="Gửi báo cáo đồ nhặt được"
           onPress={() => void handleSubmit()}
-          disabled={isSubmitting || isAnalyzing}
+          disabled={
+            isSubmitting || isAnalyzing || isResolvingMapAddress || isResolvingCurrentLocation
+          }
+          accessibilityState={{ disabled: !canSubmit, busy: isSubmitting }}
           style={({ pressed }) => [
             styles.submitButton,
             pressed && styles.submitButtonPressed,
-            (isSubmitting || isAnalyzing) && styles.submitButtonDisabled,
+            !canSubmit && styles.submitButtonDisabled,
           ]}
         >
           {isSubmitting ? (
@@ -782,7 +948,29 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     textAlignVertical: 'top',
   },
+  locationButtonRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  currentLocationButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: `${FIND_BACK.secondary}60`,
+    backgroundColor: 'rgba(46, 204, 139, 0.12)',
+  },
+  currentLocationButtonText: {
+    color: FIND_BACK.secondary,
+    fontFamily: FONT_FAMILY.semibold,
+    fontSize: 14,
+  },
   mapPickerButton: {
+    flex: 1,
     height: 48,
     borderRadius: 14,
     flexDirection: 'row',
@@ -798,11 +986,19 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.semibold,
     fontSize: 14,
   },
-  selectedCoordinatesText: {
-    color: FIND_BACK.mutedText,
-    fontFamily: FONT_FAMILY.body,
-    fontSize: 11,
+  unselectedCoordinatesText: {
+    color: '#f87171',
+    fontFamily: FONT_FAMILY.medium,
+    fontSize: 12,
     textAlign: 'center',
+    marginTop: 2,
+  },
+  selectedCoordinatesText: {
+    color: FIND_BACK.secondary,
+    fontFamily: FONT_FAMILY.medium,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 2,
   },
   // Category chips
   categoryList: {
