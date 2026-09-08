@@ -1,9 +1,37 @@
-require('dotenv').config({ path: process.env.ENVFILE || '.env' });
+const path = require('path');
+const dotenv = require('dotenv');
 
-const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
+// Load shared local values first. A selected environment file only overrides
+// values that belong to that environment. Variables configured in EAS still
+// take precedence because they already exist in process.env.
+const projectRoot = __dirname; // eslint-disable-line no-undef
 
-if (!googleMapsApiKey) {
-  throw new Error('[ENV] Missing GOOGLE_MAPS_API_KEY. Add it to .env before building the app.');
+dotenv.config({ path: path.resolve(projectRoot, '.env') });
+if (process.env.ENVFILE) {
+  dotenv.config({ path: path.resolve(projectRoot, process.env.ENVFILE), override: true });
+}
+
+const environment = process.env.ENV || process.env.APP_ENV || 'development';
+
+const requireEnv = name => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`[ENV] Missing ${name} for ${environment} build.`);
+  }
+  return value;
+};
+
+const apiUrl = requireEnv('API_URL').replace(/\/+$/, '');
+const googleMapsApiKey = requireEnv('GOOGLE_MAPS_API_KEY');
+const googleWebClientId = requireEnv('GOOGLE_WEB_CLIENT_ID');
+const googleIosClientId = process.env.GOOGLE_IOS_CLIENT_ID?.trim() || '';
+const googleAndroidClientId = process.env.GOOGLE_ANDROID_CLIENT_ID?.trim() || '';
+
+if (
+  !/^\d+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(googleWebClientId) ||
+  /X{4,}/i.test(googleWebClientId)
+) {
+  throw new Error('[ENV] GOOGLE_WEB_CLIENT_ID is not a valid Google OAuth Web client ID.');
 }
 
 export default {
@@ -39,10 +67,7 @@ export default {
           apiKey: googleMapsApiKey,
         },
       },
-      googleServicesFile:
-        process.env.ENV === 'production'
-          ? './firebase/android/google-services.json'
-          : './firebase/android/google-services.json',
+      googleServicesFile: './firebase/android/google-services.json',
     },
     web: {
       favicon: './assets/logoApp.png',
@@ -71,26 +96,20 @@ export default {
           cameraPermissionText: 'Cho phép ứng dụng truy cập camera để quét mã QR.',
         },
       ],
-      [
-        '@react-native-google-signin/google-signin',
-        {
-          iosUrlScheme: 'com.googleusercontent.apps.573454777935-0dqcumi7da5h5425d67cv6p4r2l7m7vu',
-        },
-      ],
+      // The native module is autolinked on Android. Add the Google Sign-In
+      // config plugin here only after GOOGLE_IOS_CLIENT_ID is configured.
       '@react-native-firebase/app',
       '@react-native-firebase/auth',
     ],
     extra: {
-      apiUrl: process.env.API_URL || 'https://backend-api-8rw9.onrender.com',
-      environment: process.env.ENV || 'development',
+      apiUrl,
+      environment,
       sentryDsn: process.env.SENTRY_DSN || '',
       googleMapsApiKey,
       // Google OAuth Client IDs
-      googleWebClientId:
-        process.env.GOOGLE_WEB_CLIENT_ID ||
-        '573454777935-u0sp5nj8ks2u7r6nocgk4pjd87qc4l5e.apps.googleusercontent.com',
-      googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID || '',
-      googleAndroidClientId: process.env.GOOGLE_ANDROID_CLIENT_ID || '',
+      googleWebClientId,
+      googleIosClientId,
+      googleAndroidClientId,
     },
   },
 };

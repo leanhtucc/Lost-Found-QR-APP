@@ -8,6 +8,20 @@ import Constants from 'expo-constants';
 // Get extra config from expo
 const expoExtra = Constants.expoConfig?.extra || {};
 
+const resolveGoogleWebClientId = (): string => {
+  const value = expoExtra.googleWebClientId || process.env.GOOGLE_WEB_CLIENT_ID;
+
+  if (
+    typeof value !== 'string' ||
+    !/^\d+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(value.trim()) ||
+    /X{4,}/i.test(value)
+  ) {
+    throw new Error('[ENV] Missing or invalid GOOGLE_WEB_CLIENT_ID.');
+  }
+
+  return value.trim();
+};
+
 const resolveRequiredApiUrl = (): string => {
   const rawApiUrl = expoExtra.apiUrl || process.env.API_URL;
 
@@ -41,10 +55,7 @@ export const ENV = {
 
   // Google OAuth Client IDs
   // Lấy từ Firebase Console > Project Settings > General > Your apps
-  GOOGLE_WEB_CLIENT_ID:
-    expoExtra.googleWebClientId ||
-    process.env.GOOGLE_WEB_CLIENT_ID ||
-    '970897912928-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com',
+  GOOGLE_WEB_CLIENT_ID: resolveGoogleWebClientId(),
   GOOGLE_IOS_CLIENT_ID: expoExtra.googleIosClientId || process.env.GOOGLE_IOS_CLIENT_ID || '',
   GOOGLE_ANDROID_CLIENT_ID:
     expoExtra.googleAndroidClientId || process.env.GOOGLE_ANDROID_CLIENT_ID || '',

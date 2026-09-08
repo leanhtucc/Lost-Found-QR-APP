@@ -1,9 +1,9 @@
 {
   "expo": {
     "name": "LostAndFoundQR",
-    "slug": "LostAndFoundQR",
+    "slug": "lost-and-found-qr",
     "version": "1.0.0",
-    "scheme": "lostfound",
+    "scheme": "lostfoundqr",
     "orientation": "portrait",
     "icon": "./assets/logoApp.png",
     "userInterfaceStyle": "light",
@@ -31,7 +31,7 @@
           "autoVerify": true,
           "data": [
             {
-              "scheme": "lostfound"
+              "scheme": "lostfoundqr"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]

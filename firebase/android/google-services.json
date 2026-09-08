@@ -1,0 +1,43 @@
+{
+  "project_info": {
+    "project_number": "798465121325",
+    "project_id": "lost-and-found-98cdd",
+    "storage_bucket": "lost-and-found-98cdd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:798465121325:android:0ec9605e93a98d73a5eca4",
+        "android_client_info": {
+          "package_name": "com.lostfound.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "798465121325-qmrcb0erk05cl15v8br2rarse2ep1fji.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lostfound.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaEWUeCU_9JGmjNL_-KDr2JEzUZQMIMnQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "798465121325-tj2uifpgb40q67v824r4lckit1p4r36i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

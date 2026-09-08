@@ -50,6 +50,11 @@ google-services.json
 GoogleService-Info.plist
 secrets.json
 
+# Firebase Android configuration is required by Expo/EAS prebuild.
+# OAuth client IDs and Firebase Android API keys are public app configuration;
+# restrict the API key by package name and signing certificate in Google Cloud.
+!firebase/android/google-services.json
+
 # typescript
 *.tsbuildinfo
 
@@ -65,6 +70,5 @@ secrets.json
 .env
 
 .env.production
-
 
 

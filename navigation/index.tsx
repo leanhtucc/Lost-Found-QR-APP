@@ -107,7 +107,7 @@ const AUTH_ROUTE_NAMES: (keyof RootStackParamList)[] = [
 
 // Deep linking configuration - Professional Lost & Found
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: [Linking.createURL('/'), 'lostfound://', 'lostfoundapp://'],
+  prefixes: [Linking.createURL('/'), 'lostfoundqr://', 'lostfound://', 'lostfoundapp://'],
   config: {
     screens: {
       ResetPassword: {
