@@ -36,16 +36,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ type, onAddClick }) => {
       <Text style={styles.subtitle}>Hãy thêm món đồ đầu tiên để bảo vệ tài sản</Text>
 
       <TouchableOpacity
-        activeOpacity={0.9}
+        activeOpacity={0.85}
         onPress={onAddClick}
         accessibilityRole="button"
         accessibilityLabel="Thêm món đồ"
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
         <LinearGradient
           colors={MY_ITEMS_PRIMARY_GRADIENT}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.addButton}
+          pointerEvents="none"
         >
           <Plus size={16} color="#FFFFFF" strokeWidth={2.5} />
           <Text style={styles.addButtonText}>Thêm món đồ</Text>
@@ -58,7 +60,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ type, onAddClick }) => {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingVertical: 52,
+    paddingTop: 24,
+    paddingBottom: 28,
     paddingHorizontal: 20,
   },
   iconCircle: {

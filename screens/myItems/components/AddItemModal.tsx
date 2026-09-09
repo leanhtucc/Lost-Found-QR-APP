@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X,
   ShieldCheck,
@@ -65,6 +66,9 @@ const CATEGORY_ITEMS: { value: ItemCategory; label: string; icon: React.ElementT
 ];
 
 export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, onSubmit }) => {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 36 : 16);
+
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ItemCategory>('wallet');
   const [description, setDescription] = useState('');
@@ -247,7 +251,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.backdrop}
       >
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: bottomInset + 16 }]}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.titleRow}>
@@ -521,7 +525,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '92%',
-    paddingBottom: Platform.OS === 'ios' ? 24 : 16,
   },
   header: {
     flexDirection: 'row',

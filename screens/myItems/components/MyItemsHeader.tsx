@@ -27,12 +27,14 @@ export const MyItemsHeader: React.FC<MyItemsHeaderProps> = ({ totalItems, onAddC
         accessibilityRole="button"
         accessibilityLabel="Thêm món đồ"
         style={styles.addButtonTouchArea}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
         <LinearGradient
           colors={['#7C6AF6', '#6B5AE8']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.addButtonGradient}
+          pointerEvents="none"
         >
           <Plus size={20} color="#F9F5FD" strokeWidth={2.5} />
         </LinearGradient>
@@ -51,6 +53,8 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: MY_ITEMS_COLORS.border,
+    zIndex: 10,
+    elevation: 4,
   },
   title: {
     fontSize: 28,

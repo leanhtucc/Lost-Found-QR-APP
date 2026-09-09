@@ -97,6 +97,7 @@ export const MyItemsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <LinearGradient
+        pointerEvents="none"
         colors={['rgba(108, 76, 241, 0.34)', 'rgba(108, 76, 241, 0.12)', 'rgba(14, 14, 19, 0)']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
@@ -151,14 +152,14 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     height: 180,
-    zIndex: 1,
+    zIndex: 0,
   },
   scrollView: {
     flex: 1,
     backgroundColor: MY_ITEMS_COLORS.background,
   },
   scrollContent: {
-    paddingBottom: 96,
+    paddingBottom: 110,
   },
 });
 
