@@ -60,6 +60,7 @@ export interface AnalyzeItemImageResult {
   color: string;
   confidenceScore: number;
   imagePublicUrl?: string;
+  filename?: string;
   details: {
     color: string;
     storage: string;
@@ -140,6 +141,7 @@ interface AnalyzeItemImageEnvelope {
   color?: string | null;
   confidence_score?: number;
   imagePublicUrl?: string;
+  filename?: string;
   ai_visual_tags?: string[];
   description?: string;
 }
@@ -415,6 +417,7 @@ export const itemsApi = {
       color,
       confidenceScore,
       imagePublicUrl: getFullImageUrl(payload.data.imagePublicUrl) || undefined,
+      filename: payload.data.filename || undefined,
       details: {
         color,
         storage: '',

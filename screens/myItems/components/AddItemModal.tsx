@@ -31,9 +31,13 @@ import {
   ImagePlus,
   RotateCcw,
   CheckCircle2,
+  FileText,
+  Gem,
+  Sparkles,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ItemCategory } from '@/types/item';
+import { itemsApi } from '@/services/items/api';
 import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_PRIMARY_GRADIENT } from '../constants/ui';
 
 export interface AddItemSubmitData {
@@ -41,6 +45,8 @@ export interface AddItemSubmitData {
   category: ItemCategory;
   description?: string;
   imageUri: string;
+  imagePublicUrl?: string;
+  uploadedFilename?: string;
   captureLocation: {
     latitude: number;
     longitude: number;
@@ -62,8 +68,30 @@ const CATEGORY_ITEMS: { value: ItemCategory; label: string; icon: React.ElementT
   { value: 'wallet', label: 'Ví tiền', icon: Wallet },
   { value: 'keys', label: 'Chìa khóa', icon: Key },
   { value: 'bag', label: 'Túi xách', icon: Briefcase },
+  { value: 'documents', label: 'Giấy tờ', icon: FileText },
+  { value: 'jewelry', label: 'Trang sức', icon: Gem },
   { value: 'other', label: 'Khác', icon: Package },
 ];
+
+const mapAiCategory = (rawCategory?: string): ItemCategory => {
+  if (!rawCategory) return 'other';
+  const clean = rawCategory.toLowerCase().trim();
+  if (clean === 'laptop') return 'electronics';
+  const validCategories: ItemCategory[] = [
+    'electronics',
+    'phone',
+    'wallet',
+    'keys',
+    'bag',
+    'documents',
+    'jewelry',
+    'other',
+  ];
+  if (validCategories.includes(clean as ItemCategory)) {
+    return clean as ItemCategory;
+  }
+  return 'other';
+};
 
 export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, onSubmit }) => {
   const insets = useSafeAreaInsets();
@@ -73,6 +101,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
   const [category, setCategory] = useState<ItemCategory>('wallet');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imagePublicUrl, setImagePublicUrl] = useState<string | null>(null);
+  const [uploadedFilename, setUploadedFilename] = useState<string | null>(null);
 
   const [locationCoords, setLocationCoords] = useState<{
     latitude: number;
@@ -84,6 +114,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
 
   const [isLocating, setIsLocating] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiDetected, setAiDetected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = () => {
@@ -91,9 +123,13 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
     setCategory('wallet');
     setDescription('');
     setImageUri(null);
+    setImagePublicUrl(null);
+    setUploadedFilename(null);
     setLocationCoords(null);
     setLocationAddress('');
     setCapturedAt(null);
+    setIsAnalyzing(false);
+    setAiDetected(false);
   };
 
   const handleClose = () => {
@@ -191,8 +227,40 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const pickedUri = result.assets[0].uri;
         setImageUri(pickedUri);
-        // Tự động ghi nhận GPS ngay sau khi chụp/chọn ảnh
-        await acquireLocation();
+        setImagePublicUrl(null);
+        setUploadedFilename(null);
+        setAiDetected(false);
+
+        // 1. Tự động ghi nhận GPS song song
+        const locationPromise = acquireLocation();
+
+        // 2. Tự động phân tích ảnh bằng Gemini AI
+        setIsAnalyzing(true);
+        try {
+          const aiResult = await itemsApi.analyzeItemImage(pickedUri);
+          if (aiResult.name && aiResult.name !== 'Vật phẩm mới') {
+            setName(aiResult.name);
+            setAiDetected(true);
+          }
+          if (aiResult.category) {
+            setCategory(mapAiCategory(aiResult.category));
+          }
+          if (aiResult.details?.ai_description) {
+            setDescription(aiResult.details.ai_description);
+          }
+          if (aiResult.imagePublicUrl) {
+            setImagePublicUrl(aiResult.imagePublicUrl);
+          }
+          if (aiResult.filename) {
+            setUploadedFilename(aiResult.filename);
+          }
+        } catch (aiErr: any) {
+          console.warn('[AddItemModal] AI analyze error:', aiErr?.message);
+        } finally {
+          setIsAnalyzing(false);
+        }
+
+        await locationPromise;
       }
     } catch (err: any) {
       Alert.alert('Lỗi xử lý ảnh', err?.message || 'Không thể chụp hoặc chọn ảnh.');
@@ -228,6 +296,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
         category,
         description: description.trim() || undefined,
         imageUri,
+        imagePublicUrl: imagePublicUrl || undefined,
+        uploadedFilename: uploadedFilename || undefined,
         captureLocation: {
           latitude: locationCoords.latitude,
           longitude: locationCoords.longitude,
@@ -337,6 +407,25 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
                   <ImagePlus size={18} color={MY_ITEMS_COLORS.textSecondary} />
                   <Text style={styles.galleryActionText}>Hoặc chọn từ thư viện</Text>
                 </TouchableOpacity>
+              </View>
+            )}
+
+            {/* AI Analysis Status Banner */}
+            {isAnalyzing && (
+              <View style={styles.aiBanner}>
+                <ActivityIndicator size="small" color={MY_ITEMS_COLORS.primaryStart} />
+                <Text style={styles.aiBannerText}>
+                  Gemini AI đang phân tích ảnh, nhận diện tên & danh mục...
+                </Text>
+              </View>
+            )}
+
+            {!isAnalyzing && aiDetected && (
+              <View style={styles.aiSuccessBanner}>
+                <Sparkles size={16} color={MY_ITEMS_COLORS.safeText} />
+                <Text style={styles.aiSuccessText}>
+                  AI đã tự động gợi ý tên & danh mục từ ảnh chụp!
+                </Text>
               </View>
             )}
 
@@ -869,5 +958,43 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
+  },
+  aiBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(108, 76, 241, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(108, 76, 241, 0.35)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  aiBannerText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#A78BFA',
+  },
+  aiSuccessBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: MY_ITEMS_COLORS.safeSoft,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 204, 139, 0.35)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  aiSuccessText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: MY_ITEMS_COLORS.safeText,
   },
 });

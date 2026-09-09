@@ -52,16 +52,20 @@ export const MyItemsScreen: React.FC = () => {
   };
 
   const handleCreateProtectedItem = async (data: AddItemSubmitData) => {
-    let uploadedFilename: string | undefined;
+    let uploadedFilename: string | undefined = data.uploadedFilename;
+    let publicUrl = data.imagePublicUrl;
 
-    // Bước 1: Upload ảnh trước
-    const uploadRes = await uploadApi.uploadImage(data.imageUri);
-    if (!uploadRes.success || !uploadRes.data?.url) {
-      throw new Error(uploadRes.message || 'Không thể upload ảnh lên hệ thống. Vui lòng thử lại.');
+    // Bước 1: Nếu chưa có URL ảnh từ bước phân tích AI, thực hiện upload
+    if (!publicUrl) {
+      const uploadRes = await uploadApi.uploadImage(data.imageUri);
+      if (!uploadRes.success || !uploadRes.data?.url) {
+        throw new Error(
+          uploadRes.message || 'Không thể upload ảnh lên hệ thống. Vui lòng thử lại.'
+        );
+      }
+      publicUrl = uploadRes.data.url;
+      uploadedFilename = uploadRes.data.filename;
     }
-
-    const publicUrl = uploadRes.data.url;
-    uploadedFilename = uploadRes.data.filename;
 
     // Bước 2: Tạo món đồ với URL ảnh và vị trí GPS
     try {
@@ -82,7 +86,7 @@ export const MyItemsScreen: React.FC = () => {
         `"${data.name}" đã được đưa vào hệ thống bảo vệ an toàn (SAFE) với ảnh và vị trí xác thực.`
       );
     } catch (err: any) {
-      // Bước 3: Nếu upload thành công nhưng tạo item thất bại, dọn dẹp file ảnh rác
+      // Bước 3: Nếu tạo item thất bại, dọn dẹp file ảnh rác
       if (uploadedFilename) {
         try {
           await uploadApi.deleteImage(uploadedFilename);
