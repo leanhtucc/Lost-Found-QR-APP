@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Linking } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus } from 'lucide-react-native';
+import { Plus, Navigation as NavigationIcon } from 'lucide-react-native';
+import * as Location from 'expo-location';
 import { RootStackParamList } from '@navigation/index';
 import { HomeLostFeedCard } from '@/types/radar';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -24,6 +25,9 @@ export const HomeScreen: React.FC = () => {
   const { user } = useAuthContext();
   const { showToast } = useToast();
   const [isReportChoiceVisible, setIsReportChoiceVisible] = useState(false);
+  const [locationPermissionStatus, setLocationPermissionStatus] = useState<
+    'checking' | 'granted' | 'denied' | 'disabled'
+  >('checking');
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['34%', '58%', '86%'], []);
@@ -50,10 +54,30 @@ export const HomeScreen: React.FC = () => {
     handleUserLocationChange,
     syncOnTabFocus,
   } = useHomeLostFeed({
-    radiusMeters: 550000,
-    minSyncRefreshAgeMs: 20000,
+    radiusMeters: 10000, // 10 km chuẩn backend mới
     onError: handleFeedError,
   });
+
+  const handleRequestLocation = useCallback(async () => {
+    try {
+      if (locationPermissionStatus === 'disabled') {
+        await Location.enableNetworkProviderAsync().catch(() => null);
+      }
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        setLocationPermissionStatus('granted');
+        const pos = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        handleUserLocationChange(pos.coords);
+      } else {
+        setLocationPermissionStatus('denied');
+        Linking.openSettings();
+      }
+    } catch {
+      Linking.openSettings();
+    }
+  }, [handleUserLocationChange, locationPermissionStatus]);
 
   useEffect(() => {
     if (!__DEV__) {
@@ -74,7 +98,7 @@ export const HomeScreen: React.FC = () => {
       isOwn: pin.isOwn,
     }));
 
-    console.log('[Home] Lost feed (/api/home/lost-feed):', {
+    console.log('[Home] Lost feed (/v1/home/lost-feed):', {
       cardsCount: lostFeedCards.length,
       pinsCount: mapPins.length,
       myLostCount,
@@ -98,9 +122,14 @@ export const HomeScreen: React.FC = () => {
         navigation.navigate('FoundReportDetails', { reportId: itemId.slice(6) });
         return;
       }
+      const matchedCard = lostFeedCards.find(card => card.itemId === itemId);
+      if (matchedCard && !matchedCard.isOwn) {
+        navigation.navigate('PublicItemDetails', { itemId });
+        return;
+      }
       navigation.navigate('ItemDetails', { itemId });
     },
-    [navigation]
+    [navigation, lostFeedCards]
   );
 
   const handleOpenReportChoice = useCallback(() => {
@@ -123,17 +152,6 @@ export const HomeScreen: React.FC = () => {
     console.log('[Home] BottomSheet index changed:', index);
   }, []);
 
-  if (isRadarLoading && lostFeedCards.length === 0) {
-    return (
-      <View style={styles.container}>
-        <View className="flex-1 items-center justify-center bg-fb-canvas">
-          <ActivityIndicator size="large" color={FIND_BACK.primary} />
-          <Text className="mt-4 text-gray-400">Đang tải lost feed...</Text>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <MapSection
@@ -141,6 +159,7 @@ export const HomeScreen: React.FC = () => {
         cards={lostFeedCards}
         onUserLocationChange={handleUserLocationChange}
         onSelectItem={handleSelectItem}
+        onLocationPermissionChange={setLocationPermissionStatus}
       />
 
       <LinearGradient
@@ -158,6 +177,35 @@ export const HomeScreen: React.FC = () => {
           onProfilePress={handleOpenProfile}
         />
       </LinearGradient>
+
+      {(locationPermissionStatus === 'denied' || locationPermissionStatus === 'disabled') && (
+        <View style={styles.permissionBanner}>
+          <View className="flex-row items-center gap-3">
+            <View className="h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20">
+              <NavigationIcon size={20} color="#f43f5e" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-white">
+                {locationPermissionStatus === 'disabled'
+                  ? 'Dịch vụ vị trí (GPS) đang tắt'
+                  : 'Cần quyền truy cập vị trí'}
+              </Text>
+              <Text className="mt-0.5 text-xs text-gray-300">
+                Radar yêu cầu GPS để quét đồ thất lạc xung quanh bạn trong bán kính 10 km.
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleRequestLocation}
+            className="mt-3 items-center justify-center rounded-xl bg-fb-primary py-2"
+          >
+            <Text className="text-xs font-semibold text-white">
+              {locationPermissionStatus === 'disabled' ? 'Bật dịch vụ GPS' : 'Cấp quyền vị trí'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <BottomSheet
         ref={bottomSheetRef}
@@ -244,6 +292,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 24,
     zIndex: 35,
+  },
+  permissionBanner: {
+    position: 'absolute',
+    top: 112,
+    left: 16,
+    right: 16,
+    zIndex: 25,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: '#1c1b22',
+    borderWidth: 1,
+    borderColor: 'rgba(244, 63, 94, 0.4)',
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    elevation: 10,
   },
 });
 

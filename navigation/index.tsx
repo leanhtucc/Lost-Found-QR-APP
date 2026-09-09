@@ -15,6 +15,7 @@ import {
   ScanScreen,
   MyItemsScreen,
   ItemDetailScreen,
+  PublicItemDetailScreen,
   NotificationsScreen,
   ProfileScreen,
   EditProfileScreen,
@@ -54,6 +55,7 @@ export type RootStackParamList = {
   Register: undefined;
   MyItems: undefined;
   ItemDetails: { itemId: string };
+  PublicItemDetails: { itemId: string };
   ReportItems: undefined;
   FoundItemReport: undefined;
   ManualFoundReport: undefined;
@@ -312,6 +314,11 @@ export default function RootStack() {
         <Stack.Screen
           name="ItemDetails"
           component={ItemDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PublicItemDetails"
+          component={PublicItemDetailScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

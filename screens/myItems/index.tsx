@@ -1,10 +1,9 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Alert, ScrollView, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus } from 'lucide-react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useItems } from '@/contexts/ItemsContext';
 import { Item } from '@/types/item';
 import { useItemsFilter, StatusFilterType } from './hooks/useItemsFilter';
@@ -13,8 +12,9 @@ import { SummaryCards } from './components/SummaryCards';
 import { CategoryFilter } from './components/CategoryFilter';
 import { SearchBar } from './components/SearchBar';
 import { ItemsList } from './components/ItemsList';
-import { AddItemModal } from './components/AddItemModal';
-import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_SHADOW } from './constants/ui';
+import { AddItemModal, AddItemSubmitData } from './components/AddItemModal';
+import { uploadApi } from '@/services/upload';
+import { MY_ITEMS_COLORS } from './constants/ui';
 
 type RootStackParamList = {
   ItemDetails: { itemId: string };
@@ -25,13 +25,11 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const MyItemsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const insets = useSafeAreaInsets();
   const { items, loadItems, addItem } = useItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<Item['category'] | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const reportFabBottom = useMemo(() => Math.max(insets.bottom, 8), [insets.bottom]);
 
   const { filteredItems, lostCount, safeCount } = useItemsFilter({
     items,
@@ -53,31 +51,47 @@ export const MyItemsScreen: React.FC = () => {
     setIsAddModalVisible(true);
   };
 
-  const handleCreateProtectedItem = async (data: {
-    name: string;
-    category: Item['category'];
-    description?: string;
-    address?: string;
-    latitude?: number;
-    longitude?: number;
-  }) => {
-    await addItem({
-      name: data.name,
-      category: data.category,
-      description: data.description,
-      address: data.address,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      lastSeenLocation: data.address,
-    });
-    Alert.alert(
-      'Bảo vệ món đồ thành công',
-      `"${data.name}" đã được đưa vào hệ thống bảo vệ an toàn (SAFE) với vị trí xác thực.`
-    );
-  };
+  const handleCreateProtectedItem = async (data: AddItemSubmitData) => {
+    let uploadedFilename: string | undefined;
 
-  const handleReportLost = () => {
-    navigation.navigate('ReportItems');
+    // Bước 1: Upload ảnh trước
+    const uploadRes = await uploadApi.uploadImage(data.imageUri);
+    if (!uploadRes.success || !uploadRes.data?.url) {
+      throw new Error(uploadRes.message || 'Không thể upload ảnh lên hệ thống. Vui lòng thử lại.');
+    }
+
+    const publicUrl = uploadRes.data.url;
+    uploadedFilename = uploadRes.data.filename;
+
+    // Bước 2: Tạo món đồ với URL ảnh và vị trí GPS
+    try {
+      await addItem({
+        name: data.name,
+        category: data.category,
+        description: data.description,
+        imagePublicUrl: publicUrl,
+        address: data.captureLocation.address,
+        latitude: data.captureLocation.latitude,
+        longitude: data.captureLocation.longitude,
+        captureLocation: data.captureLocation,
+        lastSeenLocation: data.captureLocation.address,
+      });
+
+      Alert.alert(
+        'Bảo vệ món đồ thành công',
+        `"${data.name}" đã được đưa vào hệ thống bảo vệ an toàn (SAFE) với ảnh và vị trí xác thực.`
+      );
+    } catch (err: any) {
+      // Bước 3: Nếu upload thành công nhưng tạo item thất bại, dọn dẹp file ảnh rác
+      if (uploadedFilename) {
+        try {
+          await uploadApi.deleteImage(uploadedFilename);
+        } catch {
+          // Cleanup log
+        }
+      }
+      throw err;
+    }
   };
 
   return (
@@ -117,19 +131,6 @@ export const MyItemsScreen: React.FC = () => {
         />
       </ScrollView>
 
-      <View pointerEvents="box-none" style={[styles.reportFabWrap, { bottom: reportFabBottom }]}>
-        <TouchableOpacity
-          activeOpacity={0.86}
-          onPress={handleReportLost}
-          accessibilityRole="button"
-          accessibilityLabel="Báo mất món đồ"
-          className="h-16 w-16 items-center justify-center rounded-2xl bg-fb-primary-light"
-          style={styles.reportFab}
-        >
-          <Plus size={28} color="#25008c" strokeWidth={2.4} />
-        </TouchableOpacity>
-      </View>
-
       <AddItemModal
         visible={isAddModalVisible}
         onClose={() => setIsAddModalVisible(false)}
@@ -157,23 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: MY_ITEMS_COLORS.background,
   },
   scrollContent: {
-    paddingBottom: 132,
-  },
-  reportFabWrap: {
-    position: 'absolute',
-    right: 24,
-    zIndex: 12,
-  },
-  reportFabTouch: {
-    borderRadius: MY_ITEMS_RADIUS.card,
-  },
-  reportFab: {
-    width: 64,
-    height: 64,
-    borderRadius: MY_ITEMS_RADIUS.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...MY_ITEMS_SHADOW.elevated,
+    paddingBottom: 96,
   },
 });
 

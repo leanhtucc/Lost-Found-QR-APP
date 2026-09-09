@@ -11,8 +11,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
 import {
   X,
   ShieldCheck,
@@ -24,22 +26,33 @@ import {
   Wallet,
   Key,
   Briefcase,
+  Camera,
+  ImagePlus,
+  RotateCcw,
+  CheckCircle2,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ItemCategory } from '@/types/item';
 import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_PRIMARY_GRADIENT } from '../constants/ui';
 
+export interface AddItemSubmitData {
+  name: string;
+  category: ItemCategory;
+  description?: string;
+  imageUri: string;
+  captureLocation: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    accuracyMeters?: number;
+    capturedAt: string;
+  };
+}
+
 interface AddItemModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: {
-    name: string;
-    category: ItemCategory;
-    description?: string;
-    address?: string;
-    latitude?: number;
-    longitude?: number;
-  }) => Promise<void>;
+  onSubmit: (data: AddItemSubmitData) => Promise<void>;
 }
 
 const CATEGORY_ITEMS: { value: ItemCategory; label: string; icon: React.ElementType }[] = [
@@ -55,19 +68,28 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ItemCategory>('wallet');
   const [description, setDescription] = useState('');
-  const [address, setAddress] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const [locationCoords, setLocationCoords] = useState<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number | null;
+  } | null>(null);
+  const [locationAddress, setLocationAddress] = useState('');
+  const [capturedAt, setCapturedAt] = useState<string | null>(null);
+
   const [isLocating, setIsLocating] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = () => {
     setName('');
     setCategory('wallet');
     setDescription('');
-    setAddress('');
-    setLatitude('');
-    setLongitude('');
+    setImageUri(null);
+    setLocationCoords(null);
+    setLocationAddress('');
+    setCapturedAt(null);
   };
 
   const handleClose = () => {
@@ -75,26 +97,36 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
     onClose();
   };
 
-  const handleGetCurrentLocation = async () => {
+  const acquireLocation = async () => {
     try {
       setIsLocating(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Quyền vị trí', 'Vui lòng cấp quyền truy cập vị trí để lấy tọa độ tự động.');
-        return;
+        Alert.alert(
+          'Quyền vị trí',
+          'Vui lòng cấp quyền vị trí để tự động ghi nhận nơi cất giữ an toàn khi chụp ảnh.'
+        );
+        return null;
       }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
       });
 
-      setLatitude(String(location.coords.latitude.toFixed(6)));
-      setLongitude(String(location.coords.longitude.toFixed(6)));
+      const coords = {
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+        accuracy: loc.coords.accuracy,
+      };
+
+      setLocationCoords(coords);
+      const now = new Date().toISOString();
+      setCapturedAt(now);
 
       try {
         const [geo] = await Location.reverseGeocodeAsync({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
         });
 
         if (geo) {
@@ -104,17 +136,64 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
             geo.district || geo.subregion,
             geo.city || geo.region,
           ].filter(Boolean);
-          if (parts.length > 0 && !address) {
-            setAddress(parts.join(', '));
+          if (parts.length > 0) {
+            setLocationAddress(parts.join(', '));
           }
         }
       } catch {
         // Geocode error ignored
       }
+
+      return coords;
     } catch (err: any) {
-      Alert.alert('Lỗi lấy vị trí', err?.message || 'Không thể lấy vị trí hiện tại.');
+      Alert.alert('Lỗi định vị', err?.message || 'Không thể lấy vị trí hiện tại.');
+      return null;
     } finally {
       setIsLocating(false);
+    }
+  };
+
+  const handlePickImage = async (useCamera = true) => {
+    try {
+      setIsCapturing(true);
+      let result: ImagePicker.ImagePickerResult;
+
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Quyền Camera', 'Vui lòng cấp quyền Camera để chụp ảnh món đồ cần bảo vệ.');
+          return;
+        }
+
+        result = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Thư viện ảnh', 'Vui lòng cấp quyền thư viện để chọn ảnh món đồ cần bảo vệ.');
+          return;
+        }
+
+        result = await ImagePicker.launchImageLibraryAsync({
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
+      }
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const pickedUri = result.assets[0].uri;
+        setImageUri(pickedUri);
+        // Tự động ghi nhận GPS ngay sau khi chụp/chọn ảnh
+        await acquireLocation();
+      }
+    } catch (err: any) {
+      Alert.alert('Lỗi xử lý ảnh', err?.message || 'Không thể chụp hoặc chọn ảnh.');
+    } finally {
+      setIsCapturing(false);
     }
   };
 
@@ -125,25 +204,17 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
       return;
     }
 
-    let parsedLat: number | undefined = undefined;
-    let parsedLng: number | undefined = undefined;
+    if (!imageUri) {
+      Alert.alert('Thiếu ảnh', 'Vui lòng chụp hoặc chọn ảnh món đồ trước khi đăng ký.');
+      return;
+    }
 
-    if (latitude.trim() || longitude.trim()) {
-      parsedLat = Number(latitude.trim());
-      parsedLng = Number(longitude.trim());
-
-      if (!Number.isFinite(parsedLat) || parsedLat < -90 || parsedLat > 90) {
-        Alert.alert('Tọa độ không hợp lệ', 'Vĩ độ (Latitude) phải nằm trong khoảng -90 đến 90.');
-        return;
-      }
-
-      if (!Number.isFinite(parsedLng) || parsedLng < -180 || parsedLng > 180) {
-        Alert.alert(
-          'Tọa độ không hợp lệ',
-          'Kinh độ (Longitude) phải nằm trong khoảng -180 đến 180.'
-        );
-        return;
-      }
+    if (!locationCoords) {
+      Alert.alert(
+        'Thiếu vị trí GPS',
+        'Vui lòng bấm "Lấy lại vị trí" để ghi nhận tọa độ bảo vệ an toàn.'
+      );
+      return;
     }
 
     try {
@@ -152,9 +223,14 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
         name: trimmedName,
         category,
         description: description.trim() || undefined,
-        address: address.trim() || undefined,
-        latitude: parsedLat,
-        longitude: parsedLng,
+        imageUri,
+        captureLocation: {
+          latitude: locationCoords.latitude,
+          longitude: locationCoords.longitude,
+          address: locationAddress.trim() || undefined,
+          accuracyMeters: locationCoords.accuracy ? Math.round(locationCoords.accuracy) : undefined,
+          capturedAt: capturedAt || new Date().toISOString(),
+        },
       });
       resetForm();
       onClose();
@@ -197,14 +273,147 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
             {/* Status explanation badge */}
             <View style={styles.statusBadge}>
               <ShieldCheck size={16} color={MY_ITEMS_COLORS.safeText} />
-              <Text style={styles.statusBadgeText}>Mặc định: AN TOÀN (SAFE)</Text>
+              <Text style={styles.statusBadgeText}>Mặc định: AN TOÀN (SAFE) & Vị trí riêng tư</Text>
             </View>
             <Text style={styles.hintText}>
-              Món đồ sau khi đăng ký sẽ được giám sát an toàn. Khi thất lạc, bạn chỉ cần kích hoạt
-              &quot;Báo mất&quot; để đẩy thông báo lên Radar công khai cho mọi người xung quanh.
+              Chụp ảnh và ghi nhận vị trí lúc đăng ký. Tọa độ này được bảo mật tuyệt đối, chỉ chủ sở
+              hữu được xem.
             </Text>
 
+            {/* Photo Capture Section */}
+            <Text style={styles.label}>
+              Ảnh món đồ <Text style={styles.required}>*</Text>
+            </Text>
+
+            {imageUri ? (
+              <View style={styles.previewContainer}>
+                <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
+                <View style={styles.previewBadge}>
+                  <CheckCircle2 size={14} color="#FFFFFF" />
+                  <Text style={styles.previewBadgeText}>Ảnh đã chụp</Text>
+                </View>
+                <View style={styles.previewActions}>
+                  <TouchableOpacity
+                    style={styles.retakeBtn}
+                    onPress={() => handlePickImage(true)}
+                    disabled={isCapturing}
+                  >
+                    <RotateCcw size={14} color="#FFFFFF" />
+                    <Text style={styles.retakeBtnText}>Chụp lại</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.retakeBtn}
+                    onPress={() => handlePickImage(false)}
+                    disabled={isCapturing}
+                  >
+                    <ImagePlus size={14} color="#FFFFFF" />
+                    <Text style={styles.retakeBtnText}>Chọn ảnh khác</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.photoPickerBox}>
+                <TouchableOpacity
+                  style={styles.cameraActionBtn}
+                  onPress={() => handlePickImage(true)}
+                  disabled={isCapturing}
+                  activeOpacity={0.8}
+                >
+                  <Camera size={26} color="#FFFFFF" />
+                  <Text style={styles.cameraActionText}>Chụp ảnh ngay (Khuyến nghị)</Text>
+                  <Text style={styles.cameraActionSub}>Tự động ghi nhận GPS chính xác</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.galleryActionBtn}
+                  onPress={() => handlePickImage(false)}
+                  disabled={isCapturing}
+                  activeOpacity={0.7}
+                >
+                  <ImagePlus size={18} color={MY_ITEMS_COLORS.textSecondary} />
+                  <Text style={styles.galleryActionText}>Hoặc chọn từ thư viện</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Location Section */}
+            <View style={styles.sectionDivider} />
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionTitleWrap}>
+                <MapPin size={18} color={MY_ITEMS_COLORS.primaryStart} />
+                <Text style={styles.sectionTitle}>
+                  Vị trí đăng ký bảo vệ <Text style={styles.required}>*</Text>
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.locationBtn}
+                onPress={acquireLocation}
+                disabled={isLocating}
+                activeOpacity={0.8}
+              >
+                {isLocating ? (
+                  <ActivityIndicator size="small" color={MY_ITEMS_COLORS.primaryStart} />
+                ) : (
+                  <>
+                    <Crosshair size={14} color={MY_ITEMS_COLORS.primaryStart} />
+                    <Text style={styles.locationBtnText}>Lấy lại vị trí</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {locationCoords ? (
+              <View style={styles.locationCard}>
+                <View style={styles.locationCardHeader}>
+                  <CheckCircle2 size={16} color={MY_ITEMS_COLORS.safeText} />
+                  <Text style={styles.locationCardTitle}>GPS đã xác thực</Text>
+                </View>
+
+                <Text style={styles.locationCoordText}>
+                  Tọa độ: {locationCoords.latitude.toFixed(5)},{' '}
+                  {locationCoords.longitude.toFixed(5)}
+                  {locationCoords.accuracy !== undefined && locationCoords.accuracy !== null
+                    ? ` (±${Math.round(locationCoords.accuracy)}m)`
+                    : ''}
+                </Text>
+
+                {capturedAt ? (
+                  <Text style={styles.locationTimeText}>
+                    Thời điểm: {new Date(capturedAt).toLocaleTimeString('vi-VN')} ngày{' '}
+                    {new Date(capturedAt).toLocaleDateString('vi-VN')}
+                  </Text>
+                ) : null}
+
+                <Text style={styles.labelSmall}>Địa chỉ ghi nhận (có thể chỉnh sửa nếu cần):</Text>
+                <TextInput
+                  style={styles.locationInput}
+                  placeholder="Nhập địa chỉ cất giữ đồ..."
+                  placeholderTextColor={MY_ITEMS_COLORS.textMuted}
+                  value={locationAddress}
+                  onChangeText={setLocationAddress}
+                />
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.locationPromptBox}
+                onPress={acquireLocation}
+                disabled={isLocating}
+              >
+                {isLocating ? (
+                  <ActivityIndicator size="small" color={MY_ITEMS_COLORS.primaryStart} />
+                ) : (
+                  <>
+                    <Crosshair size={22} color={MY_ITEMS_COLORS.primaryStart} />
+                    <Text style={styles.locationPromptText}>
+                      Chưa có vị trí GPS. Chụp ảnh hoặc bấm vào đây để lấy tọa độ.
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+
             {/* Field: Item Name */}
+            <View style={styles.sectionDivider} />
             <Text style={styles.label}>
               Tên món đồ <Text style={styles.required}>*</Text>
             </Text>
@@ -251,7 +460,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
             <Text style={styles.label}>Đặc điểm nhận dạng (tùy chọn)</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="VD: Màu đen, có móc khóa gấu bông màu đỏ, tem số seri..."
+              placeholder="VD: Màu đen, có logo màu bạc, tem số seri..."
               placeholderTextColor={MY_ITEMS_COLORS.textMuted}
               value={description}
               onChangeText={setDescription}
@@ -259,66 +468,6 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
               numberOfLines={3}
               maxLength={500}
             />
-
-            {/* Location Section */}
-            <View style={styles.sectionDivider} />
-            <View style={styles.sectionHeaderRow}>
-              <View style={styles.sectionTitleWrap}>
-                <MapPin size={18} color={MY_ITEMS_COLORS.primaryStart} />
-                <Text style={styles.sectionTitle}>Tọa độ & Địa chỉ cất giữ an toàn</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.locationBtn}
-                onPress={handleGetCurrentLocation}
-                disabled={isLocating}
-                activeOpacity={0.8}
-              >
-                {isLocating ? (
-                  <ActivityIndicator size="small" color={MY_ITEMS_COLORS.primaryStart} />
-                ) : (
-                  <>
-                    <Crosshair size={14} color={MY_ITEMS_COLORS.primaryStart} />
-                    <Text style={styles.locationBtnText}>Lấy vị trí</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {/* Field: Address */}
-            <Text style={styles.label}>Địa chỉ / Nơi để</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="VD: Nhà riêng - 123 Cầu Giấy, Hà Nội"
-              placeholderTextColor={MY_ITEMS_COLORS.textMuted}
-              value={address}
-              onChangeText={setAddress}
-            />
-
-            {/* Field: Lat / Lng */}
-            <View style={styles.coordsRow}>
-              <View style={styles.coordField}>
-                <Text style={styles.label}>Vĩ độ (Lat)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="21.028511"
-                  placeholderTextColor={MY_ITEMS_COLORS.textMuted}
-                  value={latitude}
-                  onChangeText={setLatitude}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View style={styles.coordField}>
-                <Text style={styles.label}>Kinh độ (Lng)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="105.854444"
-                  placeholderTextColor={MY_ITEMS_COLORS.textMuted}
-                  value={longitude}
-                  onChangeText={setLongitude}
-                  keyboardType="numeric"
-                />
-              </View>
-            </View>
           </ScrollView>
 
           {/* Footer Actions */}
@@ -332,9 +481,13 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.submitBtnWrap}
+              style={[
+                styles.submitBtnWrap,
+                (!imageUri || !locationCoords || !name.trim() || isSubmitting) &&
+                  styles.submitBtnDisabled,
+              ]}
               onPress={handleSubmit}
-              disabled={isSubmitting}
+              disabled={!imageUri || !locationCoords || !name.trim() || isSubmitting}
               activeOpacity={0.85}
             >
               <LinearGradient
@@ -346,7 +499,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
                 {isSubmitting ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.submitBtnText}>Đăng ký bảo vệ</Text>
+                  <Text style={styles.submitBtnText}>Đăng ký bảo vệ món đồ</Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
@@ -360,14 +513,14 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'flex-end',
   },
   container: {
     backgroundColor: MY_ITEMS_COLORS.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
+    maxHeight: '92%',
     paddingBottom: Platform.OS === 'ios' ? 24 : 16,
   },
   header: {
@@ -435,8 +588,163 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 6,
   },
+  labelSmall: {
+    color: MY_ITEMS_COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 8,
+    marginBottom: 4,
+  },
   required: {
     color: '#FF6B6B',
+  },
+  photoPickerBox: {
+    gap: 8,
+    marginBottom: 14,
+  },
+  cameraActionBtn: {
+    backgroundColor: MY_ITEMS_COLORS.primaryStart,
+    borderRadius: MY_ITEMS_RADIUS.card,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  cameraActionText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  cameraActionSub: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+  },
+  galleryActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
+    borderRadius: MY_ITEMS_RADIUS.card,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: MY_ITEMS_COLORS.border,
+  },
+  galleryActionText: {
+    color: MY_ITEMS_COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  previewContainer: {
+    borderRadius: MY_ITEMS_RADIUS.card,
+    overflow: 'hidden',
+    backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
+    borderWidth: 1,
+    borderColor: MY_ITEMS_COLORS.border,
+    marginBottom: 14,
+  },
+  previewImage: {
+    width: '100%',
+    height: 180,
+  },
+  previewBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(46, 204, 139, 0.9)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  previewBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  previewActions: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  retakeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  retakeBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  locationCard: {
+    backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
+    borderRadius: MY_ITEMS_RADIUS.card,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 204, 139, 0.3)',
+    marginBottom: 14,
+  },
+  locationCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  locationCardTitle: {
+    color: MY_ITEMS_COLORS.safeText,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  locationCoordText: {
+    color: MY_ITEMS_COLORS.textPrimary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  locationTimeText: {
+    color: MY_ITEMS_COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  locationInput: {
+    backgroundColor: MY_ITEMS_COLORS.surface,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    color: MY_ITEMS_COLORS.textPrimary,
+    fontSize: 13,
+    borderWidth: 1,
+    borderColor: MY_ITEMS_COLORS.border,
+  },
+  locationPromptBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
+    borderRadius: MY_ITEMS_RADIUS.card,
+    padding: 14,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: MY_ITEMS_COLORS.primaryStart,
+    marginBottom: 14,
+  },
+  locationPromptText: {
+    flex: 1,
+    color: MY_ITEMS_COLORS.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
   },
   input: {
     backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
@@ -492,7 +800,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   sectionTitleWrap: {
     flexDirection: 'row',
@@ -517,13 +825,6 @@ const styles = StyleSheet.create({
     color: MY_ITEMS_COLORS.primaryStart,
     fontSize: 12,
     fontWeight: '600',
-  },
-  coordsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  coordField: {
-    flex: 1,
   },
   footer: {
     flexDirection: 'row',
@@ -552,6 +853,9 @@ const styles = StyleSheet.create({
     flex: 2,
     borderRadius: MY_ITEMS_RADIUS.card,
     overflow: 'hidden',
+  },
+  submitBtnDisabled: {
+    opacity: 0.5,
   },
   submitBtn: {
     paddingVertical: 14,

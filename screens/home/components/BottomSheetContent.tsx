@@ -47,7 +47,7 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
     });
   }, [cards.length, myLostCount, feedCards, nearbyCount]);
 
-  const emptyStateText = 'Chưa có bài đăng đồ mất hoặc nhặt được gần đây.';
+  const emptyStateText = 'Chưa có đồ thất lạc nào gần bạn trong bán kính 10 km.';
 
   return (
     <View className="flex-1 rounded-t-[32px] bg-[#131318] px-6 pb-6 pt-2">
@@ -56,9 +56,7 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
           activeOpacity={0.85}
           className="self-start rounded-full bg-[#c7bfff] px-5 py-2.5"
         >
-          <Text className="text-sm font-semibold text-[#25008c]">
-            Mất & nhặt được ({feedCount})
-          </Text>
+          <Text className="text-sm font-semibold text-[#25008c]">Đồ thất lạc ({feedCount})</Text>
         </TouchableOpacity>
 
         {myLostCount > 0 ? (

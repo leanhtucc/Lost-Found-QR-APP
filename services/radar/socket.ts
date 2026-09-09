@@ -4,6 +4,7 @@ import {
   RadarHeartbeatPayload,
   RadarHeartbeatAck,
   RadarRealtimeLostItemPayload,
+  RadarRealtimeRemovedPayload,
   RadarSubscribePayload,
   RadarSubscribeAck,
   RadarUnsubscribeAck,
@@ -13,6 +14,7 @@ const ACK_TIMEOUT_MS = 8000;
 
 interface RadarServerToClientEvents {
   'radar:new-lost-item': (payload: RadarRealtimeLostItemPayload) => void;
+  'radar:lost-item-removed': (payload: RadarRealtimeRemovedPayload) => void;
 }
 
 interface RadarClientToServerEvents {
@@ -61,12 +63,14 @@ const withAckTimeout = <TAck>(
   });
 };
 
-export const createRadarSocket = (accessToken: string): RadarSocket => {
+export const createRadarSocket = (accessToken?: string | null): RadarSocket => {
   return io(resolveSocketBaseUrl(), {
     path: '/socket.io',
-    auth: {
-      token: accessToken,
-    },
+    auth: accessToken
+      ? {
+          token: accessToken,
+        }
+      : undefined,
     transports: ['websocket'],
     timeout: 10000,
     reconnection: true,

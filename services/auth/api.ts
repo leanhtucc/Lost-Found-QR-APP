@@ -138,7 +138,11 @@ const withInvalidAuthPayload = <T>(response: ApiResponse<T>, message: string): A
 /**
  * Helper function to make API requests
  */
-async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+async function apiRequest<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  includeStoredAuth = true
+): Promise<ApiResponse<T>> {
   const url = buildAuthUrl(endpoint);
 
   const defaultHeaders: HeadersInit = {
@@ -146,9 +150,11 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   };
 
   // Add auth token if available
-  const token = await authStorage.getAccessToken();
-  if (token) {
-    defaultHeaders['Authorization'] = `Bearer ${token}`;
+  if (includeStoredAuth) {
+    const token = await authStorage.getAccessToken();
+    if (token) {
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
   }
 
   try {
@@ -163,6 +169,16 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
+      logAuthApi('http_error', {
+        endpoint,
+        method: options.method || 'GET',
+        status: response.status,
+        statusText: response.statusText,
+        backendRequestId:
+          response.headers.get('x-request-id') || response.headers.get('x-correlation-id'),
+        message: data.message,
+        error: data.error,
+      });
       return {
         success: false,
         message: data.message || 'Request failed',
@@ -381,15 +397,53 @@ export const authApi = {
    * Sends Google ID Token to backend
    */
   async googleLogin(data: GoogleLoginRequest): Promise<ApiResponse<GoogleLoginResponseData>> {
-    const response = await apiRequest<GoogleLoginResponseData>('/google', {
-      method: 'POST',
-      body: JSON.stringify(data),
+    const requestId = `api-google-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const startedAt = Date.now();
+
+    const existingAccessToken = await authStorage.getAccessToken();
+
+    logAuthApi('google_login_request_start', {
+      requestId,
+      endpoint: '/google',
+      idTokenLength: data.idToken?.length || 0,
+      tokenSegmentCount: data.idToken?.split('.').length || 0,
+      hadStoredAccessToken: Boolean(existingAccessToken),
+      sendsStoredAuthorizationHeader: false,
+    });
+
+    const response = await apiRequest<GoogleLoginResponseData>(
+      '/google',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      false
+    );
+
+    const extractedTokens = extractAuthTokens(response.data);
+
+    logAuthApi('google_login_request_result', {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      success: response.success,
+      message: response.message,
+      error: response.error,
+      hasData: Boolean(response.data),
+      dataKeys: response.data ? Object.keys(response.data) : [],
+      hasUser: Boolean(response.data?.user),
+      isNewUser: response.data?.isNewUser ?? null,
+      hasAccessToken: Boolean(extractedTokens?.accessToken),
+      hasRefreshToken: Boolean(extractedTokens?.refreshToken),
     });
 
     // Store tokens and user on success
     if (response.success && response.data) {
-      const extractedTokens = extractAuthTokens(response.data);
       if (!extractedTokens) {
+        logAuthApi('google_login_tokens_missing', {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          dataKeys: Object.keys(response.data),
+        });
         return withInvalidAuthPayload(
           response,
           'Thiếu access token hoặc refresh token từ Google login.'

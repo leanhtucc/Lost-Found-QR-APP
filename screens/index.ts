@@ -18,3 +18,4 @@ export {
   RewardStatusScreen,
   RateFinderScreen,
 } from './return-flow';
+export { default as PublicItemDetailScreen } from './public-item-detail';

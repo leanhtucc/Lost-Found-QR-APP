@@ -5,9 +5,9 @@ export interface RadarNearbyQuery {
 }
 
 export interface HomeLostFeedQuery {
-  lat?: number | string | null;
-  lng?: number | string | null;
-  radius?: number | string | null;
+  lat: number;
+  lng: number;
+  radius?: number;
 }
 
 export interface HomeLostFeedPin {
@@ -35,11 +35,18 @@ export interface HomeLostFeedCard {
   reportedAt: string;
 }
 
+export interface HomeLostFeedUser {
+  userId: string;
+  fullName: string;
+  avatarUrl: string | null;
+}
+
 export interface HomeLostFeedData {
   myLostCount: number;
   nearbyCount: number;
   pins: HomeLostFeedPin[];
   cards: HomeLostFeedCard[];
+  user?: HomeLostFeedUser;
 }
 
 export type RadarCategory =
@@ -61,6 +68,13 @@ export interface RadarSubscribePayload {
 export interface RadarHeartbeatPayload {
   latitude: number;
   longitude: number;
+  radius?: number;
+}
+
+export interface RadarRealtimeRemovedPayload {
+  itemId: string;
+  status: 'SAFE' | 'FOUND' | 'RESOLVED' | 'DELETED' | string;
+  removedAt?: string;
 }
 
 export interface RadarNearbyApiItem {

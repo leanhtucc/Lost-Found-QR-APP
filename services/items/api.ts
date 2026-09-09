@@ -257,9 +257,12 @@ const normalizeCategoryFilter = (category: unknown): ItemCategory | undefined =>
   return normalized as ItemCategory;
 };
 
-const normalizeItem = (item: Item): Item => {
+const normalizeItem = (item: any): Item => {
   return {
     ...item,
+    itemId: item.itemId || item.publicItemId || item.id,
+    publicItemId: item.publicItemId || item.itemId,
+    qrCodeId: item.qrCodeId || item.id,
     imagePublicUrl:
       typeof item.imagePublicUrl === 'string'
         ? getFullImageUrl(item.imagePublicUrl) || undefined
@@ -800,6 +803,9 @@ export const itemsApi = {
     if (params.securityPin) {
       bodyPayload.securityPin = params.securityPin;
     }
+    if (params.captureLocation) {
+      bodyPayload.captureLocation = params.captureLocation;
+    }
 
     const response = await fetch(getItemsApiUrl(), {
       method: 'POST',
@@ -819,6 +825,32 @@ export const itemsApi = {
     }
 
     return normalizeItem(data.data);
+  },
+
+  /**
+   * Lấy thông tin công khai của 1 item đang thất lạc
+   * GET /api/items/public/:id
+   */
+  async getPublicItem(identifier: string): Promise<any> {
+    const url = `${getItemsApiUrl()}/public/${identifier}`;
+    const headers = await createHeaders();
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch public item details');
+    }
+
+    const data = await response.json();
+    if (!data.success || !data.data) {
+      throw new Error(data.message || 'Failed to fetch public item details');
+    }
+
+    return data.data;
   },
 
   /**
@@ -898,32 +930,47 @@ export const itemsApi = {
       throw new Error('Client can only set SAFE or LOST status');
     }
 
-    const hasLatitude = typeof params.latitude === 'number';
-    const hasLongitude = typeof params.longitude === 'number';
+    let requestBody: Record<string, unknown>;
 
-    if (hasLatitude !== hasLongitude) {
-      throw new Error('latitude and longitude must be provided together');
+    if (params.status === 'SAFE') {
+      requestBody = { status: 'SAFE' };
+    } else {
+      if (
+        typeof params.latitude !== 'number' ||
+        typeof params.longitude !== 'number' ||
+        !Number.isFinite(params.latitude) ||
+        !Number.isFinite(params.longitude)
+      ) {
+        throw new Error('Tọa độ latitude và longitude là bắt buộc khi báo mất.');
+      }
+
+      requestBody = {
+        status: 'LOST',
+        lostMessage: params.lostMessage?.trim() || undefined,
+        lostAddress: params.lostAddress?.trim() || undefined,
+        latitude: params.latitude,
+        longitude: params.longitude,
+      };
     }
 
-    const url = buildItemsUrl(itemId, 'status');
     const headers = await createHeaders();
 
-    const requestBody =
-      params.status === 'SAFE'
-        ? { status: 'SAFE' as const }
-        : {
-            status: 'LOST' as const,
-            lostMessage: params.lostMessage?.trim() || undefined,
-            lostAddress: params.lostAddress?.trim() || undefined,
-            latitude: hasLatitude ? params.latitude : undefined,
-            longitude: hasLongitude ? params.longitude : undefined,
-          };
-
-    const response = await fetch(url, {
+    // Ưu tiên PATCH /v1/items/:id/status, fallback PATCH /api/items/:id/status
+    const v1Url = buildV1Url('items', itemId, 'status');
+    let response = await fetch(v1Url, {
       method: 'PATCH',
       headers,
       body: JSON.stringify(requestBody),
     });
+
+    if (!response.ok && (response.status === 404 || response.status === 405)) {
+      const apiUrl = buildItemsUrl(itemId, 'status');
+      response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(requestBody),
+      });
+    }
 
     const data = await parseJsonSafely<UpdateStatusApiResponse>(response);
 

@@ -13,9 +13,9 @@ import { authStorage } from '@storage/auth';
 import { authApi } from '@services/auth';
 import { sessionEvents } from '@/lib/sessionEvents';
 
-const DEFAULT_RADIUS = 5000;
+const DEFAULT_RADIUS = 10000;
 const MIN_RADIUS = 1;
-const MAX_RADIUS = 50000;
+const MAX_RADIUS = 10000;
 const MAX_ITEMS_PER_REQUEST = 100;
 
 const NULL_LIKE_STRING_VALUES = new Set(['', 'null', 'undefined', 'nan']);
@@ -275,11 +275,24 @@ const normalizeHomeLostFeedData = (payload: unknown): HomeLostFeedData => {
         .filter((card): card is HomeLostFeedCard => Boolean(card))
     : [];
 
+  const user =
+    item.user && typeof item.user === 'object'
+      ? {
+          userId: String((item.user as Record<string, unknown>).userId || ''),
+          fullName: String((item.user as Record<string, unknown>).fullName || ''),
+          avatarUrl:
+            typeof (item.user as Record<string, unknown>).avatarUrl === 'string'
+              ? String((item.user as Record<string, unknown>).avatarUrl)
+              : null,
+        }
+      : undefined;
+
   return {
     myLostCount,
     nearbyCount,
     pins,
     cards,
+    user,
   };
 };
 
@@ -420,50 +433,55 @@ export const radarApi = {
     };
   },
 
-  async getHomeLostFeed(query?: HomeLostFeedQuery): Promise<HomeLostFeedData> {
+  async getHomeLostFeed(query: HomeLostFeedQuery): Promise<HomeLostFeedData> {
     const lat = normalizeOptionalNumberInput(query?.lat);
     const lng = normalizeOptionalNumberInput(query?.lng);
     const radius = normalizeOptionalNumberInput(query?.radius);
 
-    const hasValidCoords =
-      typeof lat === 'number' &&
-      typeof lng === 'number' &&
-      isWithinRange(lat, -90, 90) &&
-      isWithinRange(lng, -180, 180);
-
-    const params = new URLSearchParams();
-
-    if (hasValidCoords) {
-      const safeRadius =
-        typeof radius === 'number' && isWithinRange(radius, MIN_RADIUS, MAX_RADIUS)
-          ? radius
-          : DEFAULT_RADIUS;
-
-      params.append('lat', String(lat));
-      params.append('lng', String(lng));
-      params.append('radius', String(Math.floor(safeRadius)));
+    if (
+      typeof lat !== 'number' ||
+      typeof lng !== 'number' ||
+      !isWithinRange(lat, -90, 90) ||
+      !isWithinRange(lng, -180, 180)
+    ) {
+      throw new Error('Tọa độ GPS (lat, lng) là bắt buộc để tải dữ liệu Radar.');
     }
 
-    const baseUrl = buildHomeUrl('lost-feed');
-    const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+    const safeRadius =
+      typeof radius === 'number' && isWithinRange(radius, MIN_RADIUS, MAX_RADIUS)
+        ? Math.floor(radius)
+        : DEFAULT_RADIUS;
+
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+      radius: String(safeRadius),
+    });
+
+    // Ưu tiên GET /v1/home/lost-feed, fallback GET /api/home/lost-feed
+    const v1Url = `${buildV1Url('home', 'lost-feed')}?${params.toString()}`;
+    const apiUrl = `${buildHomeUrl('lost-feed')}?${params.toString()}`;
 
     if (__DEV__) {
       console.log('[RadarAPI][getHomeLostFeed] Request', {
-        url,
-        rawQuery: query,
-        sentQuery: hasValidCoords
-          ? {
-              lat,
-              lng,
-              radius: Number(params.get('radius')),
-            }
-          : null,
+        v1Url,
+        sentQuery: {
+          lat,
+          lng,
+          radius: safeRadius,
+        },
       });
     }
 
-    const response = await fetchWithOptionalAuth(url, {
+    let response = await fetchWithOptionalAuth(v1Url, {
       method: 'GET',
     });
+
+    if (!response.ok && (response.status === 404 || response.status === 405)) {
+      response = await fetchWithOptionalAuth(apiUrl, {
+        method: 'GET',
+      });
+    }
 
     const payload = await parseJsonSafely<RadarApiResponse<unknown>>(response);
 

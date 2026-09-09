@@ -8,6 +8,7 @@ import { ScrollView, Alert, ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Item } from '@/types/item';
+import * as Location from 'expo-location';
 import { itemsApi, ItemsApiError } from '@/services/items';
 import { ItemDetailHeader, ItemInfoCard, QRCodeCard, LostModeCard } from './components';
 import { FIND_BACK } from '@constants/theme';
@@ -46,14 +47,55 @@ export default function ItemDetailScreen() {
     }
 
     try {
-      const newStatus: 'SAFE' | 'LOST' = item.status === 'LOST' ? 'SAFE' : 'LOST';
-      const updatedItem = await itemsApi.updateStatus(item.id, {
-        status: newStatus,
-        lostMessage: newStatus === 'LOST' ? item.lostMessage : undefined,
-      });
+      if (item.status === 'SAFE') {
+        // SAFE -> LOST: Bắt buộc phải có latitude và longitude khi báo mất
+        const permission = await Location.requestForegroundPermissionsAsync();
+        if (permission.status !== 'granted') {
+          Alert.alert(
+            'Quyền vị trí bị từ chối',
+            'Bắt buộc phải có tọa độ GPS để bật chế độ báo mất trên Radar.'
+          );
+          return;
+        }
 
-      // Update local state
-      setItem(updatedItem);
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        let lostAddress: string | undefined;
+        try {
+          const [geo] = await Location.reverseGeocodeAsync({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+          if (geo) {
+            lostAddress = [geo.name, geo.streetNumber, geo.street, geo.district, geo.city]
+              .filter(Boolean)
+              .join(', ');
+          }
+        } catch {
+          // ignore geocode error
+        }
+
+        const updatedItem = await itemsApi.updateStatus(item.id, {
+          status: 'LOST',
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          lostMessage: item.lostMessage || undefined,
+          lostAddress,
+        });
+
+        setItem(updatedItem);
+        Alert.alert('Thành công', 'Đã chuyển trạng thái sang báo mất và phát tín hiệu Radar.');
+      } else {
+        // LOST -> SAFE: Chỉ cần gửi status SAFE (server tự động hủy escrow và gỡ marker radar)
+        const updatedItem = await itemsApi.updateStatus(item.id, {
+          status: 'SAFE',
+        });
+
+        setItem(updatedItem);
+        Alert.alert('Thành công', 'Đã đánh dấu an toàn. Radar đã gỡ vật phẩm này.');
+      }
     } catch (error) {
       console.error('Error toggling lost status:', error);
       if (
@@ -81,9 +123,34 @@ export default function ItemDetailScreen() {
     }
 
     try {
+      let lat: number | undefined;
+      let lng: number | undefined;
+
+      if (typeof item.lastSeenLocation === 'object' && item.lastSeenLocation?.lat) {
+        lat = item.lastSeenLocation.lat;
+        lng = item.lastSeenLocation.lng;
+      }
+
+      if (typeof lat !== 'number' || typeof lng !== 'number') {
+        const loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Low,
+        }).catch(() => null);
+        if (loc) {
+          lat = loc.coords.latitude;
+          lng = loc.coords.longitude;
+        }
+      }
+
+      if (typeof lat !== 'number' || typeof lng !== 'number') {
+        Alert.alert('Lỗi', 'Không thể xác định tọa độ hiện tại để cập nhật.');
+        return;
+      }
+
       const updatedItem = await itemsApi.updateStatus(item.id, {
         status: 'LOST',
         lostMessage: message,
+        latitude: lat,
+        longitude: lng,
       });
 
       // Update local state
@@ -141,7 +208,7 @@ export default function ItemDetailScreen() {
         <ItemInfoCard item={item} />
 
         {/* QR Code */}
-        <QRCodeCard itemId={item.id} itemName={item.name} />
+        <QRCodeCard itemId={item.qrCodeId || item.itemId || item.id} itemName={item.name} />
 
         {/* Lost Mode */}
         <LostModeCard

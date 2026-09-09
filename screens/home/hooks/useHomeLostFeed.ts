@@ -1,18 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { HomeLostFeedCard, HomeLostFeedPin } from '@/types/radar';
-import { radarApi } from '@services/radar';
-import { foundReportsApi } from '@/services/reports/found';
+import {
+  HomeLostFeedCard,
+  HomeLostFeedPin,
+  RadarRealtimeLostItemPayload,
+  RadarRealtimeRemovedPayload,
+} from '@/types/radar';
+import {
+  createRadarSocket,
+  radarApi,
+  RadarSocket,
+  sendRadarHeartbeat,
+  subscribeRadar,
+  unsubscribeRadar,
+} from '@services/radar';
+import { authStorage } from '@storage/auth';
 
-const DEFAULT_RADIUS_METERS = 5000;
+const DEFAULT_RADIUS_METERS = 10000; // 10 km chuẩn backend
 const MIN_RADIUS_METERS = 1;
-const MAX_RADIUS_METERS = 50000;
-const SNAPSHOT_REFRESH_DISTANCE_METERS = 5000; // Chỉ load lại nếu di chuyển hơn 5km
-const SNAPSHOT_REFRESH_INTERVAL_MS = 3600000; // 1 tiếng (không tự động load lại liên tục)
+const MAX_RADIUS_METERS = 10000;
+const HEARTBEAT_INTERVAL_MS = 30000; // 30 giây gửi heartbeat một lần
+const SNAPSHOT_REFRESH_DISTANCE_METERS = 500; // Load lại feed nếu di chuyển > 500m
+const SNAPSHOT_REFRESH_INTERVAL_MS = 300000; // 5 phút refresh lại snapshot
 const ERROR_THROTTLE_MS = 6000;
-const FOREGROUND_SYNC_THROTTLE_MS = 3600000; // 1 tiếng
-const TAB_FOCUS_SYNC_THROTTLE_MS = 3600000; // 1 tiếng
-const DEFAULT_MIN_SYNC_REFRESH_AGE_MS = 3600000; // 1 tiếng
+const FOREGROUND_SYNC_THROTTLE_MS = 10000; // 10 giây throttle
+const TAB_FOCUS_SYNC_THROTTLE_MS = 10000;
 
 interface RadarCoordinates {
   latitude: number;
@@ -24,13 +36,8 @@ interface LastSnapshotState {
   timestamp: number;
 }
 
-interface PendingRefreshState {
-  coords?: RadarCoordinates;
-}
-
 interface UseHomeLostFeedOptions {
   radiusMeters?: number;
-  minSyncRefreshAgeMs?: number;
   onError?: (message: string) => void;
 }
 
@@ -54,13 +61,11 @@ const clampRadius = (value: number): number => {
   if (!Number.isFinite(value)) {
     return DEFAULT_RADIUS_METERS;
   }
-
   return Math.min(MAX_RADIUS_METERS, Math.max(MIN_RADIUS_METERS, Math.floor(value)));
 };
 
 export const useHomeLostFeed = ({
   radiusMeters = DEFAULT_RADIUS_METERS,
-  minSyncRefreshAgeMs = DEFAULT_MIN_SYNC_REFRESH_AGE_MS,
   onError,
 }: UseHomeLostFeedOptions = {}) => {
   const normalizedRadius = clampRadius(radiusMeters);
@@ -70,41 +75,185 @@ export const useHomeLostFeed = ({
   const [myLostCount, setMyLostCount] = useState(0);
   const [nearbyCount, setNearbyCount] = useState(0);
   const [isRadarLoading, setIsRadarLoading] = useState(false);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<RadarCoordinates | null>(null);
 
+  const socketRef = useRef<RadarSocket | null>(null);
   const locationRef = useRef<RadarCoordinates | null>(null);
   const lastSnapshotRef = useRef<LastSnapshotState | null>(null);
   const snapshotInFlightRef = useRef(false);
-  const pendingRefreshRef = useRef<PendingRefreshState | null>(null);
+  const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastErrorAtRef = useRef(0);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastForegroundSyncAtRef = useRef(0);
   const lastTabFocusSyncAtRef = useRef(0);
-  const foundFeedRevisionRef = useRef(foundReportsApi.getFeedRevision());
   const onErrorRef = useRef(onError);
 
   useEffect(() => {
     onErrorRef.current = onError;
   }, [onError]);
 
-  const notifyError = useCallback(
-    (fallbackMessage: string, error?: unknown) => {
-      const now = Date.now();
-      if (now - lastErrorAtRef.current < ERROR_THROTTLE_MS) {
+  const notifyError = useCallback((fallbackMessage: string, error?: unknown) => {
+    const now = Date.now();
+    if (now - lastErrorAtRef.current < ERROR_THROTTLE_MS) {
+      return;
+    }
+
+    lastErrorAtRef.current = now;
+    const message = error instanceof Error ? error.message : fallbackMessage;
+
+    if (onErrorRef.current) {
+      onErrorRef.current(message);
+    }
+  }, []);
+
+  const emitSubscribe = useCallback(
+    async (socket: RadarSocket, coords: RadarCoordinates) => {
+      const ack = await subscribeRadar(socket, {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        radius: normalizedRadius,
+      });
+
+      if (__DEV__) {
+        console.log('[RadarSocket] Subscribed radar:', ack);
+      }
+    },
+    [normalizedRadius]
+  );
+
+  const sendHeartbeat = useCallback(
+    async (coords?: RadarCoordinates) => {
+      const socket = socketRef.current;
+      const targetCoords = coords || locationRef.current;
+
+      if (!socket || !socket.connected || !targetCoords) {
         return;
       }
 
-      lastErrorAtRef.current = now;
-      const message = error instanceof Error ? error.message : fallbackMessage;
-
-      // Gọi thông qua ref thay vì gọi trực tiếp biến onError
-      if (onErrorRef.current) {
-        onErrorRef.current(message);
-      }
+      await sendRadarHeartbeat(socket, {
+        latitude: targetCoords.latitude,
+        longitude: targetCoords.longitude,
+        radius: normalizedRadius,
+      });
     },
-    [] // <-- Dependency array rỗng, hàm này giờ đây bất biến!
+    [normalizedRadius]
   );
+
+  const ensureSocketConnection = useCallback(async () => {
+    if (socketRef.current) {
+      if (!socketRef.current.connected) {
+        socketRef.current.connect();
+      }
+      return;
+    }
+
+    try {
+      const token = await authStorage.getAccessToken();
+      const socket = createRadarSocket(token);
+      socketRef.current = socket;
+
+      socket.on('connect', () => {
+        setIsRealtimeConnected(true);
+        if (__DEV__) console.log('[RadarSocket] Connected, socket id:', socket.id);
+        const coords = locationRef.current;
+        if (coords) {
+          void emitSubscribe(socket, coords);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        setIsRealtimeConnected(false);
+        if (__DEV__) console.log('[RadarSocket] Disconnected');
+      });
+
+      socket.on('connect_error', (error: Error) => {
+        console.warn('[RadarSocket] Connection error:', error.message);
+      });
+
+      // 3.3. Lắng nghe đồ mất mới: radar:new-lost-item
+      socket.on('radar:new-lost-item', (item: RadarRealtimeLostItemPayload) => {
+        if (!item || !item.itemId) return;
+
+        if (__DEV__) {
+          console.log('[RadarSocket] Received radar:new-lost-item:', item.itemId);
+        }
+
+        const distanceMeters =
+          typeof item.distanceMeters === 'number' ? Math.round(item.distanceMeters) : null;
+        const distanceLabel = distanceMeters !== null ? `${distanceMeters}m` : null;
+
+        const newCard: HomeLostFeedCard = {
+          itemId: item.itemId,
+          name: item.name || 'Vật phẩm thất lạc',
+          category: item.category || 'other',
+          imagePublicUrl: item.imagePublicUrl || null,
+          lostMessage: item.lostMessage || null,
+          address: null,
+          distanceMeters,
+          distanceLabel,
+          lostLat: item.latitude,
+          lostLng: item.longitude,
+          isOwn: false,
+          ownerDisplayName: 'Người dùng',
+          ownerPhotoURL: null,
+          reportedAt: item.reportedAt || new Date().toISOString(),
+          reportType: 'LOST',
+        };
+
+        const newPin: HomeLostFeedPin = {
+          itemId: item.itemId,
+          lat: item.latitude,
+          lng: item.longitude,
+          isOwn: false,
+        };
+
+        // 1. Thêm marker vào bản đồ (pin)
+        // 2. Chèn card lên đầu danh sách BottomSheet
+        // Luôn giữ tỷ lệ 1:1, cùng thứ tự, cùng ID
+        setLostFeedCards(prevCards => {
+          const filtered = prevCards.filter(card => card.itemId !== item.itemId);
+          return [newCard, ...filtered];
+        });
+
+        setMapPins(prevPins => {
+          const filtered = prevPins.filter(pin => pin.itemId !== item.itemId);
+          return [newPin, ...filtered];
+        });
+
+        setNearbyCount(prev => prev + 1);
+        setLastUpdatedAt(new Date().toISOString());
+      });
+
+      // 3.4. Lắng nghe đồ đã được tìm thấy / hủy báo mất: radar:lost-item-removed
+      socket.on('radar:lost-item-removed', (data: RadarRealtimeRemovedPayload) => {
+        if (!data || !data.itemId) return;
+
+        if (__DEV__) {
+          console.log('[RadarSocket] Received radar:lost-item-removed:', data.itemId, data.status);
+        }
+
+        // Xóa item khỏi danh sách cards và xóa marker tương ứng trên bản đồ theo itemId
+        setLostFeedCards(prevCards => {
+          const targetCard = prevCards.find(card => card.itemId === data.itemId);
+          if (targetCard) {
+            if (targetCard.isOwn) {
+              setMyLostCount(prev => Math.max(0, prev - 1));
+            } else {
+              setNearbyCount(prev => Math.max(0, prev - 1));
+            }
+          }
+          return prevCards.filter(card => card.itemId !== data.itemId);
+        });
+
+        setMapPins(prevPins => prevPins.filter(pin => pin.itemId !== data.itemId));
+        setLastUpdatedAt(new Date().toISOString());
+      });
+    } catch (error) {
+      notifyError('Không thể kết nối Socket Radar.', error);
+    }
+  }, [emitSubscribe, notifyError]);
 
   const shouldRefreshSnapshot = useCallback((nextCoords: RadarCoordinates): boolean => {
     if (!lastSnapshotRef.current) {
@@ -120,8 +269,17 @@ export const useHomeLostFeed = ({
 
   const refreshLostFeed = useCallback(
     async (coords?: RadarCoordinates) => {
+      const targetCoords = coords || locationRef.current;
+
+      // Tuyệt đối không gọi API nếu thiếu tọa độ GPS (bắt buộc theo backend contract mới)
+      if (!targetCoords) {
+        if (__DEV__) {
+          console.log('[HomeFeed] Skipping feed fetch: GPS coordinates not available yet');
+        }
+        return;
+      }
+
       if (snapshotInFlightRef.current) {
-        pendingRefreshRef.current = { coords };
         return;
       }
 
@@ -129,17 +287,11 @@ export const useHomeLostFeed = ({
       setIsRadarLoading(true);
 
       try {
-        const data = await radarApi.getHomeLostFeed(
-          coords
-            ? {
-                lat: coords.latitude,
-                lng: coords.longitude,
-                radius: normalizedRadius,
-              }
-            : undefined
-        );
-
-        const feedSource = coords ? 'location' : 'no-location';
+        const data = await radarApi.getHomeLostFeed({
+          lat: targetCoords.latitude,
+          lng: targetCoords.longitude,
+          radius: normalizedRadius,
+        });
 
         setMapPins(data.pins);
         setLostFeedCards(data.cards);
@@ -147,43 +299,24 @@ export const useHomeLostFeed = ({
         setNearbyCount(data.nearbyCount);
         setLastUpdatedAt(new Date().toISOString());
 
-        if (coords) {
-          lastSnapshotRef.current = {
-            location: coords,
-            timestamp: Date.now(),
-          };
-        }
+        lastSnapshotRef.current = {
+          location: targetCoords,
+          timestamp: Date.now(),
+        };
 
         if (__DEV__) {
-          console.log('[HomeFeed] /api/home/lost-feed result:', {
-            source: feedSource,
-            hasLocation: Boolean(coords),
-            radius: coords ? normalizedRadius : null,
+          console.log('[HomeFeed] Loaded lost feed:', {
             myLostCount: data.myLostCount,
             nearbyCount: data.nearbyCount,
             cardsCount: data.cards.length,
             pinsCount: data.pins.length,
-            cardsPreview: data.cards.slice(0, 3).map(card => ({
-              itemId: card.itemId,
-              name: card.name,
-              isOwn: card.isOwn,
-              distanceLabel: card.distanceLabel,
-            })),
-            pinsPreview: data.pins.slice(0, 3),
           });
         }
       } catch (error) {
-        notifyError('Không thể tải dữ liệu Home Lost Feed.', error);
+        notifyError('Không thể tải dữ liệu Radar Feed.', error);
       } finally {
         snapshotInFlightRef.current = false;
         setIsRadarLoading(false);
-
-        const pendingRefresh = pendingRefreshRef.current;
-        pendingRefreshRef.current = null;
-
-        if (pendingRefresh) {
-          void refreshLostFeed(pendingRefresh.coords);
-        }
       }
     },
     [normalizedRadius, notifyError]
@@ -195,63 +328,79 @@ export const useHomeLostFeed = ({
         return;
       }
 
+      const isFirstLocation = !locationRef.current;
       locationRef.current = coords;
       setCurrentLocation(coords);
 
-      if (shouldRefreshSnapshot(coords)) {
+      void ensureSocketConnection();
+
+      if (socketRef.current?.connected) {
+        void emitSubscribe(socketRef.current, coords);
+        void sendHeartbeat(coords);
+      }
+
+      if (isFirstLocation || shouldRefreshSnapshot(coords)) {
         void refreshLostFeed(coords);
       }
     },
-    [refreshLostFeed, shouldRefreshSnapshot]
+    [emitSubscribe, ensureSocketConnection, refreshLostFeed, sendHeartbeat, shouldRefreshSnapshot]
   );
 
-  const syncLostFeedAtCurrentLocation = useCallback(async () => {
+  const syncOnForeground = useCallback(async () => {
     const coords = locationRef.current;
+    if (!coords) return;
 
-    if (!coords) {
-      await refreshLostFeed();
-      return;
+    await ensureSocketConnection();
+    if (socketRef.current?.connected) {
+      await emitSubscribe(socketRef.current, coords);
+      await sendHeartbeat(coords);
     }
 
-    const snapshotAge = lastSnapshotRef.current
-      ? Date.now() - lastSnapshotRef.current.timestamp
-      : Number.POSITIVE_INFINITY;
-    const snapshotIsOldEnough = snapshotAge >= minSyncRefreshAgeMs;
-
-    if (snapshotIsOldEnough || shouldRefreshSnapshot(coords)) {
+    if (shouldRefreshSnapshot(coords)) {
       await refreshLostFeed(coords);
     }
-  }, [minSyncRefreshAgeMs, refreshLostFeed, shouldRefreshSnapshot]);
-
-  const syncOnForeground = useCallback(async () => {
-    await syncLostFeedAtCurrentLocation();
-  }, [syncLostFeedAtCurrentLocation]);
+  }, [
+    emitSubscribe,
+    ensureSocketConnection,
+    refreshLostFeed,
+    sendHeartbeat,
+    shouldRefreshSnapshot,
+  ]);
 
   const syncOnTabFocus = useCallback(async () => {
-    const revision = foundReportsApi.getFeedRevision();
-    if (revision !== foundFeedRevisionRef.current) {
-      foundFeedRevisionRef.current = revision;
-      await refreshLostFeed(locationRef.current ?? undefined);
-      return;
-    }
-    // Không load lại data khi vào lại trang nếu đã có dữ liệu
-    if (lastSnapshotRef.current) {
-      return;
-    }
-
     const now = Date.now();
     if (now - lastTabFocusSyncAtRef.current < TAB_FOCUS_SYNC_THROTTLE_MS) {
       return;
     }
-
     lastTabFocusSyncAtRef.current = now;
-    await syncLostFeedAtCurrentLocation();
-  }, [refreshLostFeed, syncLostFeedAtCurrentLocation]);
 
+    const coords = locationRef.current;
+    if (!coords) return;
+
+    if (!lastSnapshotRef.current || shouldRefreshSnapshot(coords)) {
+      await refreshLostFeed(coords);
+    }
+  }, [refreshLostFeed, shouldRefreshSnapshot]);
+
+  // Thiết lập định kỳ gửi radar:heartbeat mỗi 30 - 60 giây
   useEffect(() => {
-    void refreshLostFeed();
-  }, [refreshLostFeed]);
+    if (heartbeatTimerRef.current) {
+      clearInterval(heartbeatTimerRef.current);
+    }
 
+    heartbeatTimerRef.current = setInterval(() => {
+      void sendHeartbeat();
+    }, HEARTBEAT_INTERVAL_MS);
+
+    return () => {
+      if (heartbeatTimerRef.current) {
+        clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = null;
+      }
+    };
+  }, [sendHeartbeat]);
+
+  // Lắng nghe thay đổi trạng thái ứng dụng (foreground / background)
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextAppState => {
       const previousAppState = appStateRef.current;
@@ -279,27 +428,24 @@ export const useHomeLostFeed = ({
     };
   }, [syncOnForeground]);
 
+  // Cleanup socket khi hook unmount
   useEffect(() => {
-    if (!__DEV__) {
-      return;
-    }
-
-    console.log('[HomeFeed] Hook state:', {
-      mapPins: mapPins.length,
-      cards: lostFeedCards.length,
-      myLostCount,
-      nearbyCount,
-      isRadarLoading,
-      hasLocation: Boolean(currentLocation),
-    });
-  }, [
-    currentLocation,
-    isRadarLoading,
-    lostFeedCards.length,
-    mapPins.length,
-    myLostCount,
-    nearbyCount,
-  ]);
+    return () => {
+      const socket = socketRef.current;
+      if (socket) {
+        socketRef.current = null;
+        socket.removeAllListeners();
+        try {
+          if (socket.connected) {
+            void unsubscribeRadar(socket);
+          }
+        } catch {
+          // ignore
+        }
+        socket.disconnect();
+      }
+    };
+  }, []);
 
   return {
     mapPins,
@@ -307,6 +453,7 @@ export const useHomeLostFeed = ({
     myLostCount,
     nearbyCount,
     isRadarLoading,
+    isRealtimeConnected,
     lastUpdatedAt,
     currentLocation,
     handleUserLocationChange,

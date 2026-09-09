@@ -10,6 +10,7 @@ interface MapSectionProps {
   cards: HomeLostFeedCard[];
   onUserLocationChange: (coords: { latitude: number; longitude: number }) => void;
   onSelectItem?: (itemId: string) => void;
+  onLocationPermissionChange?: (status: 'granted' | 'denied' | 'disabled') => void;
 }
 
 interface MapMarkerPayload {
@@ -62,12 +63,18 @@ export const MapSection: React.FC<MapSectionProps> = ({
   cards,
   onUserLocationChange,
   onSelectItem,
+  onLocationPermissionChange,
 }) => {
   const mapRef = useRef<MapView>(null);
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const hasFocusedMarkersRef = useRef(false);
   const hasFocusedUserRef = useRef(false);
   const geocodedCoordinatesRef = useRef(new Map<string, string>());
+  const onLocationPermissionChangeRef = useRef(onLocationPermissionChange);
+
+  useEffect(() => {
+    onLocationPermissionChangeRef.current = onLocationPermissionChange;
+  }, [onLocationPermissionChange]);
   const [isMapReady, setIsMapReady] = useState(false);
   const [isDaytime, setIsDaytime] = useState<boolean>(() => isDaytimeNow());
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
@@ -180,6 +187,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== 'granted' || !isMounted) {
         setHasLocationPermission(false);
+        onLocationPermissionChangeRef.current?.('denied');
         console.warn('[GoogleMap] Foreground location permission was not granted');
         return;
       }
@@ -187,6 +195,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
       const servicesEnabled = await Location.hasServicesEnabledAsync();
       if (!servicesEnabled) {
+        onLocationPermissionChangeRef.current?.('disabled');
         const initialLocation = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Low,
           mayShowUserSettingsDialog: true,
@@ -195,9 +204,12 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
         try {
           await Location.enableNetworkProviderAsync();
+          onLocationPermissionChangeRef.current?.('granted');
         } catch {
           console.warn('[GoogleMap] Location services are disabled or unavailable');
         }
+      } else {
+        onLocationPermissionChangeRef.current?.('granted');
       }
 
       try {

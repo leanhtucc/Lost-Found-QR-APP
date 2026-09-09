@@ -29,7 +29,9 @@ export interface Location {
 // Main Item interface - matches backend schema
 export interface Item {
   id: string; // UUID - Database ID
-  itemId: string; // nanoid(16) - Unique ID cho QR
+  itemId: string; // nanoid(16) / cuid - Unique ID cho QR
+  publicItemId?: string; // Public Item ID
+  qrCodeId?: string; // Mã dùng để quét QR
   ownerId: string; // User ID của chủ sở hữu
   owner?: User; // Full owner info with trust metrics
   name: string; // Tên vật phẩm (max 100 chars)
@@ -37,10 +39,26 @@ export interface Item {
   description?: string; // Mô tả (max 500 chars)
   status: ItemStatus; // Trạng thái
   lostMessage?: string; // Tin nhắn khi mất (max 500 chars)
-  qrCodeUrl: string; // URL QR Code
+  lostAddress?: string; // Địa chỉ mất
+  lostLat?: number;
+  lostLng?: number;
+  qrCodeUrl?: string; // URL QR Code
   imagePublicUrl?: string; // URL ảnh vật phẩm
   lastSeenLocation?: Location | string; // JSON: {lat: number, lng: number}
   securityPin?: string; // Mã PIN 4 số
+  // Registered capture location (safe storage)
+  captureLatitude?: number | null;
+  captureLongitude?: number | null;
+  captureAddress?: string | null;
+  captureAccuracyMeters?: number | null;
+  capturedAt?: string | null;
+  captureLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    accuracyMeters?: number;
+    capturedAt?: string;
+  } | null;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
@@ -55,6 +73,13 @@ export interface CreateItemParams {
   latitude?: number;
   longitude?: number;
   address?: string;
+  captureLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    accuracyMeters?: number;
+    capturedAt?: string;
+  } | null;
   securityPin?: string;
 }
 
@@ -97,13 +122,17 @@ export interface ItemsSummary {
 }
 
 // Update status params
-export interface UpdateStatusParams {
-  status: 'SAFE' | 'LOST';
-  lostMessage?: string;
-  lostAddress?: string;
-  latitude?: number;
-  longitude?: number;
-}
+export type UpdateStatusParams =
+  | {
+      status: 'SAFE';
+    }
+  | {
+      status: 'LOST';
+      latitude: number;
+      longitude: number;
+      lostMessage?: string;
+      lostAddress?: string;
+    };
 
 export interface ScanItemOwnerInfo {
   memberId?: string;

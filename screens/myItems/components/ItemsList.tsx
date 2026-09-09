@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Package } from 'lucide-react-native';
 import { Item } from '@/types/item';
 import { StatusFilterType } from '../hooks/useItemsFilter';
@@ -78,6 +78,10 @@ export const ItemsList: React.FC<ItemsListProps> = ({
                 : MY_ITEMS_COLORS.lostText
               : MY_ITEMS_COLORS.safeText;
 
+            const shortAddress =
+              item.captureAddress ||
+              (typeof item.lastSeenLocation === 'string' ? item.lastSeenLocation : undefined);
+
             return (
               <TouchableOpacity
                 key={item.id}
@@ -86,15 +90,34 @@ export const ItemsList: React.FC<ItemsListProps> = ({
                 onPress={() => onSelectItem(item.id)}
               >
                 <View style={styles.cardRow}>
-                  <View style={[styles.iconWrap, { backgroundColor: iconBackground }]}>
-                    <Package size={22} color={iconColor} strokeWidth={2.4} />
-                  </View>
+                  {item.imagePublicUrl ? (
+                    <View style={styles.thumbnailWrap}>
+                      <Image
+                        source={{ uri: item.imagePublicUrl }}
+                        style={styles.thumbnailImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  ) : (
+                    <View style={[styles.iconWrap, { backgroundColor: iconBackground }]}>
+                      <Package size={22} color={iconColor} strokeWidth={2.4} />
+                    </View>
+                  )}
+
                   <View style={styles.metaWrap}>
                     <Text numberOfLines={1} style={styles.itemName}>
                       {item.name}
                     </Text>
                     <Text style={styles.itemCategory}>{getCategoryLabel(item.category)}</Text>
-                    <Text style={styles.itemCode}>ID: {item.id}</Text>
+                    {shortAddress ? (
+                      <Text numberOfLines={1} style={styles.itemAddress}>
+                        {shortAddress}
+                      </Text>
+                    ) : (
+                      <Text style={styles.itemCode}>
+                        ID: {item.publicItemId || item.itemId || item.id}
+                      </Text>
+                    )}
                   </View>
 
                   <View style={[styles.badge, { backgroundColor: badgeBackground }]}>
@@ -189,5 +212,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.2,
+  },
+  thumbnailWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
+    borderWidth: 1,
+    borderColor: MY_ITEMS_COLORS.border,
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
+  },
+  itemAddress: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '500',
+    color: MY_ITEMS_COLORS.textSecondary,
   },
 });
