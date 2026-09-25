@@ -50,7 +50,8 @@ export default function HandoverConfirmScreen() {
   const clearError = useReturnStore(state => state.clearError);
 
   // Finder state
-  const [handoverCode, setHandoverCode] = useState(session?.handover?.code || '');
+  const [handoverCode, setHandoverCode] = useState('');
+  const [handoverQrPayload, setHandoverQrPayload] = useState('');
   const [finderConfirmedCheck, setFinderConfirmedCheck] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
   const [isRefreshingCode, setIsRefreshingCode] = useState(false);
@@ -66,20 +67,17 @@ export default function HandoverConfirmScreen() {
 
   // Init handover details on mount
   useEffect(() => {
-    if (!session?.id) return;
-    if (session.handover?.code) {
-      setHandoverCode(session.handover.code);
-      return;
-    }
+    if (!session?.id || currentRole !== 'FINDER') return;
 
     const init = async () => {
       const details = await initHandover();
       if (details?.code) {
         setHandoverCode(details.code);
+        setHandoverQrPayload(details.qrPayload);
       }
     };
     void init();
-  }, [initHandover, session?.handover?.code, session?.id]);
+  }, [currentRole, initHandover, session?.id]);
 
   const isOwner = currentRole === 'OWNER';
   const partner = isOwner ? session?.finder : session?.owner;
@@ -115,6 +113,7 @@ export default function HandoverConfirmScreen() {
       const details = await initHandover();
       if (details?.code) {
         setHandoverCode(details.code);
+        setHandoverQrPayload(details.qrPayload);
       }
     } finally {
       setIsRefreshingCode(false);
@@ -125,7 +124,7 @@ export default function HandoverConfirmScreen() {
     if (isSubmitting) return;
     clearError();
 
-    const codeToVerify = isOwner ? inputCode.trim() : handoverCode;
+    const codeToVerify = isOwner ? inputCode.trim() : undefined;
     const success = await confirmHandover(codeToVerify);
 
     if (success) {
@@ -221,9 +220,7 @@ export default function HandoverConfirmScreen() {
             <View className="p-4 rounded-2xl bg-white mb-4 items-center justify-center shadow-lg">
               {handoverCode ? (
                 <QRCode
-                  value={
-                    session?.handover?.qrPayload || `handover://${session?.id}?code=${handoverCode}`
-                  }
+                  value={handoverQrPayload}
                   size={160}
                   color="#000000"
                   backgroundColor="#ffffff"

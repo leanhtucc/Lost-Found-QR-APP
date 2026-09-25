@@ -12,7 +12,7 @@ import {
   ReturnUserRole,
   LiveLocation,
   ProposeMeetupRequest,
-  HandoverDetails,
+  HandoverInitResult,
   RewardPayout,
   SubmitRatingRequest,
 } from '@/types/return-flow';
@@ -48,6 +48,7 @@ export interface ReturnActions {
   setMyLocation: (location: LiveLocation) => void;
   setPartnerLocation: (location: LiveLocation) => void;
   setPartnerLocationStale: (stale: boolean) => void;
+  clearLiveLocations: () => void;
   setConnectionState: (state: ReturnState['connectionState']) => void;
   setGpsState: (state: ReturnState['gpsState']) => void;
 
@@ -58,7 +59,7 @@ export interface ReturnActions {
   startTracking: () => Promise<boolean>;
   stopTracking: () => Promise<void>;
   notifyArrival: () => Promise<boolean>;
-  initHandover: () => Promise<HandoverDetails | null>;
+  initHandover: () => Promise<HandoverInitResult | null>;
   confirmHandover: (code?: string) => Promise<boolean>;
   disputeHandover: (reason: string) => Promise<boolean>;
   fetchRewardStatus: () => Promise<RewardPayout | null>;
@@ -154,6 +155,33 @@ export const useReturnStore = create<ReturnStore>()(
         return session;
       } catch (err: any) {
         console.warn('[ReturnStore] Refresh session failed:', err);
+        if ([401, 403, 404].includes(err?.status)) {
+          set({
+            session: null,
+            currentRole: null,
+            myLocation: null,
+            partnerLocation: null,
+            connectionState: 'disconnected',
+            error: err?.message || 'Phiên hoàn trả không còn khả dụng',
+            errorCode: err?.code || null,
+          });
+        } else {
+          set(state => ({
+            session: state.session
+              ? {
+                  ...state.session,
+                  capabilities: {
+                    ...state.session.capabilities,
+                    directionsAllowed: false,
+                    liveSharingAllowed: false,
+                    handoverAllowed: false,
+                  },
+                }
+              : null,
+            myLocation: null,
+            partnerLocation: null,
+          }));
+        }
         return null;
       }
     },
@@ -173,6 +201,10 @@ export const useReturnStore = create<ReturnStore>()(
 
     setPartnerLocationStale: stale => {
       set({ isPartnerLocationStale: stale });
+    },
+
+    clearLiveLocations: () => {
+      set({ myLocation: null, partnerLocation: null, isPartnerLocationStale: false });
     },
 
     setConnectionState: connectionState => {
@@ -290,13 +322,7 @@ export const useReturnStore = create<ReturnStore>()(
 
       try {
         const details = await returnApi.initHandover(session.id);
-        set(state => ({
-          session: state.session
-            ? { ...state.session, handover: details, status: 'HANDOVER_PENDING' }
-            : null,
-          error: null,
-          errorCode: null,
-        }));
+        set({ error: null, errorCode: null });
         return details;
       } catch (err: any) {
         set({

@@ -84,6 +84,13 @@ export default {
       ],
       'expo-secure-store',
       [
+        'expo-location',
+        {
+          locationWhenInUsePermission:
+            'Cho phép ứng dụng dùng vị trí khi mở để hỗ trợ gặp mặt và bàn giao đồ.',
+        },
+      ],
+      [
         'expo-image-picker',
         {
           photosPermission: 'Cho phép ứng dụng truy cập thư viện ảnh để chọn hình ảnh đồ vật.',

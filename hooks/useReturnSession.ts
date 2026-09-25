@@ -16,6 +16,14 @@ interface UseReturnSessionOptions {
   autoRefresh?: boolean;
 }
 
+const PRIVATE_REVOKED_STATES = new Set([
+  'COMPLETED',
+  'MEETUP_CANCELLED',
+  'TRACKING_EXPIRED',
+  'HANDOVER_DISPUTED',
+  'REFUND_PENDING',
+]);
+
 export const useReturnSession = ({
   channelId,
   sessionId,
@@ -33,8 +41,8 @@ export const useReturnSession = ({
 
   const initSession = useReturnStore(state => state.initSession);
   const refreshSession = useReturnStore(state => state.refreshSession);
-  const setSession = useReturnStore(state => state.setSession);
   const setPartnerLocation = useReturnStore(state => state.setPartnerLocation);
+  const clearLiveLocations = useReturnStore(state => state.clearLiveLocations);
   const setConnectionState = useReturnStore(state => state.setConnectionState);
 
   // Initial load
@@ -80,9 +88,9 @@ export const useReturnSession = ({
 
     let socketInstance: ReturnSocket | null = null;
 
-    const handleSessionUpdated = (payload: { sessionId: string; session: any }) => {
-      if (payload.sessionId === currentSessionId && payload.session) {
-        setSession(payload.session);
+    const handleSessionUpdated = (payload: { sessionId: string }) => {
+      if (payload.sessionId === currentSessionId) {
+        void refreshSession(currentSessionId, user);
       }
     };
 
@@ -118,6 +126,13 @@ export const useReturnSession = ({
       }
     };
 
+    const handleLocationCleared = (payload: { sessionId: string }) => {
+      if (payload.sessionId === currentSessionId) {
+        clearLiveLocations();
+        void refreshSession(currentSessionId, user);
+      }
+    };
+
     const handleConnect = () => {
       setConnectionState('connected');
     };
@@ -147,6 +162,7 @@ export const useReturnSession = ({
       socket.on('return:participant-arrived', handleParticipantArrived);
       socket.on('return:handover-updated', handleHandoverUpdated);
       socket.on('return:reward-updated', handleRewardUpdated);
+      socket.on('return:location-cleared', handleLocationCleared);
     };
 
     void setupSocket();
@@ -161,6 +177,8 @@ export const useReturnSession = ({
         socketInstance.off('return:participant-arrived', handleParticipantArrived);
         socketInstance.off('return:handover-updated', handleHandoverUpdated);
         socketInstance.off('return:reward-updated', handleRewardUpdated);
+        socketInstance.off('return:location-cleared', handleLocationCleared);
+        returnSocketManager.disconnect(currentSessionId);
       }
     };
   }, [
@@ -169,10 +187,17 @@ export const useReturnSession = ({
     currentUserId,
     user,
     setConnectionState,
-    setSession,
     setPartnerLocation,
+    clearLiveLocations,
     refreshSession,
   ]);
+
+  useEffect(() => {
+    if (session && PRIVATE_REVOKED_STATES.has(session.status)) {
+      clearLiveLocations();
+      returnSocketManager.disconnect(session.id);
+    }
+  }, [clearLiveLocations, session]);
 
   const manualRefresh = useCallback(() => {
     return refreshSession(undefined, user);

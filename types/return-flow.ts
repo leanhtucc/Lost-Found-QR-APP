@@ -26,6 +26,15 @@ export type ReturnSessionStatus =
   | 'REFUND_PENDING';
 
 export type ReturnUserRole = 'OWNER' | 'FINDER';
+export type ReturnSourceType = 'ITEM' | 'FOUND_REPORT';
+
+export interface ReturnCapabilities {
+  canReviewMeetup: boolean;
+  directionsAllowed: boolean;
+  liveSharingAllowed: boolean;
+  handoverAllowed: boolean;
+  canCancel: boolean;
+}
 
 export interface ReturnParticipant {
   id: string; // memberId or userId
@@ -64,8 +73,6 @@ export interface MeetupProposal {
 }
 
 export interface HandoverDetails {
-  code?: string; // 6-digit verification code generated for this handover
-  qrPayload?: string;
   finderConfirmed: boolean;
   ownerConfirmed: boolean;
   finderConfirmedAt?: string;
@@ -73,6 +80,11 @@ export interface HandoverDetails {
   disputeReason?: string;
   disputedBy?: string;
   disputedAt?: string;
+}
+
+export interface HandoverInitResult extends HandoverDetails {
+  code: string;
+  qrPayload: string;
 }
 
 export interface RewardPayout {
@@ -98,7 +110,9 @@ export interface FinderRating {
 export interface ReturnSession {
   id: string; // returnSessionId
   channelId: string;
-  itemId: string;
+  sourceType: ReturnSourceType;
+  itemId?: string;
+  foundReportId?: string;
   itemName: string;
   itemCategory?: string;
   itemImageUrl?: string | null;
@@ -113,6 +127,8 @@ export interface ReturnSession {
   createdAt: string;
   updatedAt: string;
   serverRevision: number;
+  trackingExpiresAt?: string | null;
+  capabilities: ReturnCapabilities;
 }
 
 // Request & Response Types

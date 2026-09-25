@@ -19,9 +19,11 @@ export interface Conversation {
 }
 
 export interface ChatChannel {
-  id: string;
-  type: string;
-  name: string;
+  id?: string;
+  type?: string;
+  name?: string;
+  channelId: string;
+  channelType: string;
   last_message?: string;
   unread_count?: number;
   created_at?: string;

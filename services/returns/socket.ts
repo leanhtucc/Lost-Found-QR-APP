@@ -6,13 +6,7 @@
 
 import { getApiUrl } from '@constants/environment';
 import { io, Socket } from 'socket.io-client';
-import {
-  LiveLocation,
-  HandoverDetails,
-  RewardPayout,
-  ReturnSession,
-  ReturnSessionStatus,
-} from '@/types/return-flow';
+import { LiveLocation, ReturnSessionStatus } from '@/types/return-flow';
 import { authStorage } from '@/storage/auth';
 
 export interface ReturnServerToClientEvents {
@@ -24,15 +18,21 @@ export interface ReturnServerToClientEvents {
   'return:participant-arrived': (payload: { sessionId: string; userId: string }) => void;
   'return:handover-updated': (payload: {
     sessionId: string;
-    handover: HandoverDetails;
     status: ReturnSessionStatus;
+    eventType: string;
   }) => void;
   'return:reward-updated': (payload: {
     sessionId: string;
-    reward: RewardPayout;
     status: ReturnSessionStatus;
+    eventType: string;
   }) => void;
-  'return:session-updated': (payload: { sessionId: string; session: ReturnSession }) => void;
+  'return:session-updated': (payload: {
+    sessionId: string;
+    revision: number;
+    status: ReturnSessionStatus;
+    eventType: string;
+  }) => void;
+  'return:location-cleared': (payload: { sessionId: string }) => void;
 }
 
 export interface ReturnClientToServerEvents {

@@ -48,17 +48,17 @@ export default function LiveTrackingScreen() {
     etaToMeetup,
     startTracking,
   } = useLiveTracking({
-    enabled: Boolean(session),
+    enabled: Boolean(session?.capabilities.liveSharingAllowed),
     sessionId: session?.id,
     meetupLatitude: meetup?.latitude,
     meetupLongitude: meetup?.longitude,
   });
 
   const meetupCoords = useMemo(
-    () => ({
-      latitude: meetup?.latitude ?? 20.9808,
-      longitude: meetup?.longitude ?? 105.7879,
-    }),
+    () =>
+      meetup && Number.isFinite(meetup.latitude) && Number.isFinite(meetup.longitude)
+        ? { latitude: meetup.latitude, longitude: meetup.longitude }
+        : null,
     [meetup?.latitude, meetup?.longitude]
   );
 
@@ -71,6 +71,7 @@ export default function LiveTrackingScreen() {
   );
 
   const fitAllPoints = useCallback(() => {
+    if (!meetupCoords) return;
     const coordinates = [meetupCoords];
     if (myLocation) {
       coordinates.push({ latitude: myLocation.latitude, longitude: myLocation.longitude });
@@ -125,7 +126,12 @@ export default function LiveTrackingScreen() {
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={StyleSheet.absoluteFillObject}
-        initialRegion={{ ...meetupCoords, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
+        initialRegion={{
+          latitude: meetupCoords?.latitude ?? myLocation?.latitude ?? 0,
+          longitude: meetupCoords?.longitude ?? myLocation?.longitude ?? 0,
+          latitudeDelta: 0.015,
+          longitudeDelta: 0.015,
+        }}
         customMapStyle={DARK_GOOGLE_MAP_STYLE}
         showsUserLocation={false}
         showsMyLocationButton={false}
@@ -173,13 +179,15 @@ export default function LiveTrackingScreen() {
           </Marker>
         )}
 
-        <Marker coordinate={meetupCoords} title={meetup?.name || 'Điểm gặp'}>
-          <View style={styles.meetupMarker}>
-            <MapPin size={20} color="#FFFFFF" fill="#FFFFFF" />
-          </View>
-        </Marker>
+        {meetupCoords && (
+          <Marker coordinate={meetupCoords} title={meetup?.name || 'Điểm gặp'}>
+            <View style={styles.meetupMarker}>
+              <MapPin size={20} color="#FFFFFF" fill="#FFFFFF" />
+            </View>
+          </Marker>
+        )}
 
-        {myLocation && (
+        {myLocation && meetupCoords && (
           <Polyline
             coordinates={[
               { latitude: myLocation.latitude, longitude: myLocation.longitude },
@@ -189,7 +197,7 @@ export default function LiveTrackingScreen() {
             strokeWidth={4}
           />
         )}
-        {partnerCoords && (
+        {partnerCoords && meetupCoords && (
           <Polyline
             coordinates={[partnerCoords, meetupCoords]}
             strokeColor={FIND_BACK.secondary}
@@ -251,8 +259,9 @@ export default function LiveTrackingScreen() {
               partner={partner}
               meetupAddress={meetup?.address || 'Điểm hẹn đã thống nhất'}
               meetupName={meetup?.name}
-              meetupLatitude={meetupCoords.latitude}
-              meetupLongitude={meetupCoords.longitude}
+              meetupLatitude={meetupCoords?.latitude}
+              meetupLongitude={meetupCoords?.longitude}
+              directionsAllowed={Boolean(session.capabilities.directionsAllowed && meetupCoords)}
               distanceToMeetup={distanceToMeetup}
               etaToMeetup={etaToMeetup}
               isPartnerStale={isPartnerLocationStale}

@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { AppState } from 'react-native';
 import * as Location from 'expo-location';
 import { useReturnStore } from '@/services/returns/store';
 import { LiveLocation } from '@/types/return-flow';
@@ -69,12 +70,20 @@ export const useLiveTracking = ({
   const isPartnerLocationStale = useReturnStore(state => state.isPartnerLocationStale);
   const gpsState = useReturnStore(state => state.gpsState);
   const connectionState = useReturnStore(state => state.connectionState);
+  const session = useReturnStore(state => state.session);
+  const refreshSession = useReturnStore(state => state.refreshSession);
 
   const setMyLocation = useReturnStore(state => state.setMyLocation);
   const setGpsState = useReturnStore(state => state.setGpsState);
   const setPartnerLocationStale = useReturnStore(state => state.setPartnerLocationStale);
 
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+
+  const stopWatching = useCallback(() => {
+    locationSubscriptionRef.current?.remove();
+    locationSubscriptionRef.current = null;
+    setGpsState('idle');
+  }, [setGpsState]);
 
   // Stale check interval
   useEffect(() => {
@@ -90,6 +99,10 @@ export const useLiveTracking = ({
 
   // Request permission and start location watch
   const startTracking = useCallback(async () => {
+    if (!session?.capabilities.liveSharingAllowed) return;
+    if (session.trackingExpiresAt && new Date(session.trackingExpiresAt).getTime() <= Date.now()) {
+      return;
+    }
     try {
       setGpsState('acquiring');
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -157,18 +170,20 @@ export const useLiveTracking = ({
       console.warn('[useLiveTracking] Location watch error:', err);
       setGpsState('weak');
     }
-  }, [sessionId, setGpsState, setMyLocation]);
+  }, [
+    session?.capabilities.liveSharingAllowed,
+    session?.trackingExpiresAt,
+    sessionId,
+    setGpsState,
+    setMyLocation,
+  ]);
 
   const stopTracking = useCallback(() => {
-    if (locationSubscriptionRef.current) {
-      locationSubscriptionRef.current.remove();
-      locationSubscriptionRef.current = null;
-    }
-    setGpsState('idle');
+    stopWatching();
     if (sessionId) {
       void returnApi.stopTracking(sessionId);
     }
-  }, [sessionId, setGpsState]);
+  }, [sessionId, stopWatching]);
 
   useEffect(() => {
     if (enabled) {
@@ -178,9 +193,23 @@ export const useLiveTracking = ({
     }
 
     return () => {
-      stopTracking();
+      stopWatching();
     };
-  }, [enabled, startTracking, stopTracking]);
+  }, [enabled, startTracking, stopWatching]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState !== 'active') {
+        stopWatching();
+        return;
+      }
+      void (async () => {
+        const fresh = await refreshSession(sessionId);
+        if (enabled && fresh?.capabilities.liveSharingAllowed) await startTracking();
+      })();
+    });
+    return () => subscription.remove();
+  }, [enabled, refreshSession, sessionId, startTracking, stopWatching]);
 
   // Distance calculations
   const distanceToMeetup = useMemo(() => {

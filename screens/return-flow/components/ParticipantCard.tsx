@@ -4,15 +4,7 @@
  */
 
 import React from 'react';
-import {
-  ActivityIndicator,
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  Linking,
-  Platform,
-} from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity, Image, Linking } from 'react-native';
 import {
   Phone,
   MessageSquare,
@@ -26,13 +18,15 @@ import {
 } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
 import { ReturnParticipant, ReturnSessionStatus } from '@/types/return-flow';
+import { openExternalDirections } from '@/services/maps/directions';
 
 interface ParticipantCardProps {
   partner: ReturnParticipant;
   meetupAddress: string;
   meetupName?: string;
-  meetupLatitude: number;
-  meetupLongitude: number;
+  meetupLatitude?: number;
+  meetupLongitude?: number;
+  directionsAllowed: boolean;
   distanceToMeetup: number | null;
   etaToMeetup: string;
   isPartnerStale: boolean;
@@ -54,6 +48,7 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
   meetupName,
   meetupLatitude,
   meetupLongitude,
+  directionsAllowed,
   distanceToMeetup,
   etaToMeetup,
   isPartnerStale,
@@ -77,18 +72,11 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
     }
   };
 
-  const handleOpenExternalMap = () => {
-    const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
-    const latLng = `${meetupLatitude},${meetupLongitude}`;
-    const label = encodeURIComponent(meetupName || meetupAddress);
-    const url = Platform.select({
-      ios: `${scheme}${label}@${latLng}`,
-      android: `${scheme}${latLng}(${label})`,
-    });
-
-    if (url) {
-      Linking.openURL(url).catch(err => console.warn('Could not open map:', err));
-    }
+  const handleOpenExternalMap = async () => {
+    if (!directionsAllowed || meetupLatitude == null || meetupLongitude == null) return;
+    await openExternalDirections(meetupLatitude, meetupLongitude).catch(err =>
+      console.warn('Could not open map:', err)
+    );
   };
 
   return (
@@ -193,13 +181,15 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
             </Text>
           </View>
 
-          <TouchableOpacity
-            onPress={handleOpenExternalMap}
-            className="flex-row items-center gap-1 rounded-lg border border-fb-border-subtle bg-fb-surface-elevated px-2.5 py-1.5"
-          >
-            <Navigation size={13} color={FIND_BACK.primaryLight} />
-            <Text className="text-xs font-semibold text-fb-primary-light">Chỉ đường</Text>
-          </TouchableOpacity>
+          {directionsAllowed && (
+            <TouchableOpacity
+              onPress={() => void handleOpenExternalMap()}
+              className="flex-row items-center gap-1 rounded-lg border border-fb-border-subtle bg-fb-surface-elevated px-2.5 py-1.5"
+            >
+              <Navigation size={13} color={FIND_BACK.primaryLight} />
+              <Text className="text-xs font-semibold text-fb-primary-light">Chỉ đường</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Distance & ETA Row */}

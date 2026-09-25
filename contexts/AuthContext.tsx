@@ -13,6 +13,8 @@ import { User } from '@services/auth/types';
 import { sessionEvents } from '@/lib/sessionEvents';
 import { SessionExpiredModal } from '@components/SessionExpiredModal';
 import { pushNotificationService } from '@/services/notifications';
+import { useReturnStore } from '@/services/returns/store';
+import { returnSocketManager } from '@/services/returns/socket';
 
 // Session timeout in milliseconds (7 days)
 const SESSION_TIMEOUT = 7 * 24 * 60 * 60 * 1000;
@@ -92,6 +94,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {
+      returnSocketManager.disconnect();
+      useReturnStore.getState().reset();
       await authStorage.clearAll();
       await authStorage.removeItem(LAST_ACTIVITY_KEY);
       setIsAuthenticated(false);

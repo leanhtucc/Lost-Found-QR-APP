@@ -23,6 +23,8 @@ import { RootStackParamList } from '@/navigation';
 import { itemsApi } from '@/services/items';
 import { getCategoryIcon, getCategoryLabel } from '@/constants/categories';
 import { FIND_BACK } from '@constants/theme';
+import { createChannel } from '@/services/chat/api';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 type PublicItemDetailRouteProp = RouteProp<RootStackParamList, 'PublicItemDetails'>;
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -31,6 +33,7 @@ export default function PublicItemDetailScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<PublicItemDetailRouteProp>();
   const { itemId } = route.params;
+  const { user } = useAuthContext();
 
   const [item, setItem] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,21 +58,26 @@ export default function PublicItemDetailScreen() {
     void loadPublicItem();
   }, [loadPublicItem]);
 
-  const handleContactOwner = () => {
+  const handleContactOwner = async () => {
     if (!item) return;
-
-    // Chuyển sang màn hình quét QR hoặc hướng dẫn người dùng
-    Alert.alert(
-      'Liên hệ chủ sở hữu',
-      'Nếu bạn đã nhặt được món đồ này, bạn có thể quét mã QR dán trên đồ vật hoặc thông báo cho hệ thống để kết nối bảo mật với chủ nhân.',
-      [
-        { text: 'Đóng', style: 'cancel' },
-        {
-          text: 'Quét mã QR',
-          onPress: () => navigation.navigate('Scan'),
-        },
-      ]
-    );
+    const finderId = user?.id || user?.memberId || user?.uid;
+    if (!finderId) {
+      Alert.alert('Cần đăng nhập', 'Vui lòng đăng nhập để kết nối với chủ sở hữu.');
+      return;
+    }
+    try {
+      const result = await createChannel(itemId, finderId);
+      navigation.navigate('Chat', {
+        channelId: result.channel.channelId,
+        itemName: item.name,
+        userName: item.owner?.displayName || 'Chủ sở hữu',
+      });
+    } catch (reason) {
+      Alert.alert(
+        'Không thể kết nối',
+        reason instanceof Error ? reason.message : 'Vui lòng thử lại.'
+      );
+    }
   };
 
   const CategoryIcon = item ? getCategoryIcon(item.category) : null;
@@ -200,7 +208,7 @@ export default function PublicItemDetailScreen() {
               justifyContent: 'center',
               gap: 8,
             }}
-            onPress={handleContactOwner}
+            onPress={() => void handleContactOwner()}
             activeOpacity={0.85}
           >
             <MessageSquare size={18} color="#FFFFFF" />

@@ -16,7 +16,7 @@ import {
   DisputeHandoverRequest,
   SubmitRatingRequest,
   RewardPayout,
-  HandoverDetails,
+  HandoverInitResult,
 } from '@/types/return-flow';
 
 // Đặt false để ép buộc gọi API Backend thật trong cả DEV và PROD
@@ -104,6 +104,7 @@ const createMockSession = (
   const newSession: ReturnSession = {
     id: sessionId,
     channelId,
+    sourceType: 'ITEM',
     itemId: itemId || 'item_default',
     itemName: extra?.itemName || 'Ví da cầm tay & Giấy tờ',
     itemCategory: extra?.itemCategory || 'Ví / Giấy tờ',
@@ -139,6 +140,14 @@ const createMockSession = (
     createdAt: now,
     updatedAt: now,
     serverRevision: 1,
+    trackingExpiresAt: null,
+    capabilities: {
+      canReviewMeetup: false,
+      directionsAllowed: false,
+      liveSharingAllowed: false,
+      handoverAllowed: false,
+      canCancel: false,
+    },
   };
 
   inMemorySessions[sessionId] = newSession;
@@ -349,11 +358,11 @@ export const returnApi = {
    * Khởi tạo bàn giao (Sinh mã ngẫu nhiên 6 số CSPRNG, TTL 5 phút, max 5 lần thử)
    * POST /v1/returns/:id/handover/init
    */
-  async initHandover(sessionId: string): Promise<HandoverDetails> {
+  async initHandover(sessionId: string): Promise<HandoverInitResult> {
     try {
       const url = buildV1Url('returns', sessionId, 'handover', 'init');
       const response = await fetchWithAuth(url, { method: 'POST' });
-      return await handleResponse<HandoverDetails>(response);
+      return await handleResponse<HandoverInitResult>(response);
     } catch (err) {
       if (USE_MOCK_FALLBACK) {
         console.warn('[ReturnAPI] Dev fallback initHandover:', err);
