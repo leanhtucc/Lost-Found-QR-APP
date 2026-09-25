@@ -56,10 +56,14 @@ export default function LiveTrackingScreen() {
 
   const meetupCoords = useMemo(
     () =>
-      meetup && Number.isFinite(meetup.latitude) && Number.isFinite(meetup.longitude)
+      meetup &&
+      typeof meetup.latitude === 'number' &&
+      typeof meetup.longitude === 'number' &&
+      Number.isFinite(meetup.latitude) &&
+      Number.isFinite(meetup.longitude)
         ? { latitude: meetup.latitude, longitude: meetup.longitude }
         : null,
-    [meetup?.latitude, meetup?.longitude]
+    [meetup]
   );
 
   const partnerCoords = useMemo(

@@ -16,16 +16,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import {
-  X,
-  MapPin,
-  Clock,
-  ShieldCheck,
-  Navigation,
-  Coffee,
-  Building,
-  ShieldAlert,
-} from 'lucide-react-native';
+import { X, MapPin, Clock, ShieldCheck, Navigation } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
 import * as Location from 'expo-location';
 import MapView, { MapPressEvent, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -45,30 +36,6 @@ interface MeetupModalProps {
   isLoading?: boolean;
 }
 
-const PRESET_PLACES = [
-  {
-    name: 'Highlands Coffee (Gần nhất)',
-    address: 'Số 102 Trần Phú, Hà Đông, Hà Nội',
-    lat: 20.9785,
-    lng: 105.7872,
-    icon: Coffee,
-  },
-  {
-    name: 'Sảnh Lễ Tân Tòa Nhà A',
-    address: 'Sảnh chính Tòa nhà A, Học viện CN Bưu chính Viễn thông',
-    lat: 20.9808,
-    lng: 105.7879,
-    icon: Building,
-  },
-  {
-    name: 'Phòng Bảo Vệ Cổng Chính',
-    address: 'Cổng 1, Km10 Đường Nguyễn Trãi, Hà Đông',
-    lat: 20.9815,
-    lng: 105.7892,
-    icon: ShieldAlert,
-  },
-];
-
 export const MeetupModal: React.FC<MeetupModalProps> = ({
   visible,
   onClose,
@@ -77,8 +44,8 @@ export const MeetupModal: React.FC<MeetupModalProps> = ({
 }) => {
   const [address, setAddress] = useState('');
   const [placeName, setPlaceName] = useState('');
-  const [latitude, setLatitude] = useState(20.9808);
-  const [longitude, setLongitude] = useState(105.7879);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [isAsap, setIsAsap] = useState(true);
   const [customTime, setCustomTime] = useState('17:30 hôm nay');
   const [notes, setNotes] = useState('');
@@ -117,13 +84,6 @@ export const MeetupModal: React.FC<MeetupModalProps> = ({
     }
   };
 
-  const handleSelectPreset = (preset: (typeof PRESET_PLACES)[0]) => {
-    setPlaceName(preset.name);
-    setAddress(preset.address);
-    setLatitude(preset.lat);
-    setLongitude(preset.lng);
-  };
-
   const handleMapPress = async (event: MapPressEvent) => {
     const coordinate = event.nativeEvent.coordinate;
     setLatitude(coordinate.latitude);
@@ -152,7 +112,7 @@ export const MeetupModal: React.FC<MeetupModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!address.trim()) return;
+    if (!address.trim() || latitude == null || longitude == null) return;
 
     await onSubmit({
       name: placeName.trim() || undefined,
@@ -188,47 +148,6 @@ export const MeetupModal: React.FC<MeetupModalProps> = ({
           </View>
 
           <ScrollView className="p-5" showsVerticalScrollIndicator={false}>
-            {/* Safe Spots Suggestions */}
-            <Text className="text-xs font-semibold uppercase tracking-wider text-fb-label mb-2">
-              Gợi ý điểm hẹn an toàn
-            </Text>
-            <View className="gap-2 mb-4">
-              {PRESET_PLACES.map((p, index) => {
-                const Icon = p.icon;
-                const isSelected = address === p.address;
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => handleSelectPreset(p)}
-                    className={`flex-row items-center gap-3 rounded-xl border p-3 ${
-                      isSelected
-                        ? 'border-fb-primary bg-fb-primary/10'
-                        : 'border-fb-border-subtle bg-fb-surface-elevated'
-                    }`}
-                  >
-                    <View className="h-9 w-9 items-center justify-center rounded-lg bg-fb-surface">
-                      <Icon
-                        size={18}
-                        color={isSelected ? FIND_BACK.primary : FIND_BACK.mutedText}
-                      />
-                    </View>
-                    <View className="flex-1">
-                      <Text
-                        className={`text-sm font-semibold ${
-                          isSelected ? 'text-fb-primary-light' : 'text-fb-content'
-                        }`}
-                      >
-                        {p.name}
-                      </Text>
-                      <Text className="text-xs text-fb-muted" numberOfLines={1}>
-                        {p.address}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
             {/* Manual Location Input */}
             <Text className="text-xs font-semibold uppercase tracking-wider text-fb-label mb-1.5">
               Địa điểm cụ thể
@@ -262,37 +181,45 @@ export const MeetupModal: React.FC<MeetupModalProps> = ({
             </View>
 
             {/* Compact map picker */}
-            <View className="mb-4 h-44 overflow-hidden rounded-2xl border border-fb-border-subtle">
-              <MapView
-                provider={PROVIDER_GOOGLE}
-                style={StyleSheet.absoluteFillObject}
-                region={{
-                  latitude,
-                  longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-                customMapStyle={DARK_GOOGLE_MAP_STYLE}
-                showsUserLocation={false}
-                showsMyLocationButton={false}
-                toolbarEnabled={false}
-                onPress={handleMapPress}
-              >
-                <Marker coordinate={{ latitude, longitude }}>
-                  <View className="h-9 w-9 items-center justify-center rounded-2xl border-2 border-white bg-fb-primary">
-                    <MapPin size={18} color="#fff" fill="#fff" />
-                  </View>
-                </Marker>
-              </MapView>
-              <View
-                pointerEvents="none"
-                className="absolute bottom-2 left-2 rounded-full bg-fb-neutral/90 px-3 py-1.5"
-              >
-                <Text className="text-[10px] font-semibold text-fb-content">
-                  Chạm bản đồ để đặt ghim
+            {latitude != null && longitude != null ? (
+              <View className="mb-4 h-44 overflow-hidden rounded-2xl border border-fb-border-subtle">
+                <MapView
+                  provider={PROVIDER_GOOGLE}
+                  style={StyleSheet.absoluteFillObject}
+                  region={{
+                    latitude,
+                    longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                  customMapStyle={DARK_GOOGLE_MAP_STYLE}
+                  showsUserLocation={false}
+                  showsMyLocationButton={false}
+                  toolbarEnabled={false}
+                  onPress={handleMapPress}
+                >
+                  <Marker coordinate={{ latitude, longitude }}>
+                    <View className="h-9 w-9 items-center justify-center rounded-2xl border-2 border-white bg-fb-primary">
+                      <MapPin size={18} color="#fff" fill="#fff" />
+                    </View>
+                  </Marker>
+                </MapView>
+                <View
+                  pointerEvents="none"
+                  className="absolute bottom-2 left-2 rounded-full bg-fb-neutral/90 px-3 py-1.5"
+                >
+                  <Text className="text-[10px] font-semibold text-fb-content">
+                    Chạm bản đồ để đặt ghim
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <View className="mb-4 h-28 items-center justify-center rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated px-6">
+                <Text className="text-center text-xs text-fb-muted">
+                  Dùng vị trí hiện tại để mở bản đồ, sau đó chạm vào điểm gặp chính xác.
                 </Text>
               </View>
-            </View>
+            )}
 
             {/* Time Selection */}
             <Text className="text-xs font-semibold uppercase tracking-wider text-fb-label mb-1.5">
@@ -375,9 +302,11 @@ export const MeetupModal: React.FC<MeetupModalProps> = ({
             {/* Submit Button */}
             <TouchableOpacity
               onPress={handleSubmit}
-              disabled={!address.trim() || isLoading}
+              disabled={!address.trim() || latitude == null || longitude == null || isLoading}
               className={`mb-6 items-center justify-center rounded-2xl py-3.5 ${
-                address.trim() && !isLoading ? 'bg-fb-primary' : 'bg-fb-surface-elevated opacity-50'
+                address.trim() && latitude != null && longitude != null && !isLoading
+                  ? 'bg-fb-primary'
+                  : 'bg-fb-surface-elevated opacity-50'
               }`}
             >
               {isLoading ? (

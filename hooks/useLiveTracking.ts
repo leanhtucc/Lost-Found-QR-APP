@@ -70,7 +70,6 @@ export const useLiveTracking = ({
   const isPartnerLocationStale = useReturnStore(state => state.isPartnerLocationStale);
   const gpsState = useReturnStore(state => state.gpsState);
   const connectionState = useReturnStore(state => state.connectionState);
-  const session = useReturnStore(state => state.session);
   const refreshSession = useReturnStore(state => state.refreshSession);
 
   const setMyLocation = useReturnStore(state => state.setMyLocation);
@@ -99,8 +98,12 @@ export const useLiveTracking = ({
 
   // Request permission and start location watch
   const startTracking = useCallback(async () => {
-    if (!session?.capabilities.liveSharingAllowed) return;
-    if (session.trackingExpiresAt && new Date(session.trackingExpiresAt).getTime() <= Date.now()) {
+    const freshSession = useReturnStore.getState().session;
+    if (!freshSession?.capabilities.liveSharingAllowed) return;
+    if (
+      freshSession.trackingExpiresAt &&
+      new Date(freshSession.trackingExpiresAt).getTime() <= Date.now()
+    ) {
       return;
     }
     try {
@@ -170,13 +173,7 @@ export const useLiveTracking = ({
       console.warn('[useLiveTracking] Location watch error:', err);
       setGpsState('weak');
     }
-  }, [
-    session?.capabilities.liveSharingAllowed,
-    session?.trackingExpiresAt,
-    sessionId,
-    setGpsState,
-    setMyLocation,
-  ]);
+  }, [sessionId, setGpsState, setMyLocation]);
 
   const stopTracking = useCallback(() => {
     stopWatching();
@@ -195,7 +192,7 @@ export const useLiveTracking = ({
     return () => {
       stopWatching();
     };
-  }, [enabled, startTracking, stopWatching]);
+  }, [enabled, startTracking, stopTracking, stopWatching]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
