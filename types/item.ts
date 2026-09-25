@@ -93,6 +93,13 @@ export interface UpdateItemParams {
   latitude?: number;
   longitude?: number;
   address?: string;
+  captureLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    accuracyMeters?: number;
+    capturedAt?: string;
+  } | null;
   securityPin?: string;
 }
 

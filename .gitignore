@@ -65,10 +65,4 @@ secrets.json
 # Generated SVG components (from SVGR)
 /assets/svgs/output/
 
-.env.local
-
-.env
-
-.env.production
-
 

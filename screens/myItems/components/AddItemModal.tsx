@@ -34,10 +34,13 @@ import {
   FileText,
   Gem,
   Sparkles,
+  Map,
+  Trash2,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ItemCategory } from '@/types/item';
 import { itemsApi } from '@/services/items/api';
+import { LocationPickerModal } from '@/components/molecules/LocationPickerModal';
 import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_PRIMARY_GRADIENT } from '../constants/ui';
 
 export interface AddItemSubmitData {
@@ -111,6 +114,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
   } | null>(null);
   const [locationAddress, setLocationAddress] = useState('');
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
   const [isLocating, setIsLocating] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -128,6 +132,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
     setLocationCoords(null);
     setLocationAddress('');
     setCapturedAt(null);
+    setIsMapPickerOpen(false);
     setIsAnalyzing(false);
     setAiDetected(false);
   };
@@ -440,18 +445,13 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
               </View>
               <TouchableOpacity
                 style={styles.locationBtn}
-                onPress={acquireLocation}
-                disabled={isLocating}
+                onPress={() => setIsMapPickerOpen(true)}
                 activeOpacity={0.8}
               >
-                {isLocating ? (
-                  <ActivityIndicator size="small" color={MY_ITEMS_COLORS.primaryStart} />
-                ) : (
-                  <>
-                    <Crosshair size={14} color={MY_ITEMS_COLORS.primaryStart} />
-                    <Text style={styles.locationBtnText}>Lấy lại vị trí</Text>
-                  </>
-                )}
+                <Map size={14} color={MY_ITEMS_COLORS.primaryStart} />
+                <Text style={styles.locationBtnText}>
+                  {locationCoords ? 'Đổi vị trí' : 'Chọn trên bản đồ'}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -459,7 +459,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
               <View style={styles.locationCard}>
                 <View style={styles.locationCardHeader}>
                   <CheckCircle2 size={16} color={MY_ITEMS_COLORS.safeText} />
-                  <Text style={styles.locationCardTitle}>GPS đã xác thực</Text>
+                  <Text style={styles.locationCardTitle}>Vị trí đã xác thực</Text>
                 </View>
 
                 <Text style={styles.locationCoordText}>
@@ -485,24 +485,59 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
                   value={locationAddress}
                   onChangeText={setLocationAddress}
                 />
+
+                <View style={styles.locationActionsRow}>
+                  <TouchableOpacity
+                    style={styles.locationActionEditBtn}
+                    onPress={() => setIsMapPickerOpen(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Map size={14} color={MY_ITEMS_COLORS.primaryStart} />
+                    <Text style={styles.locationActionEditText}>Mở bản đồ tinh chỉnh</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.locationActionDeleteBtn}
+                    onPress={() => {
+                      setLocationCoords(null);
+                      setLocationAddress('');
+                      setCapturedAt(null);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Trash2 size={14} color="#FF6B6B" />
+                    <Text style={styles.locationActionDeleteText}>Xóa vị trí</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ) : (
-              <TouchableOpacity
-                style={styles.locationPromptBox}
-                onPress={acquireLocation}
-                disabled={isLocating}
-              >
-                {isLocating ? (
-                  <ActivityIndicator size="small" color={MY_ITEMS_COLORS.primaryStart} />
-                ) : (
-                  <>
-                    <Crosshair size={22} color={MY_ITEMS_COLORS.primaryStart} />
-                    <Text style={styles.locationPromptText}>
-                      Chưa có vị trí GPS. Chụp ảnh hoặc bấm vào đây để lấy tọa độ.
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              <View style={styles.locationPromptGrid}>
+                <TouchableOpacity
+                  style={styles.locationMapPromptBtn}
+                  onPress={() => setIsMapPickerOpen(true)}
+                  activeOpacity={0.85}
+                >
+                  <Map size={20} color="#FFFFFF" />
+                  <Text style={styles.locationMapPromptText}>Chọn trên bản đồ</Text>
+                  <Text style={styles.locationMapPromptSub}>Chạm hoặc kéo ghim chính xác</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.locationGpsPromptBtn}
+                  onPress={acquireLocation}
+                  disabled={isLocating}
+                  activeOpacity={0.8}
+                >
+                  {isLocating ? (
+                    <ActivityIndicator size="small" color={MY_ITEMS_COLORS.primaryStart} />
+                  ) : (
+                    <>
+                      <Crosshair size={18} color={MY_ITEMS_COLORS.primaryStart} />
+                      <Text style={styles.locationGpsPromptText}>Lấy nhanh GPS</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             )}
 
             {/* Field: Item Name */}
@@ -599,6 +634,27 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, on
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <LocationPickerModal
+        visible={isMapPickerOpen}
+        title="Vị trí đăng ký bảo vệ"
+        subtitle="Chạm vào bản đồ hoặc kéo ghim để chọn vị trí cất giữ an toàn"
+        initialCoordinate={locationCoords}
+        initialAddress={locationAddress}
+        onClose={() => setIsMapPickerOpen(false)}
+        onConfirm={loc => {
+          setLocationCoords({
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            accuracy: loc.accuracyMeters,
+          });
+          if (loc.address) {
+            setLocationAddress(loc.address);
+          }
+          setCapturedAt(loc.capturedAt || new Date().toISOString());
+          setIsMapPickerOpen(false);
+        }}
+      />
     </Modal>
   );
 };
@@ -837,6 +893,84 @@ const styles = StyleSheet.create({
     color: MY_ITEMS_COLORS.textSecondary,
     fontSize: 13,
     lineHeight: 18,
+  },
+  locationActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: MY_ITEMS_COLORS.border,
+  },
+  locationActionEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: MY_ITEMS_COLORS.primarySoft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  locationActionEditText: {
+    color: MY_ITEMS_COLORS.primaryStart,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  locationActionDeleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  locationActionDeleteText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  locationPromptGrid: {
+    gap: 8,
+    marginBottom: 14,
+  },
+  locationMapPromptBtn: {
+    backgroundColor: MY_ITEMS_COLORS.primaryStart,
+    borderRadius: MY_ITEMS_RADIUS.card,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  locationMapPromptText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  locationMapPromptSub: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+  },
+  locationGpsPromptBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
+    borderRadius: MY_ITEMS_RADIUS.card,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: MY_ITEMS_COLORS.border,
+  },
+  locationGpsPromptText: {
+    color: MY_ITEMS_COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
   },
   input: {
     backgroundColor: MY_ITEMS_COLORS.surfaceMuted,

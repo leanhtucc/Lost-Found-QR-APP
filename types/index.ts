@@ -9,3 +9,4 @@ export * from './notification';
 export * from './moderation';
 export * from './chat';
 export * from './radar';
+export * from './location';

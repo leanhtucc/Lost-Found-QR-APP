@@ -22,7 +22,11 @@ export const FIND_BACK = {
   borderSubtle: 'rgba(72, 71, 77, 0.15)',
   glassBackground: 'rgba(19, 19, 25, 0.72)',
   danger: '#D73357',
+  warning: '#F4845F',
+  success: '#2ECC8B',
   info: '#ADA3FF',
+  bodyMuted: '#ACAAB1',
+  subtleText: '#71717A',
   returnFlow: {
     mapOverlay: 'rgba(10, 10, 15, 0.94)',
     mapScrim: 'rgba(10, 10, 15, 0.42)',
@@ -33,6 +37,61 @@ export const FIND_BACK = {
     controlRadius: 16,
     screenPadding: 16,
   },
+} as const;
+
+/** Standardized Semantic Tokens for FindBack / Obsidian Design System */
+export const SEMANTIC_TOKENS = {
+  // Surfaces & Backgrounds
+  background: FIND_BACK.canvas,
+  canvas: FIND_BACK.canvas,
+  surface: FIND_BACK.surface,
+  surfaceMuted: FIND_BACK.surfaceMuted,
+  surfaceElevated: FIND_BACK.surfaceElevated,
+
+  // Typography & Text
+  textPrimary: FIND_BACK.bodyText,
+  textSecondary: FIND_BACK.mutedText,
+  textTertiary: FIND_BACK.labelText,
+
+  // Brand & Status Accents
+  primary: FIND_BACK.primary,
+  primaryLight: FIND_BACK.primaryLight,
+  primaryDark: FIND_BACK.primaryDark,
+  success: FIND_BACK.secondary,
+  warning: FIND_BACK.tertiary,
+  danger: FIND_BACK.danger,
+  info: FIND_BACK.info,
+
+  // Borders & Outlines
+  borderDefault: FIND_BACK.borderGlass,
+  borderSubtle: FIND_BACK.borderSubtle,
+
+  // Overlays & Translucency
+  overlay: 'rgba(10, 10, 15, 0.78)',
+  glassBackground: FIND_BACK.glassBackground,
+} as const;
+
+/** Standard Spacing Scale (8pt grid basis) */
+export const SPACING_SCALE = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  '2xl': 24,
+  '3xl': 32,
+  '4xl': 40,
+} as const;
+
+/** Standard Border Radius Scale */
+export const RADIUS_SCALE = {
+  sm: 8,
+  md: 12,
+  lg: 14,
+  xl: 18,
+  '2xl': 24,
+  '3xl': 32,
+  full: 9999,
 } as const;
 
 export const THEME = {

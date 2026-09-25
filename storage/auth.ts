@@ -134,6 +134,31 @@ export const authStorage = {
   },
 
   /**
+   * Check if a JWT token is expired
+   */
+  isTokenExpired(token: string | null | undefined): boolean {
+    if (!token) return true;
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return false;
+      const encodedPayload = parts[1];
+      const normalizedPayload = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+      const paddedPayload = normalizedPayload.padEnd(
+        normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+        '='
+      );
+      const jsonStr = globalThis.atob(paddedPayload);
+      const payload = JSON.parse(jsonStr) as { exp?: unknown };
+      if (typeof payload.exp === 'number') {
+        return payload.exp * 1000 <= Date.now() + 10000;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
    * Check if user is authenticated (has valid tokens)
    */
   async isAuthenticated(): Promise<boolean> {

@@ -2,7 +2,14 @@ import { cn } from '@/lib/cn';
 import { memo, forwardRef } from 'react';
 import { Text, type TextProps } from 'react-native';
 
-export type TypographyVariant = 'headline' | 'title' | 'body' | 'bodySm' | 'label' | 'caption';
+export type TypographyVariant =
+  | 'headline'
+  | 'title'
+  | 'sectionTitle'
+  | 'body'
+  | 'bodySm'
+  | 'label'
+  | 'caption';
 
 export interface TypographyProps extends TextProps {
   variant?: TypographyVariant;
@@ -14,6 +21,7 @@ export interface TypographyProps extends TextProps {
 const variantClass: Record<TypographyVariant, string> = {
   headline: 'font-display text-display-headline font-bold text-white',
   title: 'font-display text-display-title font-bold text-white',
+  sectionTitle: 'font-display text-section-title font-semibold text-white',
   body: 'text-body-default text-fb-content',
   bodySm: 'text-body-small text-fb-content',
   label: 'text-label-default text-fb-label',

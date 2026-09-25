@@ -57,7 +57,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess,
 
       <TouchableOpacity
         className="flex-row items-center justify-center h-12 border-2 border-gray-200 rounded-xl bg-white active:bg-gray-50"
-        onPress={signInWithGoogle}
+        onPress={() => signInWithGoogle()}
         disabled={loading}
       >
         {loading ? (

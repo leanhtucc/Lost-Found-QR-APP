@@ -23,6 +23,7 @@ import {
 } from '@/types/notification';
 import { authStorage } from '@/storage/auth';
 import { authApi } from '@/services/auth';
+import { sessionEvents } from '@/lib/sessionEvents';
 import { buildNotificationsUrl, buildAuthUrl } from '@services/shared/url';
 
 // ─── Auth helpers ────────────────────────────────────────────────────────────
@@ -55,7 +56,8 @@ const fetchWithAuth = async (url: string, options: RequestInit): Promise<Respons
       }
     } catch (error) {
       console.error('[NotifAPI] Token refresh failed:', error);
-      await authStorage.clearTokens();
+      await authStorage.clearAll();
+      sessionEvents.emitSessionExpired();
       throw new Error('Session expired. Please login again.');
     }
   }

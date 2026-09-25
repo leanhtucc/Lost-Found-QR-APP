@@ -59,6 +59,22 @@ export const ENV = {
   GOOGLE_IOS_CLIENT_ID: expoExtra.googleIosClientId || process.env.GOOGLE_IOS_CLIENT_ID || '',
   GOOGLE_ANDROID_CLIENT_ID:
     expoExtra.googleAndroidClientId || process.env.GOOGLE_ANDROID_CLIENT_ID || '',
+
+  // Telegram Error Reporting
+  TELEGRAM_BOT_TOKEN:
+    (process.env.EXPO_PUBLIC_TELEGRAM_BOT_TOKEN as string | undefined) ||
+    (expoExtra.telegramBotToken as string | undefined) ||
+    (process.env.TELEGRAM_BOT_TOKEN as string | undefined) ||
+    '',
+  TELEGRAM_CHAT_ID:
+    (process.env.EXPO_PUBLIC_TELEGRAM_CHAT_ID as string | undefined) ||
+    (expoExtra.telegramChatId as string | undefined) ||
+    (process.env.TELEGRAM_CHAT_ID as string | undefined) ||
+    '',
+  TELEGRAM_TEST_ON_LAUNCH:
+    (process.env.EXPO_PUBLIC_TELEGRAM_TEST_ON_LAUNCH ||
+      expoExtra.telegramTestOnLaunch ||
+      process.env.TELEGRAM_TEST_ON_LAUNCH) === 'true' || expoExtra.telegramTestOnLaunch === true,
 };
 // Helper function to get API URL
 export const getApiUrl = (): string => {

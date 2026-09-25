@@ -7,9 +7,13 @@ import React, { useState } from 'react';
 import { View, Text, Image } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { MapPin, ShieldCheck } from 'lucide-react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { DARK_GOOGLE_MAP_STYLE } from '@/constants/googleMapStyle';
 import { Item } from '@/types/item';
+import { isValidCoordinate } from '@/types/location';
 import { getCategoryIcon, getCategoryLabel } from '@/constants/categories';
 import { FIND_BACK } from '@constants/theme';
+import { StatusBadge } from '@/components/atoms/StatusBadge';
 
 interface ItemInfoCardProps {
   item: Item;
@@ -19,45 +23,19 @@ export const ItemInfoCard: React.FC<ItemInfoCardProps> = ({ item }) => {
   const CategoryIcon = getCategoryIcon(item.category);
   const [imageFailed, setImageFailed] = useState(false);
 
-  const statusVisual = (() => {
-    switch (item.status) {
-      case 'LOST':
-        return {
-          backgroundColor: 'rgba(215, 51, 87, 0.14)',
-          color: FIND_BACK.danger,
-          label: 'Đang mất',
-        };
-      case 'PENDING_PAYMENT':
-        return {
-          backgroundColor: 'rgba(244, 132, 95, 0.14)',
-          color: FIND_BACK.tertiary,
-          label: 'Chờ thanh toán',
-        };
-      case 'FOUND':
-        return {
-          backgroundColor: 'rgba(173, 163, 255, 0.14)',
-          color: FIND_BACK.info,
-          label: 'Đã tìm thấy',
-        };
-      case 'RESOLVED':
-        return {
-          backgroundColor: 'rgba(124, 106, 246, 0.14)',
-          color: FIND_BACK.primaryLight,
-          label: 'Đã hoàn trả',
-        };
-      case 'SAFE':
-      default:
-        return {
-          backgroundColor: 'rgba(46, 204, 139, 0.14)',
-          color: FIND_BACK.secondary,
-          label: 'An toàn',
-        };
-    }
-  })();
-
   const hasCaptureLocation =
     Boolean(item.captureAddress) ||
     (item.captureLatitude !== null && item.captureLatitude !== undefined);
+
+  const hasValidCoordinates =
+    item.captureLatitude !== null &&
+    item.captureLatitude !== undefined &&
+    item.captureLongitude !== null &&
+    item.captureLongitude !== undefined &&
+    isValidCoordinate({
+      latitude: item.captureLatitude,
+      longitude: item.captureLongitude,
+    });
 
   return (
     <Animated.View
@@ -89,14 +67,7 @@ export const ItemInfoCard: React.FC<ItemInfoCardProps> = ({ item }) => {
         </View>
 
         {/* Status Badge */}
-        <View
-          className="rounded-full px-3 py-2"
-          style={{ backgroundColor: statusVisual.backgroundColor }}
-        >
-          <Text className="text-xs font-bold" style={{ color: statusVisual.color }}>
-            {statusVisual.label}
-          </Text>
-        </View>
+        <StatusBadge status={item.status} size="md" />
       </View>
 
       {/* Description */}
@@ -148,6 +119,35 @@ export const ItemInfoCard: React.FC<ItemInfoCardProps> = ({ item }) => {
                 year: 'numeric',
               })}
             </Text>
+          ) : null}
+
+          {hasValidCoordinates ? (
+            <View className="mt-3 h-36 w-full overflow-hidden rounded-xl border border-fb-border-subtle bg-black/40">
+              <MapView
+                provider={PROVIDER_GOOGLE}
+                customMapStyle={DARK_GOOGLE_MAP_STYLE}
+                initialRegion={{
+                  latitude: item.captureLatitude!,
+                  longitude: item.captureLongitude!,
+                  latitudeDelta: 0.006,
+                  longitudeDelta: 0.006,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                toolbarEnabled={false}
+                style={{ width: '100%', height: '100%' }}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: item.captureLatitude!,
+                    longitude: item.captureLongitude!,
+                  }}
+                  tracksViewChanges={false}
+                />
+              </MapView>
+            </View>
           ) : null}
         </View>
       ) : null}

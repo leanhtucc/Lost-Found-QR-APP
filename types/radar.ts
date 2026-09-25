@@ -8,6 +8,40 @@ export interface HomeLostFeedQuery {
   lat: number;
   lng: number;
   radius?: number;
+  category?: string;
+}
+
+export type DiscoverySource = 'LOST_ITEM' | 'FOUND_REPORT';
+export type DiscoveryFilterType = 'ALL' | 'LOST' | 'FOUND';
+
+export interface MapDiscoveryPin {
+  discoveryKey: string;
+  rawId: string;
+  source: DiscoverySource;
+  lat: number;
+  lng: number;
+  isOwn: boolean;
+}
+
+export interface MapDiscoveryCard {
+  discoveryKey: string;
+  rawId: string;
+  itemId?: string;
+  source: DiscoverySource;
+  reportType: 'LOST' | 'FOUND';
+  name: string;
+  category: RadarCategory | string;
+  imagePublicUrl: string | null;
+  lostMessage: string | null;
+  address: string | null;
+  distanceMeters: number | null;
+  distanceLabel: string | null;
+  lostLat: number | null;
+  lostLng: number | null;
+  isOwn: boolean;
+  ownerDisplayName: string;
+  ownerPhotoURL: string | null;
+  reportedAt: string;
 }
 
 export interface HomeLostFeedPin {

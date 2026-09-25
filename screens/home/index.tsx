@@ -8,12 +8,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Navigation as NavigationIcon } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { RootStackParamList } from '@navigation/index';
-import { HomeLostFeedCard } from '@/types/radar';
+import { DiscoveryFilterType, MapDiscoveryCard } from '@/types/radar';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { Header, MapSection } from './components';
+import {
+  Header,
+  MapSection,
+  MapSectionHandle,
+  DiscoveryFilterBar,
+  DiscoverySearchBar,
+} from './components';
 import { BottomSheetContent } from './components/BottomSheetContent';
-import { useHomeLostFeed } from './hooks/useHomeLostFeed';
+import { useMapDiscovery } from './hooks/useMapDiscovery';
 import { FIND_BACK } from '@constants/theme';
 import { ReportChoiceModal } from '@/components/molecules';
 
@@ -29,6 +35,7 @@ export const HomeScreen: React.FC = () => {
     'checking' | 'granted' | 'denied' | 'disabled'
   >('checking');
 
+  const mapSectionRef = useRef<MapSectionHandle>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['34%', '58%', '86%'], []);
   const reportFabBottom = useMemo(() => Math.max(insets.bottom, 8), [insets.bottom]);
@@ -36,7 +43,7 @@ export const HomeScreen: React.FC = () => {
   const handleFeedError = useCallback(
     (message: string) => {
       showToast({
-        title: 'Lost Feed',
+        title: 'Khám phá',
         message,
         type: 'warning',
       });
@@ -44,19 +51,54 @@ export const HomeScreen: React.FC = () => {
     [showToast]
   );
 
+  const handlePartialError = useCallback(
+    (message: string) => {
+      showToast({
+        title: 'Khám phá',
+        message,
+        type: 'info',
+      });
+    },
+    [showToast]
+  );
+
   const {
+    typeFilter,
+    categoryFilter,
+    setTypeFilter,
+    setCategoryFilter,
     mapPins,
-    lostFeedCards,
+    discoveryCards,
     myLostCount,
     nearbyCount,
     isRadarLoading,
+    isRealtimeConnected,
     lastUpdatedAt,
+    currentLocation,
     handleUserLocationChange,
+    refreshDiscovery,
+    fetchViewportDiscovery,
     syncOnTabFocus,
-  } = useHomeLostFeed({
-    radiusMeters: 10000, // 10 km chuẩn backend mới
+  } = useMapDiscovery({
+    radiusMeters: 10000,
     onError: handleFeedError,
+    onPartialError: handlePartialError,
   });
+
+  const handleSelectSearchedLocation = useCallback(
+    (coords: { latitude: number; longitude: number; address: string }) => {
+      mapSectionRef.current?.animateToLocation(
+        {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          latitudeDelta: 0.015,
+          longitudeDelta: 0.015,
+        },
+        400
+      );
+    },
+    []
+  );
 
   const handleRequestLocation = useCallback(async () => {
     try {
@@ -84,23 +126,28 @@ export const HomeScreen: React.FC = () => {
       return;
     }
 
-    const cardsPreview = lostFeedCards.slice(0, 5).map(card => ({
-      itemId: card.itemId,
+    const cardsPreview = discoveryCards.slice(0, 5).map(card => ({
+      discoveryKey: card.discoveryKey,
+      rawId: card.rawId,
+      source: card.source,
       name: card.name,
       isOwn: card.isOwn,
       distanceLabel: card.distanceLabel,
     }));
 
     const pinsPreview = mapPins.slice(0, 5).map(pin => ({
-      itemId: pin.itemId,
+      discoveryKey: pin.discoveryKey,
       lat: pin.lat,
       lng: pin.lng,
       isOwn: pin.isOwn,
+      source: pin.source,
     }));
 
-    console.log('[Home] Lost feed (/v1/home/lost-feed):', {
-      cardsCount: lostFeedCards.length,
+    console.log('[Home] Discovery feed:', {
+      cardsCount: discoveryCards.length,
       pinsCount: mapPins.length,
+      typeFilter,
+      categoryFilter,
       myLostCount,
       nearbyCount,
       isRadarLoading,
@@ -108,7 +155,16 @@ export const HomeScreen: React.FC = () => {
       cardsPreview,
       pinsPreview,
     });
-  }, [isRadarLoading, lastUpdatedAt, lostFeedCards, mapPins, myLostCount, nearbyCount]);
+  }, [
+    isRadarLoading,
+    lastUpdatedAt,
+    discoveryCards,
+    mapPins,
+    myLostCount,
+    nearbyCount,
+    typeFilter,
+    categoryFilter,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -117,19 +173,37 @@ export const HomeScreen: React.FC = () => {
   );
 
   const handleSelectItem = useCallback(
-    (itemId: HomeLostFeedCard['itemId']) => {
-      if (itemId.startsWith('found:')) {
-        navigation.navigate('FoundReportDetails', { reportId: itemId.slice(6) });
+    (itemKey: string) => {
+      const matchedCard = discoveryCards.find(
+        card =>
+          card.discoveryKey === itemKey ||
+          card.rawId === itemKey ||
+          (card as any).itemId === itemKey
+      );
+
+      const isFound =
+        matchedCard?.source === 'FOUND_REPORT' ||
+        itemKey.startsWith('FOUND_REPORT:') ||
+        itemKey.startsWith('found:') ||
+        (matchedCard as any)?.itemId?.startsWith('found:');
+
+      if (isFound) {
+        const reportId = matchedCard?.rawId
+          ? matchedCard.rawId
+          : itemKey.replace(/^(FOUND_REPORT:|found:)/, '');
+        navigation.navigate('FoundReportDetails', { reportId });
         return;
       }
-      const matchedCard = lostFeedCards.find(card => card.itemId === itemId);
-      if (matchedCard && !matchedCard.isOwn) {
-        navigation.navigate('PublicItemDetails', { itemId });
+
+      const itemId = matchedCard?.rawId ? matchedCard.rawId : itemKey.replace(/^LOST_ITEM:/, '');
+
+      if (matchedCard?.isOwn === true) {
+        navigation.navigate('ItemDetails', { itemId });
         return;
       }
-      navigation.navigate('ItemDetails', { itemId });
+      navigation.navigate('PublicItemDetails', { itemId });
     },
-    [navigation, lostFeedCards]
+    [navigation, discoveryCards]
   );
 
   const handleOpenReportChoice = useCallback(() => {
@@ -152,21 +226,31 @@ export const HomeScreen: React.FC = () => {
     console.log('[Home] BottomSheet index changed:', index);
   }, []);
 
+  const handleViewportChange = useCallback(
+    (query: { lat: number; lng: number; radius: number }) => {
+      fetchViewportDiscovery({ latitude: query.lat, longitude: query.lng }, query.radius);
+    },
+    [fetchViewportDiscovery]
+  );
+
   return (
     <View style={styles.container}>
       <MapSection
+        ref={mapSectionRef}
         pins={mapPins}
-        cards={lostFeedCards}
+        cards={discoveryCards}
         onUserLocationChange={handleUserLocationChange}
         onSelectItem={handleSelectItem}
         onLocationPermissionChange={setLocationPermissionStatus}
+        onViewportChange={handleViewportChange}
       />
 
       <LinearGradient
-        colors={['rgba(10,10,15,0.88)', 'rgba(10,10,15,0.4)', 'rgba(10,10,15,0)']}
+        colors={['rgba(10,10,15,0.96)', 'rgba(10,10,15,0.7)', 'rgba(10,10,15,0)']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        className="pointer-events-box-none absolute left-0 right-0 top-0 z-10"
+        pointerEvents="box-none"
+        className="pointer-events-box-none absolute left-0 right-0 top-0 z-10 pb-4"
       >
         <Header
           userName={user?.displayName || 'User'}
@@ -175,6 +259,24 @@ export const HomeScreen: React.FC = () => {
           notificationCount={0}
           onNotificationPress={handleOpenNotifications}
           onProfilePress={handleOpenProfile}
+        />
+        <DiscoverySearchBar
+          onSelectLocation={handleSelectSearchedLocation}
+          locationBias={
+            currentLocation
+              ? {
+                  lat: currentLocation.latitude,
+                  lng: currentLocation.longitude,
+                  radius: 10000,
+                }
+              : undefined
+          }
+        />
+        <DiscoveryFilterBar
+          typeFilter={typeFilter}
+          categoryFilter={categoryFilter}
+          onTypeFilterChange={setTypeFilter}
+          onCategoryFilterChange={setCategoryFilter}
         />
       </LinearGradient>
 
@@ -224,9 +326,16 @@ export const HomeScreen: React.FC = () => {
       >
         <BottomSheetView style={styles.bottomSheetBody}>
           <BottomSheetContent
-            cards={lostFeedCards}
+            cards={discoveryCards}
+            typeFilter={typeFilter}
             myLostCount={myLostCount}
             nearbyCount={nearbyCount}
+            isRealtimeConnected={isRealtimeConnected}
+            isRadarLoading={isRadarLoading}
+            hasLocationPermission={locationPermissionStatus === 'granted'}
+            onRequestLocation={handleRequestLocation}
+            lastUpdatedAt={lastUpdatedAt}
+            onRefresh={refreshDiscovery}
             onSelectItem={handleSelectItem}
           />
         </BottomSheetView>
@@ -295,7 +404,7 @@ const styles = StyleSheet.create({
   },
   permissionBanner: {
     position: 'absolute',
-    top: 112,
+    top: 220,
     left: 16,
     right: 16,
     zIndex: 25,

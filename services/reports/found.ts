@@ -1,7 +1,8 @@
 import * as Crypto from 'expo-crypto';
 import { authStorage } from '@storage/auth';
-import { buildApiUrl } from '@services/shared/url';
+import { buildApiUrl, buildV1Url } from '@services/shared/url';
 import type { ItemCategory } from '@/types/item';
+import type { HomeLostFeedCard, HomeLostFeedPin } from '@/types/radar';
 
 export interface FoundReport {
   id: string;
@@ -23,6 +24,12 @@ export interface CreateFoundReport {
   description?: string;
   imagePublicUrl: string;
   location: { lat: number; lng: number; address: string };
+}
+
+export interface FoundFeedResponse {
+  cards: HomeLostFeedCard[];
+  pins: HomeLostFeedPin[];
+  totalCount: number;
 }
 
 let feedRevision = 0;
@@ -60,5 +67,47 @@ export const foundReportsApi = {
       throw new Error(json?.message || 'Không thể tải bài đăng.');
     }
     return json.data;
+  },
+  async getFeed(query: {
+    lat: number;
+    lng: number;
+    radius?: number;
+    category?: string;
+  }): Promise<FoundFeedResponse> {
+    const params = new URLSearchParams({
+      lat: String(query.lat),
+      lng: String(query.lng),
+    });
+    if (typeof query.radius === 'number' && Number.isFinite(query.radius)) {
+      params.set('radius', String(Math.floor(query.radius)));
+    }
+    if (query.category && query.category.toLowerCase() !== 'all') {
+      params.set('category', query.category);
+    }
+
+    const token = await authStorage.getAccessToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const v1Url = `${buildV1Url('found-reports', 'feed')}?${params.toString()}`;
+    const apiUrl = `${buildApiUrl('found-reports', 'feed')}?${params.toString()}`;
+
+    let response = await fetch(v1Url, { method: 'GET', headers });
+    if (!response.ok && (response.status === 404 || response.status === 405)) {
+      response = await fetch(apiUrl, { method: 'GET', headers });
+    }
+
+    const json = await response.json();
+    if (!response.ok || !json?.success || !json.data) {
+      throw new Error(json?.message || 'Không thể tải danh sách đồ nhặt được.');
+    }
+
+    return {
+      cards: Array.isArray(json.data.cards) ? json.data.cards : [],
+      pins: Array.isArray(json.data.pins) ? json.data.pins : [],
+      totalCount: typeof json.data.totalCount === 'number' ? json.data.totalCount : 0,
+    };
   },
 };

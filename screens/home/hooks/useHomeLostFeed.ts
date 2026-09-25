@@ -25,6 +25,7 @@ const SNAPSHOT_REFRESH_INTERVAL_MS = 300000; // 5 phút refresh lại snapshot
 const ERROR_THROTTLE_MS = 6000;
 const FOREGROUND_SYNC_THROTTLE_MS = 10000; // 10 giây throttle
 const TAB_FOCUS_SYNC_THROTTLE_MS = 10000;
+const DEBOUNCE_VIEWPORT_MS = 450;
 
 interface RadarCoordinates {
   latitude: number;
@@ -75,12 +76,16 @@ export const useHomeLostFeed = ({
   const [myLostCount, setMyLostCount] = useState(0);
   const [nearbyCount, setNearbyCount] = useState(0);
   const [isRadarLoading, setIsRadarLoading] = useState(false);
+  const [isViewportLoading, setIsViewportLoading] = useState(false);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<RadarCoordinates | null>(null);
 
   const socketRef = useRef<RadarSocket | null>(null);
   const locationRef = useRef<RadarCoordinates | null>(null);
+  const radarRequestIdRef = useRef(0);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const lastSnapshotRef = useRef<LastSnapshotState | null>(null);
   const snapshotInFlightRef = useRef(false);
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -285,6 +290,7 @@ export const useHomeLostFeed = ({
 
       snapshotInFlightRef.current = true;
       setIsRadarLoading(true);
+      const requestId = ++radarRequestIdRef.current;
 
       try {
         const data = await radarApi.getHomeLostFeed({
@@ -292,6 +298,10 @@ export const useHomeLostFeed = ({
           lng: targetCoords.longitude,
           radius: normalizedRadius,
         });
+
+        if (requestId !== radarRequestIdRef.current) {
+          return;
+        }
 
         setMapPins(data.pins);
         setLostFeedCards(data.cards);
@@ -313,13 +323,78 @@ export const useHomeLostFeed = ({
           });
         }
       } catch (error) {
-        notifyError('Không thể tải dữ liệu Radar Feed.', error);
+        if (requestId === radarRequestIdRef.current) {
+          notifyError('Không thể tải dữ liệu Radar Feed.', error);
+        }
       } finally {
         snapshotInFlightRef.current = false;
-        setIsRadarLoading(false);
+        if (requestId === radarRequestIdRef.current) {
+          setIsRadarLoading(false);
+        }
       }
     },
     [normalizedRadius, notifyError]
+  );
+
+  const fetchViewportFeed = useCallback(
+    (coords: RadarCoordinates, radiusMeters: number) => {
+      if (!coords || !Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) {
+        return;
+      }
+
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      const clamped = clampRadius(radiusMeters);
+
+      debounceTimerRef.current = setTimeout(async () => {
+        const requestId = ++radarRequestIdRef.current;
+        setIsViewportLoading(true);
+        setIsRadarLoading(true);
+
+        try {
+          const data = await radarApi.getHomeLostFeed({
+            lat: coords.latitude,
+            lng: coords.longitude,
+            radius: clamped,
+          });
+
+          // Discard stale response if a newer request was dispatched
+          if (requestId !== radarRequestIdRef.current) {
+            return;
+          }
+
+          // Single source of truth for visible markers: clean replacement, zero leakage
+          setMapPins(data.pins);
+          setLostFeedCards(data.cards);
+          setMyLostCount(data.myLostCount);
+          setNearbyCount(data.nearbyCount);
+          setLastUpdatedAt(new Date().toISOString());
+
+          if (__DEV__) {
+            console.log('[useHomeLostFeed] Viewport feed updated:', {
+              requestId,
+              coords,
+              radius: clamped,
+              pinsCount: data.pins.length,
+              cardsCount: data.cards.length,
+            });
+          }
+        } catch (error) {
+          if (requestId === radarRequestIdRef.current) {
+            // Keep existing pins/cards intact; non-blocking error notification
+            notifyError('Không thể tải dữ liệu Radar khu vực.', error);
+          }
+        } finally {
+          if (requestId === radarRequestIdRef.current) {
+            setIsViewportLoading(false);
+            setIsRadarLoading(false);
+          }
+        }
+      }, DEBOUNCE_VIEWPORT_MS);
+    },
+    [notifyError]
   );
 
   const handleUserLocationChange = useCallback(
@@ -428,9 +503,14 @@ export const useHomeLostFeed = ({
     };
   }, [syncOnForeground]);
 
-  // Cleanup socket khi hook unmount
+  // Cleanup socket and timers khi hook unmount
   useEffect(() => {
     return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+
       const socket = socketRef.current;
       if (socket) {
         socketRef.current = null;
@@ -453,11 +533,13 @@ export const useHomeLostFeed = ({
     myLostCount,
     nearbyCount,
     isRadarLoading,
+    isViewportLoading,
     isRealtimeConnected,
     lastUpdatedAt,
     currentLocation,
     handleUserLocationChange,
     refreshLostFeed,
+    fetchViewportFeed,
     syncOnTabFocus,
   };
 };

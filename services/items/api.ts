@@ -26,6 +26,8 @@ import {
   getFullImageUrl,
 } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
+import { authApi } from '@services/auth';
+import { sessionEvents } from '@/lib/sessionEvents';
 
 export interface EligibleForReportItem {
   /** Temporary compatibility alias returned by the backend. */
@@ -197,6 +199,59 @@ const createHeaders = async (includeAuth = true): Promise<HeadersInit> => {
   return headers;
 };
 
+/**
+ * Helper function để thực hiện fetch với Bearer token và auto-refresh khi gặp 401
+ */
+const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const existingHeaders = (options.headers as Record<string, string>) || {};
+  let headers = await createHeaders(true);
+  let response = await fetch(url, {
+    ...options,
+    headers: {
+      ...headers,
+      ...existingHeaders,
+    },
+  });
+
+  if (response.status === 401) {
+    if (__DEV__) {
+      console.log('[ItemsAPI] 401 Unauthorized encountered, attempting refresh...');
+    }
+    try {
+      const refreshToken = await authStorage.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const refreshResult = await authApi.refreshToken({ refreshToken });
+      if (refreshResult.success && refreshResult.data) {
+        if (__DEV__) {
+          console.log('[ItemsAPI] Refresh token successful, retrying request...');
+        }
+        headers = await createHeaders(true);
+        response = await fetch(url, {
+          ...options,
+          headers: {
+            ...headers,
+            ...existingHeaders,
+          },
+        });
+        if (response.status !== 401) {
+          return response;
+        }
+      }
+      throw new Error(refreshResult.message || 'Token refresh failed');
+    } catch (refreshErr) {
+      console.warn('[ItemsAPI] Refresh failed, emitting session expired:', refreshErr);
+      await authStorage.clearAll();
+      sessionEvents.emitSessionExpired();
+      throw new Error('Token expired');
+    }
+  }
+
+  return response;
+};
+
 const parseJsonSafely = async <T>(response: Response): Promise<T | null> => {
   try {
     return (await response.json()) as T;
@@ -301,11 +356,9 @@ export const itemsApi = {
    */
   async getEligibleForReportItems(): Promise<EligibleForReportItem[]> {
     const url = buildItemsUrl('eligible-for-report');
-    const headers = await createHeaders();
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     const payload = await parseJsonSafely<ItemApiResponse<EligibleForReportPayload>>(response);
@@ -442,11 +495,9 @@ export const itemsApi = {
       throw new Error('category is required');
     }
 
-    const headers = await createHeaders();
     // V2: dùng /api/items thay vì /v1/items
-    const response = await fetch(buildItemsUrl(), {
+    const response = await fetchWithAuth(buildItemsUrl(), {
       method: 'POST',
-      headers,
       body: JSON.stringify({
         name: payload.name.trim(),
         category: payload.category.trim(),
@@ -501,11 +552,9 @@ export const itemsApi = {
   async getSelectionSummary(itemId: string): Promise<SelectionSummaryResponse> {
     // V2: Dùng buildItemsUrl để trỏ vào /api/items thay vì /v1/items
     const url = buildItemsUrl(`${itemId}/selection-summary`);
-    const headers = await createHeaders();
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     const payload = await parseJsonSafely<ItemApiResponse<SelectionSummaryResponse>>(response);
@@ -528,15 +577,13 @@ export const itemsApi = {
    */
   async getCategories(): Promise<{ value: ItemCategory; label: string; icon: string }[]> {
     const url = `${getItemsApiUrl()}/categories`;
-    const headers = await createHeaders();
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to fetch categories');
     }
 
@@ -594,16 +641,22 @@ export const itemsApi = {
       });
     }
 
-    const headers = await createHeaders();
-
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch items');
+      const error = await response.json().catch(() => ({}));
+      const message = error.message || 'Failed to fetch items';
+      if (
+        message.toLowerCase().includes('token expired') ||
+        message.toLowerCase().includes('jwt expired') ||
+        message.toLowerCase().includes('session expired')
+      ) {
+        await authStorage.clearAll();
+        sessionEvents.emitSessionExpired();
+      }
+      throw new Error(message);
     }
 
     const data: ItemApiResponse<ListItemsResponse> = await response.json();
@@ -655,15 +708,12 @@ export const itemsApi = {
       });
     }
 
-    const headers = await createHeaders();
-
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to fetch my vault items');
     }
 
@@ -722,15 +772,13 @@ export const itemsApi = {
    */
   async getSummary(): Promise<ItemsSummary> {
     const url = `${getItemsApiUrl()}/summary`;
-    const headers = await createHeaders();
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to fetch items summary');
     }
 
@@ -749,15 +797,13 @@ export const itemsApi = {
    */
   async getItemById(itemId: string): Promise<Item> {
     const url = `${getItemsApiUrl()}/${itemId}`;
-    const headers = await createHeaders();
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers,
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to fetch item');
     }
 
@@ -775,8 +821,6 @@ export const itemsApi = {
    * POST /api/items
    */
   async createItem(params: CreateItemParams): Promise<Item> {
-    const headers = await createHeaders();
-
     const bodyPayload: Record<string, any> = {
       name: params.name,
       category: params.category,
@@ -810,14 +854,13 @@ export const itemsApi = {
       bodyPayload.captureLocation = params.captureLocation;
     }
 
-    const response = await fetch(getItemsApiUrl(), {
+    const response = await fetchWithAuth(getItemsApiUrl(), {
       method: 'POST',
-      headers,
       body: JSON.stringify(bodyPayload),
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to create item');
     }
 
@@ -836,15 +879,16 @@ export const itemsApi = {
    */
   async getPublicItem(identifier: string): Promise<any> {
     const url = `${getItemsApiUrl()}/public/${identifier}`;
-    const headers = await createHeaders();
 
     const response = await fetch(url, {
       method: 'GET',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to fetch public item details');
     }
 
@@ -861,8 +905,6 @@ export const itemsApi = {
    * PATCH /api/items/:id
    */
   async updateItem(itemId: string, params: UpdateItemParams): Promise<Item> {
-    const headers = await createHeaders();
-
     const bodyPayload: Record<string, any> = {};
     if (params.name) bodyPayload.name = params.name;
     if (params.category) bodyPayload.category = params.category;
@@ -878,15 +920,15 @@ export const itemsApi = {
           : JSON.stringify(params.lastSeenLocation);
     }
     if (params.securityPin !== undefined) bodyPayload.securityPin = params.securityPin;
+    if (params.captureLocation !== undefined) bodyPayload.captureLocation = params.captureLocation;
 
-    const response = await fetch(`${getItemsApiUrl()}/${itemId}`, {
+    const response = await fetchWithAuth(`${getItemsApiUrl()}/${itemId}`, {
       method: 'PATCH',
-      headers,
       body: JSON.stringify(bodyPayload),
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to update item');
     }
 
@@ -905,15 +947,13 @@ export const itemsApi = {
    */
   async deleteItem(itemId: string): Promise<void> {
     const url = `${getItemsApiUrl()}/${itemId}`;
-    const headers = await createHeaders();
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'DELETE',
-      headers,
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to delete item');
     }
 
@@ -956,21 +996,17 @@ export const itemsApi = {
       };
     }
 
-    const headers = await createHeaders();
-
     // Ưu tiên PATCH /v1/items/:id/status, fallback PATCH /api/items/:id/status
     const v1Url = buildV1Url('items', itemId, 'status');
-    let response = await fetch(v1Url, {
+    let response = await fetchWithAuth(v1Url, {
       method: 'PATCH',
-      headers,
       body: JSON.stringify(requestBody),
     });
 
     if (!response.ok && (response.status === 404 || response.status === 405)) {
       const apiUrl = buildItemsUrl(itemId, 'status');
-      response = await fetch(apiUrl, {
+      response = await fetchWithAuth(apiUrl, {
         method: 'PATCH',
-        headers,
         body: JSON.stringify(requestBody),
       });
     }

@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import { buildV1Url, buildApiUrl } from '@services/shared/url';
 import { authStorage } from '@storage/auth';
 import {
+  AutocompleteOptions,
   MapApiResponse,
   MapAutocompletePrediction,
   MapGeocodeResult,
@@ -47,19 +48,33 @@ const toAddressString = (loc: Location.LocationGeocodedAddress): string => {
 export const mapApi = {
   /**
    * 1. Gợi ý địa chỉ theo thời gian thực (Google Maps Places Autocomplete)
-   * GET /v1/map/autocomplete?input=...
+   * GET /v1/map/autocomplete?input=...&sessiontoken=...
    */
-  async autocomplete(input: string): Promise<MapAutocompletePrediction[]> {
+  async autocomplete(
+    input: string,
+    options?: AutocompleteOptions
+  ): Promise<MapAutocompletePrediction[]> {
     const trimmed = input.trim();
     if (!trimmed) return [];
 
     try {
       const headers = await createHeaders();
-      let url = `${buildV1Url('map', 'autocomplete')}?input=${encodeURIComponent(trimmed)}`;
+      let queryParams = `input=${encodeURIComponent(trimmed)}`;
+      if (options?.sessionToken) {
+        queryParams += `&sessiontoken=${encodeURIComponent(options.sessionToken)}`;
+      }
+      if (options?.lat !== undefined && options?.lng !== undefined) {
+        queryParams += `&lat=${options.lat}&lng=${options.lng}`;
+        if (options.radius) {
+          queryParams += `&radius=${options.radius}`;
+        }
+      }
+
+      let url = `${buildV1Url('map', 'autocomplete')}?${queryParams}`;
       let response = await fetch(url, { method: 'GET', headers });
 
       if (!response.ok && response.status === 404) {
-        url = `${buildApiUrl('map', 'autocomplete')}?input=${encodeURIComponent(trimmed)}`;
+        url = `${buildApiUrl('map', 'autocomplete')}?${queryParams}`;
         response = await fetch(url, { method: 'GET', headers });
       }
 
@@ -118,9 +133,9 @@ export const mapApi = {
 
   /**
    * 2. Lấy toạ độ GPS chính xác và địa chỉ đầy đủ từ place_id
-   * GET /v1/map/place-details?place_id=...
+   * GET /v1/map/place-details?place_id=...&sessiontoken=...
    */
-  async getPlaceDetails(placeId: string): Promise<MapPlaceDetails | null> {
+  async getPlaceDetails(placeId: string, sessionToken?: string): Promise<MapPlaceDetails | null> {
     if (!placeId) return null;
 
     // If fallback place_id
@@ -139,11 +154,16 @@ export const mapApi = {
 
     try {
       const headers = await createHeaders();
-      let url = `${buildV1Url('map', 'place-details')}?place_id=${encodeURIComponent(placeId)}`;
+      let queryParams = `place_id=${encodeURIComponent(placeId)}`;
+      if (sessionToken) {
+        queryParams += `&sessiontoken=${encodeURIComponent(sessionToken)}`;
+      }
+
+      let url = `${buildV1Url('map', 'place-details')}?${queryParams}`;
       let response = await fetch(url, { method: 'GET', headers });
 
       if (!response.ok && response.status === 404) {
-        url = `${buildApiUrl('map', 'place-details')}?place_id=${encodeURIComponent(placeId)}`;
+        url = `${buildApiUrl('map', 'place-details')}?${queryParams}`;
         response = await fetch(url, { method: 'GET', headers });
       }
 

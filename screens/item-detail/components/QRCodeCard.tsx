@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
-import { Download } from 'lucide-react-native';
+import { Share2 } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
 import ViewShot from 'react-native-view-shot';
 import { FIND_BACK } from '@constants/theme';
@@ -20,7 +20,7 @@ interface QRCodeCardProps {
 export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
   const qrCodeRef = React.useRef<ViewShot>(null);
 
-  const handleDownloadQR = async () => {
+  const handleShareQR = async () => {
     try {
       if (!qrCodeRef.current) return;
 
@@ -28,7 +28,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
       const uri = await qrCodeRef.current.capture?.();
 
       if (!uri) {
-        Alert.alert('Lỗi', 'Không thể tạo mã QR');
+        Alert.alert('Lỗi', 'Không thể tạo ảnh mã QR');
         return;
       }
 
@@ -36,20 +36,18 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
       const isAvailable = await Sharing.isAvailableAsync();
 
       if (!isAvailable) {
-        Alert.alert('Lỗi', 'Thiết bị không hỗ trợ chia sẻ file');
+        Alert.alert('Lỗi', 'Thiết bị không hỗ trợ chia sẻ hình ảnh');
         return;
       }
 
-      // Share the QR code
+      // Share the QR code (user can save to photos, send via Zalo, AirDrop, etc.)
       await Sharing.shareAsync(uri, {
         mimeType: 'image/png',
-        dialogTitle: `Lưu mã QR - ${itemName}`,
+        dialogTitle: `Chia sẻ mã QR - ${itemName}`,
       });
-
-      Alert.alert('Thành công', 'Đã lưu mã QR');
     } catch (error) {
-      console.error('Error downloading QR:', error);
-      Alert.alert('Lỗi', 'Không thể lưu mã QR');
+      console.error('Error sharing QR:', error);
+      Alert.alert('Lỗi', 'Không thể chia sẻ mã QR');
     }
   };
 
@@ -72,14 +70,15 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
 
       <Text className="mb-4 mt-4 text-xs text-fb-label">ID: {itemId}</Text>
 
-      {/* Download Button */}
+      {/* Share Button */}
       <TouchableOpacity
-        onPress={handleDownloadQR}
+        onPress={handleShareQR}
         accessibilityRole="button"
+        accessibilityLabel="Chia sẻ mã QR"
         className="flex-row items-center gap-2 rounded-2xl border border-fb-primary/25 bg-fb-primary/10 px-6 py-3"
       >
-        <Download size={18} color={FIND_BACK.primaryLight} />
-        <Text className="font-semibold text-fb-primary-light">Lưu mã QR</Text>
+        <Share2 size={18} color={FIND_BACK.primaryLight} />
+        <Text className="font-semibold text-fb-primary-light">Chia sẻ mã QR</Text>
       </TouchableOpacity>
     </Animated.View>
   );

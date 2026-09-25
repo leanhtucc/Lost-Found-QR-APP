@@ -73,6 +73,7 @@ module.exports = {
       fontSize: {
         'display-headline': ['28px', { lineHeight: '34px', fontWeight: '700' }],
         'display-title': ['22px', { lineHeight: '28px', fontWeight: '700' }],
+        'section-title': ['18px', { lineHeight: '24px', fontWeight: '600' }],
         'body-default': ['16px', { lineHeight: '24px', fontWeight: '400' }],
         'body-small': ['15px', { lineHeight: '22px', fontWeight: '400' }],
         'label-default': ['13px', { lineHeight: '18px', fontWeight: '500' }],

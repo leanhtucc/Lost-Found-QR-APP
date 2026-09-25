@@ -137,6 +137,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
 
+      // Proactively check access token expiration
+      const { accessToken, refreshToken } = await authStorage.getTokens();
+      if (accessToken && authStorage.isTokenExpired(accessToken)) {
+        if (__DEV__) {
+          console.log('[AuthContext] Access token expired on startup, attempting refresh...');
+        }
+        if (refreshToken) {
+          try {
+            const refreshRes = await authApi.refreshToken({ refreshToken });
+            if (!refreshRes.success || !refreshRes.data) {
+              throw new Error('Refresh token rejected');
+            }
+            if (__DEV__) {
+              console.log('[AuthContext] Token refreshed successfully on startup');
+            }
+          } catch (refreshErr) {
+            console.warn(
+              '[AuthContext] Token refresh failed on startup, emitting session expired:',
+              refreshErr
+            );
+            sessionEvents.emitSessionExpired();
+            const cachedUser = await authStorage.getUser();
+            if (cachedUser) {
+              setUser(cachedUser);
+              setIsAuthenticated(true);
+            }
+            return false;
+          }
+        } else {
+          console.warn(
+            '[AuthContext] No refresh token available on startup, emitting session expired'
+          );
+          sessionEvents.emitSessionExpired();
+          const cachedUser = await authStorage.getUser();
+          if (cachedUser) {
+            setUser(cachedUser);
+            setIsAuthenticated(true);
+          }
+          return false;
+        }
+      }
+
       // Get user data
       const userData = await authStorage.getUser();
       if (userData) {
@@ -186,6 +228,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('Session expired while in background, logging out...');
             await logout();
           } else {
+            const { accessToken, refreshToken } = await authStorage.getTokens();
+            if (accessToken && authStorage.isTokenExpired(accessToken)) {
+              if (refreshToken) {
+                try {
+                  const refreshRes = await authApi.refreshToken({ refreshToken });
+                  if (!refreshRes.success || !refreshRes.data) {
+                    throw new Error('Refresh token rejected');
+                  }
+                } catch (refreshErr) {
+                  console.warn(
+                    '[AuthContext] Token refresh failed on foreground, emitting session expired:',
+                    refreshErr
+                  );
+                  sessionEvents.emitSessionExpired();
+                  return;
+                }
+              } else {
+                sessionEvents.emitSessionExpired();
+                return;
+              }
+            }
             await updateLastActivity();
           }
         }

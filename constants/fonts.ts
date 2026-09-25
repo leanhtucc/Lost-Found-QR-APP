@@ -17,6 +17,7 @@ export const FONT_FAMILY = {
 export const FONT_SIZE = {
   headline: 28,
   title: 22,
+  sectionTitle: 18,
   body: 16,
   bodySm: 15,
   label: 13,
@@ -26,6 +27,7 @@ export const FONT_SIZE = {
 export const LINE_HEIGHT = {
   headline: 34,
   title: 28,
+  sectionTitle: 24,
   body: 24,
   bodySm: 22,
   label: 18,

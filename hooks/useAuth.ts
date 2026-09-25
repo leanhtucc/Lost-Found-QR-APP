@@ -8,9 +8,14 @@ import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
-import { authApi } from '@services/auth';
+import { authApi, User } from '@services/auth';
 import { useToast } from '@contexts/ToastContext';
 import { useAuthContext } from '@contexts/AuthContext';
+
+export interface LoginOptions {
+  autoNavigate?: boolean;
+  onSuccess?: (user: User | null) => void;
+}
 
 type AuthNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -83,7 +88,8 @@ interface UseAuthReturn {
   isLoading: boolean;
   error: string | null;
   // Auth functions
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, options?: LoginOptions) => Promise<boolean>;
+  completeLogin: () => void;
   firebaseVerify: (idToken: string) => Promise<boolean>;
   register: (
     displayName: string,
@@ -122,12 +128,20 @@ export const useAuth = (): UseAuthReturn => {
     setError(null);
   }, []);
 
+  const completeLogin = useCallback(() => {
+    setAuthenticated(true);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'TabNavigator' }],
+    });
+  }, [navigation, setAuthenticated]);
+
   /**
    * Login with email and password
    * Shows success toast and navigates to home on success
    */
   const login = useCallback(
-    async (email: string, password: string): Promise<boolean> => {
+    async (email: string, password: string, options?: LoginOptions): Promise<boolean> => {
       setIsLoading(true);
       setError(null);
 
@@ -136,24 +150,30 @@ export const useAuth = (): UseAuthReturn => {
 
         if (response.success) {
           // Fetch user profile after successful login
+          let loadedUser: User | null = null;
           const profileResponse = await authApi.getProfile();
           if (profileResponse.success && profileResponse.data) {
+            loadedUser = profileResponse.data;
             setUser(profileResponse.data);
           }
 
-          setAuthenticated(true);
           await updateLastActivity();
+          options?.onSuccess?.(loadedUser);
 
-          // Show success toast
-          toast.success('Đăng nhập thành công', 'Chào mừng bạn quay trở lại!');
+          if (options?.autoNavigate !== false) {
+            setAuthenticated(true);
 
-          // Navigate to main app after a short delay
-          setTimeout(() => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'TabNavigator' }],
-            });
-          }, 500);
+            // Show success toast
+            toast.success('Đăng nhập thành công', 'Chào mừng bạn quay trở lại!');
+
+            // Navigate to main app after a short delay
+            setTimeout(() => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'TabNavigator' }],
+              });
+            }, 500);
+          }
 
           return true;
         } else {
@@ -598,6 +618,7 @@ export const useAuth = (): UseAuthReturn => {
     isLoading,
     error,
     login,
+    completeLogin,
     firebaseVerify,
     register,
     verifyOtp,

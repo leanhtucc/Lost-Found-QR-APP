@@ -110,6 +110,14 @@ export default {
       googleWebClientId,
       googleIosClientId,
       googleAndroidClientId,
+      // Telegram Error Reporting
+      telegramBotToken:
+        process.env.EXPO_PUBLIC_TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || '',
+      telegramChatId:
+        process.env.EXPO_PUBLIC_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID || '',
+      telegramTestOnLaunch:
+        (process.env.EXPO_PUBLIC_TELEGRAM_TEST_ON_LAUNCH || process.env.TELEGRAM_TEST_ON_LAUNCH) ===
+        'true',
     },
   },
 };

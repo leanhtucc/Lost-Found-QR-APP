@@ -6,6 +6,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Item, ItemsSummary, ItemStatus, CreateItemParams } from '@/types/item';
 import { itemsApi } from '@/services/items';
+import { sessionEvents } from '@/lib/sessionEvents';
 
 const PRELOAD_RETRY_DELAY_MS = 900;
 
@@ -25,6 +26,15 @@ const shouldRetryPreloadError = (error: unknown): boolean => {
   }
 
   if (message.includes('no authentication token found')) {
+    return false;
+  }
+
+  if (
+    message.includes('token expired') ||
+    message.includes('session expired') ||
+    message.includes('unauthorized') ||
+    message.includes('jwt expired')
+  ) {
     return false;
   }
 
@@ -123,6 +133,17 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const message = error?.message || '';
 
         if (message === 'No authentication token found') {
+          return;
+        }
+
+        if (
+          typeof message === 'string' &&
+          (message.toLowerCase().includes('token expired') ||
+            message.toLowerCase().includes('session expired') ||
+            message.toLowerCase().includes('unauthorized') ||
+            message.toLowerCase().includes('jwt expired'))
+        ) {
+          sessionEvents.emitSessionExpired();
           return;
         }
 

@@ -3,6 +3,9 @@
  */
 
 export { Header } from './Header';
-export { MapSection } from './MapSection';
+export { MapSection, type MapSectionHandle } from './MapSection';
 export { BottomSheetContent } from './BottomSheetContent';
 export { HomeItemCard } from './HomeItemCard';
+export { RadarItemPreviewCard } from './RadarItemPreviewCard';
+export { DiscoveryFilterBar } from './DiscoveryFilterBar';
+export { DiscoverySearchBar } from './DiscoverySearchBar';

@@ -92,9 +92,14 @@ const logGoogleAuth = (
   console[level](`${GOOGLE_AUTH_LOG_TAG} ${new Date().toISOString()} ${event}`, details);
 };
 
+export interface SignInWithGoogleOptions {
+  autoNavigate?: boolean;
+  onSuccess?: (user: User | null, isNewUser: boolean | null) => void;
+}
+
 interface UseGoogleAuthResult {
   /** Trigger Google Sign In */
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (options?: SignInWithGoogleOptions) => Promise<void>;
   /** Loading state */
   loading: boolean;
   /** Error message if any */
@@ -149,7 +154,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
   /**
    * Trigger Google Sign In flow
    */
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (options?: SignInWithGoogleOptions) => {
     const requestId = `google-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const startedAt = Date.now();
 
@@ -211,10 +216,15 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
         if (result.success && result.data) {
           setUser(result.data.user);
           setAuthenticatedUser(result.data.user);
-          setAuthenticated(true);
           await updateLastActivity();
           setIsNewUser(result.data.isNewUser);
           setError(null);
+
+          options?.onSuccess?.(result.data.user, result.data.isNewUser);
+
+          if (options?.autoNavigate !== false) {
+            setAuthenticated(true);
+          }
 
           logGoogleAuth('info', 'auth_context_updated', {
             requestId,

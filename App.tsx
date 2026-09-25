@@ -4,6 +4,12 @@ import '@/styles/global.css';
 import AppRoot from './app-root';
 // eslint-disable-next-line import/no-named-as-default
 import ENV from './constants/environment';
+import { initTelegramLogger } from './services/telegram';
+
+/**
+ * Initialize Telegram Bot error tracking & startup notifications
+ */
+initTelegramLogger();
 
 /**
  * Initialize Sentry for error tracking and crash reporting

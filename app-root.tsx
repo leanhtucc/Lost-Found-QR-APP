@@ -17,6 +17,7 @@ import RootStack from './navigation';
 import { AuthProvider } from '@contexts/AuthContext';
 import { ToastProvider } from '@contexts/ToastContext';
 import { ItemsProvider } from '@/contexts';
+import { ErrorBoundary } from '@/components';
 import { logo } from '@assets';
 
 const CUSTOM_SPLASH_DURATION_MS = 2000;
@@ -101,19 +102,21 @@ const AppRoot: React.FC = () => {
   return (
     <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
-        <KeyboardProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <ItemsProvider>
-                <RootStack />
-                {showCustomSplash ? (
-                  <CustomSplashScreen opacity={splashOpacity} versionLabel={versionLabel} />
-                ) : null}
-                <StatusBar style="light" />
-              </ItemsProvider>
-            </ToastProvider>
-          </AuthProvider>
-        </KeyboardProvider>
+        <ErrorBoundary>
+          <KeyboardProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <ItemsProvider>
+                  <RootStack />
+                  {showCustomSplash ? (
+                    <CustomSplashScreen opacity={splashOpacity} versionLabel={versionLabel} />
+                  ) : null}
+                  <StatusBar style="light" />
+                </ItemsProvider>
+              </ToastProvider>
+            </AuthProvider>
+          </KeyboardProvider>
+        </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -10,7 +10,7 @@ import { FIND_BACK } from '@constants/theme';
 
 interface HeaderProps {
   userName?: string;
-  studentId?: string;
+  studentId?: string; // Kept for backward compatibility
   userAvatar?: string;
   notificationCount?: number;
   onNotificationPress?: () => void;
@@ -19,7 +19,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   userName = 'Người dùng',
-  studentId,
   userAvatar,
   notificationCount = 0,
   onNotificationPress,

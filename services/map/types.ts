@@ -5,6 +5,13 @@ export interface MapAutocompletePrediction {
   secondary_text: string;
 }
 
+export interface AutocompleteOptions {
+  sessionToken?: string;
+  lat?: number;
+  lng?: number;
+  radius?: number;
+}
+
 export interface MapPlaceDetails {
   place_id: string;
   name: string;

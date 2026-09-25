@@ -4,14 +4,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Alert, ActivityIndicator, Text, View } from 'react-native';
+import { ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Item } from '@/types/item';
 import * as Location from 'expo-location';
 import { itemsApi, ItemsApiError } from '@/services/items';
 import { ItemDetailHeader, ItemInfoCard, QRCodeCard, LostModeCard } from './components';
-import { FIND_BACK } from '@constants/theme';
+import { LoadingState, ErrorState } from '@/components/atoms';
 
 export default function ItemDetailScreen() {
   const route = useRoute();
@@ -20,19 +20,21 @@ export default function ItemDetailScreen() {
 
   const [item, setItem] = useState<Item | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadItem = React.useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
     try {
       const data = await itemsApi.getItemById(itemId);
       setItem(data);
     } catch (error) {
       console.error('Error loading item:', error);
-      Alert.alert('Lỗi', 'Không thể tải thông tin món đồ');
-      navigation.goBack();
+      setErrorMessage('Không thể tải thông tin món đồ. Vui lòng kiểm tra kết nối mạng và thử lại.');
     } finally {
       setIsLoading(false);
     }
-  }, [itemId, navigation]);
+  }, [itemId]);
 
   useEffect(() => {
     loadItem();
@@ -183,16 +185,23 @@ export default function ItemDetailScreen() {
     return (
       <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
         <ItemDetailHeader itemId={itemId} onDelete={handleDelete} />
-        <View className="flex-1 items-center justify-center px-6">
-          <ActivityIndicator size="large" color={FIND_BACK.primary} />
-          <Text className="mt-4 text-sm text-fb-muted">Đang tải thông tin món đồ...</Text>
-        </View>
+        <LoadingState message="Đang tải thông tin món đồ..." />
       </SafeAreaView>
     );
   }
 
-  if (!item) {
-    return null;
+  if (errorMessage || !item) {
+    return (
+      <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
+        <ItemDetailHeader itemId={itemId} onDelete={handleDelete} />
+        <ErrorState
+          message={errorMessage || 'Không tìm thấy thông tin món đồ này.'}
+          onRetry={loadItem}
+          secondaryActionTitle="Quay lại"
+          onSecondaryAction={() => navigation.goBack()}
+        />
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -207,16 +216,16 @@ export default function ItemDetailScreen() {
         {/* Item Info */}
         <ItemInfoCard item={item} />
 
-        {/* QR Code */}
-        <QRCodeCard itemId={item.qrCodeId || item.itemId || item.id} itemName={item.name} />
-
-        {/* Lost Mode */}
+        {/* Lost Mode & Status Actions */}
         <LostModeCard
           item={item}
           onToggleLost={handleToggleLost}
           onUpdateMessage={handleUpdateMessage}
           onOpenChat={handleOpenChat}
         />
+
+        {/* QR Code Identity */}
+        <QRCodeCard itemId={item.qrCodeId || item.itemId || item.id} itemName={item.name} />
       </ScrollView>
     </SafeAreaView>
   );

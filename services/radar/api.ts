@@ -111,30 +111,36 @@ const fetchWithOptionalAuth = async (url: string, options: RequestInit = {}): Pr
     console.log('[RadarAPI] 401 on optional auth, attempting refresh...');
     try {
       const refreshToken = await authStorage.getRefreshToken();
-      if (refreshToken) {
-        const refreshResult = await authApi.refreshToken({ refreshToken });
-        if (refreshResult.success && refreshResult.data) {
-          const newToken = await authStorage.getAccessToken();
-          if (newToken) {
-            headers['Authorization'] = `Bearer ${newToken}`;
-          }
-          response = await fetch(url, {
-            ...options,
-            headers: {
-              ...headers,
-              ...options.headers,
-            },
-          });
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const refreshResult = await authApi.refreshToken({ refreshToken });
+      if (refreshResult.success && refreshResult.data) {
+        const newToken = await authStorage.getAccessToken();
+        if (newToken) {
+          headers['Authorization'] = `Bearer ${newToken}`;
+        }
+        response = await fetch(url, {
+          ...options,
+          headers: {
+            ...headers,
+            ...options.headers,
+          },
+        });
+        if (response.status !== 401) {
+          return response;
         }
       }
-    } catch {
-      // If refresh fails for optional auth, retry anonymously
-      return fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-        },
-      });
+      throw new Error(refreshResult.message || 'Refresh failed');
+    } catch (refreshErr) {
+      console.warn(
+        '[RadarAPI] User token expired and refresh failed on optional auth, emitting session expired:',
+        refreshErr
+      );
+      await authStorage.clearAll();
+      sessionEvents.emitSessionExpired();
+      throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
     }
   }
 
@@ -457,6 +463,10 @@ export const radarApi = {
       lng: String(lng),
       radius: String(safeRadius),
     });
+
+    if (query.category && query.category.toLowerCase() !== 'all') {
+      params.set('category', query.category);
+    }
 
     // Ưu tiên GET /v1/home/lost-feed, fallback GET /api/home/lost-feed
     const v1Url = `${buildV1Url('home', 'lost-feed')}?${params.toString()}`;
