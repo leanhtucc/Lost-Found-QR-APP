@@ -375,10 +375,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   dropdownContainer: {
-    position: 'absolute',
-    top: 48,
-    left: 0,
-    right: 0,
+    marginTop: 6,
     backgroundColor: '#161622',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.14)',

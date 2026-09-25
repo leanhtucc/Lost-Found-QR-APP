@@ -79,7 +79,12 @@ export const mapApi = {
       }
 
       const payload = await parseJsonSafely<MapApiResponse<MapAutocompletePrediction[]>>(response);
-      if (response.ok && payload?.success && Array.isArray(payload.data)) {
+      if (
+        response.ok &&
+        payload?.success &&
+        Array.isArray(payload.data) &&
+        payload.data.length > 0
+      ) {
         return payload.data;
       }
     } catch (error) {
