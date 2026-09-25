@@ -217,8 +217,6 @@ export const useLiveRadar = ({
         if (__DEV__) {
           console.log('[Radar] Nearby fetch result:', {
             count: nearbyItems.length,
-            latitude: targetCoords.latitude,
-            longitude: targetCoords.longitude,
             radius: normalizedNearbyRadius,
           });
         }

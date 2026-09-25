@@ -474,12 +474,8 @@ export const radarApi = {
 
     if (__DEV__) {
       console.log('[RadarAPI][getHomeLostFeed] Request', {
-        v1Url,
-        sentQuery: {
-          lat,
-          lng,
-          radius: safeRadius,
-        },
+        radius: safeRadius,
+        category: query.category || 'all',
       });
     }
 

@@ -375,7 +375,6 @@ export const useHomeLostFeed = ({
           if (__DEV__) {
             console.log('[useHomeLostFeed] Viewport feed updated:', {
               requestId,
-              coords,
               radius: clamped,
               pinsCount: data.pins.length,
               cardsCount: data.cards.length,
