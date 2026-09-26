@@ -1,52 +1,59 @@
 /**
  * useQRScanner Hook
- * Custom hook xử lý logic scan QR code với support cho memberId
+ * Camera QR detection with real-time position tracking.
+ * Delegates scan processing to useScanProcessor.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
-import * as Haptics from 'expo-haptics';
-import { itemsApi } from '@/services/items';
-import type { ScanItemResponse } from '@/types/item';
+import type { Code, CodeScannerFrame } from 'react-native-vision-camera';
+import { mapCodeBoundsToPreview, selectBestCode } from '../utils/mapCodeBoundsToPreview';
+import type { QRBounds, PreviewLayout } from '../utils/mapCodeBoundsToPreview';
+import type { ScannerStatus } from './useScanProcessor';
 
-export interface ScanResult {
-  itemId: string;
-  scanData?: ScanItemResponse;
-  isOwnItem: boolean;
-  action?: ScanItemResponse['action'];
-  channelId?: string;
-  itemName?: string;
-  ownerDisplayName?: string;
-}
+// ─── Types ──────────────────────────────────────────────────────────────────────
 
 interface UseQRScannerReturn {
-  device: any;
+  device: ReturnType<typeof useCameraDevice>;
   hasPermission: boolean;
-  isScanning: boolean;
-  hasCodeInFrame: boolean;
+  /** Real-time QR bounding box in screen coordinates */
+  qrBounds: QRBounds | null;
   error: string | null;
-  scannedData: string | null;
   requestPermission: () => Promise<void>;
-  handleCodeScanned: (codes: any[]) => void;
+  handleCodeScanned: (codes: Code[], frame: CodeScannerFrame) => void;
+  /** Set camera preview layout from onLayout */
+  setPreviewLayout: (layout: PreviewLayout) => void;
   resetScanner: () => void;
 }
 
-export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQRScannerReturn => {
+// ─── Detection timeout (ms) ─────────────────────────────────────────────────────
+
+const DETECTION_TIMEOUT_MS = 400;
+
+// ─── Hook ───────────────────────────────────────────────────────────────────────
+
+export const useQRScanner = (
+  /** Called when a valid QR code value is detected for the first time */
+  onCodeDetected: (value: string) => void,
+  /** Current scanner status from useScanProcessor */
+  scannerStatus: ScannerStatus
+): UseQRScannerReturn => {
   const [hasPermission, setHasPermission] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
-  const [hasCodeInFrame, setHasCodeInFrame] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scannedData, setScannedData] = useState<string | null>(null);
-  const hasScanned = useRef(false);
-  const codeDetectionTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [qrBounds, setQrBounds] = useState<QRBounds | null>(null);
+
+  const previewLayoutRef = useRef<PreviewLayout | null>(null);
+  const lastDetectedAt = useRef<number>(0);
+  const detectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasEmittedRef = useRef(false);
 
   const device = useCameraDevice('back');
 
-  // Request camera permission
+  // ── Camera permission ─────────────────────────────────────────
+
   const requestPermission = useCallback(async () => {
     try {
       const permission = await Camera.requestCameraPermission();
-
       if (permission === 'granted' || (permission as string) === 'authorized') {
         setHasPermission(true);
         setError(null);
@@ -60,143 +67,88 @@ export const useQRScanner = (onScanSuccess: (result: ScanResult) => void): UseQR
     }
   }, []);
 
-  // Record scan event to backend
-  const recordScanEvent = useCallback(async (itemId: string) => {
-    try {
-      // TODO: Call API to record scan event
-      console.log('Scan event recorded for item:', itemId);
-    } catch (err) {
-      console.error('Error recording scan:', err);
-    }
+  // ── Preview layout ────────────────────────────────────────────
+
+  const setPreviewLayout = useCallback((layout: PreviewLayout) => {
+    previewLayoutRef.current = layout;
   }, []);
 
-  const toScanResult = useCallback((itemId: string, scanData: ScanItemResponse): ScanResult => {
-    const isOpenChat = scanData.action === 'open_chat';
-    const ownerDisplayName = scanData.item_info.owner_info?.display_name;
+  // ── Code scanned handler ──────────────────────────────────────
 
-    return {
-      itemId,
-      scanData,
-      isOwnItem: !isOpenChat,
-      action: scanData.action,
-      channelId: scanData.action === 'open_chat' ? scanData.channelId : undefined,
-      itemName: scanData.item_info.name,
-      ownerDisplayName,
-    };
-  }, []);
-
-  // Fetch scan data and determine navigation
-  const fetchScanData = useCallback(
-    async (itemId: string) => {
-      try {
-        const scanData = await itemsApi.scanQR(itemId);
-
-        // Record scan event
-        await recordScanEvent(itemId);
-
-        const result = toScanResult(itemId, scanData);
-
-        // Notify parent with result
-        setTimeout(() => {
-          onScanSuccess(result);
-        }, 500);
-      } catch (err) {
-        console.error('Error fetching scan data:', err);
-        // On error, treat as own item and navigate to ItemDetails
-        setTimeout(() => {
-          onScanSuccess({
-            itemId,
-            isOwnItem: true,
-          });
-        }, 500);
-      }
-    },
-    [onScanSuccess, recordScanEvent, toScanResult]
-  );
-
-  // Handle scanned QR code
   const handleCodeScanned = useCallback(
-    (codes: any[]) => {
+    (codes: Code[], _frame: CodeScannerFrame) => {
       // Clear previous timeout
-      if (codeDetectionTimeout.current) {
-        clearTimeout(codeDetectionTimeout.current);
+      if (detectionTimeoutRef.current) {
+        clearTimeout(detectionTimeoutRef.current);
+        detectionTimeoutRef.current = null;
       }
 
-      // Show scanning line when code is in frame
-      if (codes.length > 0 && codes[0]?.value) {
-        setHasCodeInFrame(true);
+      // Select best QR code
+      const best = selectBestCode(codes, previewLayoutRef.current);
 
-        // Hide scanning line after 300ms of no detection
-        codeDetectionTimeout.current = setTimeout(() => {
-          setHasCodeInFrame(false);
-        }, 300);
+      if (best && best.value) {
+        // ── Update tracking bounds ──────────────────────────────
+        lastDetectedAt.current = Date.now();
+
+        const bounds = mapCodeBoundsToPreview(best.frame, previewLayoutRef.current);
+
+        if (bounds) {
+          setQrBounds(bounds);
+        }
+
+        // ── Emit value for processing (once) ────────────────────
+        if (!hasEmittedRef.current && scannerStatus !== 'processing') {
+          hasEmittedRef.current = true;
+          onCodeDetected(best.value);
+        }
+
+        // ── Set timeout to clear bounds if QR disappears ────────
+        detectionTimeoutRef.current = setTimeout(() => {
+          setQrBounds(null);
+        }, DETECTION_TIMEOUT_MS);
       } else {
-        setHasCodeInFrame(false);
+        // No valid code — set timeout to clear bounds
+        detectionTimeoutRef.current = setTimeout(() => {
+          const elapsed = Date.now() - lastDetectedAt.current;
+          if (elapsed >= DETECTION_TIMEOUT_MS) {
+            setQrBounds(null);
+          }
+        }, DETECTION_TIMEOUT_MS);
       }
-
-      // Process scan only once
-      if (hasScanned.current || codes.length === 0) return;
-
-      const code = codes[0];
-      if (!code?.value) return;
-
-      hasScanned.current = true;
-      setIsScanning(true);
-
-      // Haptic feedback on successful scan
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      const decodedText = code.value;
-      console.log('QR Code scanned:', decodedText);
-
-      // Extract item ID from QR code
-      let itemId = decodedText;
-
-      // Handle deep link format: lostfound://item/{id}
-      if (decodedText.includes('lostfound://item/')) {
-        itemId = decodedText.replace('lostfound://item/', '');
-      }
-      // Handle old format
-      else if (decodedText.includes('lostfoundqr://item/')) {
-        itemId = decodedText.replace('lostfoundqr://item/', '');
-      }
-      // Handle URL format
-      else if (decodedText.includes('/item/')) {
-        const parts = decodedText.split('/item/');
-        itemId = parts[parts.length - 1];
-      }
-
-      itemId = itemId.split('?')[0].split('#')[0].trim();
-
-      setScannedData(itemId);
-
-      // Fetch scan data from API to determine if it's user's own item
-      fetchScanData(itemId);
     },
-    [fetchScanData]
+    [onCodeDetected, scannerStatus]
   );
 
-  // Reset scanner state
+  // ── Reset ─────────────────────────────────────────────────────
+
   const resetScanner = useCallback(() => {
-    hasScanned.current = false;
-    setIsScanning(false);
-    setHasCodeInFrame(false);
-    setScannedData(null);
+    hasEmittedRef.current = false;
+    setQrBounds(null);
     setError(null);
-    if (codeDetectionTimeout.current) {
-      clearTimeout(codeDetectionTimeout.current);
+    lastDetectedAt.current = 0;
+    if (detectionTimeoutRef.current) {
+      clearTimeout(detectionTimeoutRef.current);
+      detectionTimeoutRef.current = null;
     }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (detectionTimeoutRef.current) {
+        clearTimeout(detectionTimeoutRef.current);
+      }
+    };
   }, []);
 
   return {
     device,
     hasPermission,
-    isScanning,
-    hasCodeInFrame,
+    qrBounds,
     error,
-    scannedData,
     requestPermission,
     handleCodeScanned,
+    setPreviewLayout,
     resetScanner,
   };
 };

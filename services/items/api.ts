@@ -1036,7 +1036,9 @@ export const itemsApi = {
   },
 
   /**
-   * Quét QR Code (Public - không cần auth)
+   * Quét QR Code bằng phiên đăng nhập hiện tại.
+   * Backend vẫn có thể trả thông tin công khai cho guest, nhưng finder đã đăng
+   * nhập phải gửi Bearer token để server tạo/reuse ReturnSession và channel.
    * GET /api/scan/:itemId
    */
   async scanQR(
@@ -1059,11 +1061,8 @@ export const itemsApi = {
     const baseUrl = buildScanUrl(itemId);
     const url = queryParams.toString() ? `${baseUrl}?${queryParams.toString()}` : baseUrl;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
 
     if (!response.ok) {
@@ -1071,7 +1070,8 @@ export const itemsApi = {
       throw new Error(error.message || 'Failed to scan QR code');
     }
 
-    const data = (await response.json()) as ScanItemResponse;
+    const payload = (await response.json()) as ScanItemResponse | ItemApiResponse<ScanItemResponse>;
+    const data = 'data' in payload && payload.data ? payload.data : (payload as ScanItemResponse);
     return normalizeScanResponse(data);
   },
 

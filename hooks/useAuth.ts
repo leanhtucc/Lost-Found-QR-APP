@@ -89,7 +89,6 @@ interface UseAuthReturn {
   error: string | null;
   // Auth functions
   login: (email: string, password: string, options?: LoginOptions) => Promise<boolean>;
-  completeLogin: () => void;
   firebaseVerify: (idToken: string) => Promise<boolean>;
   register: (
     displayName: string,
@@ -128,17 +127,9 @@ export const useAuth = (): UseAuthReturn => {
     setError(null);
   }, []);
 
-  const completeLogin = useCallback(() => {
-    setAuthenticated(true);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'TabNavigator' }],
-    });
-  }, [navigation, setAuthenticated]);
-
   /**
    * Login with email and password
-   * Shows success toast and navigates to home on success
+   * Navigates directly to home on success
    */
   const login = useCallback(
     async (email: string, password: string, options?: LoginOptions): Promise<boolean> => {
@@ -162,17 +153,10 @@ export const useAuth = (): UseAuthReturn => {
 
           if (options?.autoNavigate !== false) {
             setAuthenticated(true);
-
-            // Show success toast
-            toast.success('Đăng nhập thành công', 'Chào mừng bạn quay trở lại!');
-
-            // Navigate to main app after a short delay
-            setTimeout(() => {
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'TabNavigator' }],
-              });
-            }, 500);
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'TabNavigator' }],
+            });
           }
 
           return true;
@@ -618,7 +602,6 @@ export const useAuth = (): UseAuthReturn => {
     isLoading,
     error,
     login,
-    completeLogin,
     firebaseVerify,
     register,
     verifyOtp,

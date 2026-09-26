@@ -9,3 +9,5 @@ export { ScannerOverlay } from './ScannerOverlay';
 export { ScannerInstructions } from './ScannerInstructions';
 export { ScannerError } from './ScannerError';
 export { ScannerLoading } from './ScannerLoading';
+export { ScannerActions } from './ScannerActions';
+export { ManualInputModal } from './ManualInputModal';
