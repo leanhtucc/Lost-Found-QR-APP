@@ -11,6 +11,7 @@ import { RootStackParamList } from '@navigation/index';
 import { DiscoveryFilterType, MapDiscoveryCard } from '@/types/radar';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 import {
   Header,
   MapSection,
@@ -30,6 +31,7 @@ export const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { user } = useAuthContext();
   const { showToast } = useToast();
+  const { unreadCount, refreshUnreadCount } = useNotificationContext();
   const [isReportChoiceVisible, setIsReportChoiceVisible] = useState(false);
   const [locationPermissionStatus, setLocationPermissionStatus] = useState<
     'checking' | 'granted' | 'denied' | 'disabled'
@@ -169,7 +171,8 @@ export const HomeScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       void syncOnTabFocus();
-    }, [syncOnTabFocus])
+      void refreshUnreadCount();
+    }, [refreshUnreadCount, syncOnTabFocus])
   );
 
   const handleSelectItem = useCallback(
@@ -256,7 +259,7 @@ export const HomeScreen: React.FC = () => {
           userName={user?.displayName || 'User'}
           studentId={user?.uid || ''}
           userAvatar={user?.photoURL ?? undefined}
-          notificationCount={0}
+          notificationCount={unreadCount}
           onNotificationPress={handleOpenNotifications}
           onProfilePress={handleOpenProfile}
         />

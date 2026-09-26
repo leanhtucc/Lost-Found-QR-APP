@@ -6,18 +6,18 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import messaging from '@react-native-firebase/messaging';
 import type { RootStackParamList } from '@/navigation';
-import { markNotificationAsOpened } from '@/services/notifications';
-
-let messagingModule: any = null;
-try {
-  messagingModule = require('@react-native-firebase/messaging').default;
-} catch {
-  messagingModule = null;
-}
+import {
+  markNotificationAsOpened,
+  parseFcmNotificationData,
+  resolveNotificationDestination,
+} from '@/services/notifications';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 
 export function useNotificationHandler() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { refreshUnreadCount } = useNotificationContext();
 
   const handleNotificationNavigation = useCallback(
     async (remoteMessageData?: Record<string, any>) => {
@@ -32,78 +32,51 @@ export function useNotificationHandler() {
         }
       }
 
-      let metadata: Record<string, any> = {};
-      if (typeof remoteMessageData.metadata === 'string') {
-        try {
-          metadata = JSON.parse(remoteMessageData.metadata);
-        } catch {
-          metadata = {};
-        }
-      } else if (
-        typeof remoteMessageData.metadata === 'object' &&
-        remoteMessageData.metadata !== null
-      ) {
-        metadata = remoteMessageData.metadata;
-      }
+      const data = parseFcmNotificationData(remoteMessageData);
+      const type = typeof data.type === 'string' ? data.type : undefined;
+      const destination = resolveNotificationDestination(type, data);
 
-      const type = remoteMessageData.type || metadata.type;
-      const itemId =
-        metadata.post_id ||
-        metadata.item_id ||
-        remoteMessageData.postId ||
-        remoteMessageData.itemId;
-      const channelId =
-        metadata.channel_id ||
-        metadata.room_id ||
-        remoteMessageData.channelId ||
-        remoteMessageData.roomId;
-
-      switch (type) {
-        case 'MATCH_FOUND':
-        case 'PROXIMITY':
-          if (itemId) {
-            navigation.navigate('ItemDetails', { itemId: String(itemId) });
-          } else {
-            navigation.navigate('Notifications');
-          }
+      switch (destination.screen) {
+        case 'ItemDetails':
+          navigation.navigate('ItemDetails', destination.params);
           break;
-
-        case 'NEW_CHAT':
-        case 'QR_SCANNED':
-          if (channelId) {
-            navigation.navigate('Chat', {
-              channelId: String(channelId),
-              itemName: metadata.item_name || 'Đồ thất lạc',
-              userName: metadata.user_name || metadata.finder_name || 'Người dùng',
-              userAvatar: metadata.user_avatar,
-              isVerified: Boolean(metadata.is_verified),
-            });
-          } else {
-            navigation.navigate('ChatList');
-          }
+        case 'FoundReportDetails':
+          navigation.navigate('FoundReportDetails', destination.params);
           break;
-
+        case 'Chat':
+          navigation.navigate('Chat', destination.params);
+          break;
+        case 'ChatList':
+          navigation.navigate('ChatList');
+          break;
+        case 'LiveTracking':
+          navigation.navigate('LiveTracking', destination.params);
+          break;
+        case 'HandoverConfirm':
+          navigation.navigate('HandoverConfirm', destination.params);
+          break;
+        case 'RewardStatus':
+          navigation.navigate('RewardStatus', destination.params);
+          break;
         default:
           navigation.navigate('Notifications');
-          break;
       }
+
+      void refreshUnreadCount();
     },
-    [navigation]
+    [navigation, refreshUnreadCount]
   );
 
   useEffect(() => {
-    if (!messagingModule) return;
-
     try {
-      const messaging = messagingModule();
-
       // 1. App in Foreground
-      const unsubscribeOnMessage = messaging.onMessage(async (remoteMessage: any) => {
+      const unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
         console.log('[NotificationHandler] Foreground notification received:', remoteMessage);
+        await refreshUnreadCount();
       });
 
       // 2. App in Background (opened by user click)
-      const unsubscribeOnOpened = messaging.onNotificationOpenedApp((remoteMessage: any) => {
+      const unsubscribeOnOpened = messaging().onNotificationOpenedApp(remoteMessage => {
         console.log(
           '[NotificationHandler] Notification opened from background:',
           remoteMessage?.data
@@ -116,7 +89,7 @@ export function useNotificationHandler() {
       // 3. App in Quit State (opened by user click from cold start)
       messaging()
         .getInitialNotification()
-        .then((remoteMessage: any) => {
+        .then(remoteMessage => {
           if (remoteMessage?.data) {
             console.log(
               '[NotificationHandler] Notification opened from quit state:',
@@ -125,7 +98,7 @@ export function useNotificationHandler() {
             void handleNotificationNavigation(remoteMessage.data);
           }
         })
-        .catch((error: any) => {
+        .catch(error => {
           console.warn('[NotificationHandler] Error getting initial notification:', error);
         });
 
@@ -137,7 +110,7 @@ export function useNotificationHandler() {
       console.warn('[NotificationHandler] Failed to initialize listeners:', error);
       return;
     }
-  }, [handleNotificationNavigation]);
+  }, [handleNotificationNavigation, refreshUnreadCount]);
 }
 
 export default useNotificationHandler;

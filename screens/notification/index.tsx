@@ -15,7 +15,9 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   markNotificationAsOpened,
+  resolveStoredNotificationDestination,
 } from '@/services/notifications';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 import { NotificationHeader, NotificationCard, EmptyState, LoadingState } from './components';
 import { getMockNotifications, tabToCategory } from './utils';
 
@@ -26,8 +28,8 @@ const PURPLE = '#8B5CF6';
 
 export default function NotificationsScreen() {
   const navigation = useNavigation<NotificationNavigationProp>();
+  const { unreadCount, refreshUnreadCount, markOneRead, markAllRead } = useNotificationContext();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -49,7 +51,7 @@ export default function NotificationsScreen() {
           setNotifications(data.data);
         }
 
-        setUnreadCount(data.total_unread);
+        void refreshUnreadCount();
         setPage(data.pagination.page);
         setHasMore(data.pagination.hasNextPage);
       } catch (error) {
@@ -70,7 +72,6 @@ export default function NotificationsScreen() {
           console.log('[NotifScreen] Using mock data for demo');
           const mockData = getMockNotifications();
           setNotifications(mockData);
-          setUnreadCount(mockData.filter(n => !n.is_read).length);
         }
       } finally {
         if (isMountedRef.current) {
@@ -78,7 +79,7 @@ export default function NotificationsScreen() {
         }
       }
     },
-    [navigation]
+    [navigation, refreshUnreadCount]
   );
 
   // ── Initial load ──
@@ -118,7 +119,7 @@ export default function NotificationsScreen() {
         setNotifications(prev =>
           prev.map(n => (n.id === notification.id ? { ...n, is_read: true } : n))
         );
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        markOneRead();
 
         // Call API
         try {
@@ -135,46 +136,41 @@ export default function NotificationsScreen() {
         console.warn('[NotifScreen] Failed to mark opened:', error);
       }
 
-      // Deep link based on type
-      const meta = (notification.metadata ?? {}) as Record<string, any>;
-      const itemId = meta.post_id || meta.item_id || meta.itemId;
-      const channelId = meta.room_id || meta.channel_id || meta.roomId;
-
-      switch (notification.type) {
-        case 'MATCH_FOUND':
-        case 'PROXIMITY':
-          if (itemId) {
-            navigation.navigate('ItemDetails', { itemId: String(itemId) });
-          }
+      const destination = resolveStoredNotificationDestination(notification);
+      switch (destination.screen) {
+        case 'ItemDetails':
+          navigation.navigate('ItemDetails', destination.params);
           break;
-        case 'NEW_CHAT':
-        case 'QR_SCANNED':
-          if (channelId) {
-            navigation.navigate('Chat', {
-              channelId: String(channelId),
-              itemName: meta.item_name || 'Đồ thất lạc',
-              userName: meta.user_name || meta.finder_name || 'Người dùng',
-              userAvatar: meta.user_avatar,
-              isVerified: Boolean(meta.is_verified),
-            });
-          } else {
-            navigation.navigate('ChatList');
-          }
+        case 'FoundReportDetails':
+          navigation.navigate('FoundReportDetails', destination.params);
           break;
-        case 'ESCROW_LOCKED':
-        case 'REFUNDED':
-        case 'RELEASED':
+        case 'Chat':
+          navigation.navigate('Chat', destination.params);
           break;
+        case 'ChatList':
+          navigation.navigate('ChatList');
+          break;
+        case 'LiveTracking':
+          navigation.navigate('LiveTracking', destination.params);
+          break;
+        case 'HandoverConfirm':
+          navigation.navigate('HandoverConfirm', destination.params);
+          break;
+        case 'RewardStatus':
+          navigation.navigate('RewardStatus', destination.params);
+          break;
+        default:
+          navigation.navigate('Notifications');
       }
     },
-    [navigation]
+    [markOneRead, navigation]
   );
 
   // ── Mark all as read ──
   const handleMarkAllAsRead = useCallback(async () => {
     // Optimistic
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    setUnreadCount(0);
+    markAllRead();
 
     try {
       await markAllNotificationsAsRead();
@@ -184,7 +180,7 @@ export default function NotificationsScreen() {
       const category = tabToCategory(activeTab);
       await loadNotifications(category, 1, false);
     }
-  }, [activeTab, loadNotifications]);
+  }, [activeTab, loadNotifications, markAllRead]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }} edges={['top']}>

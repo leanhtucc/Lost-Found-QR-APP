@@ -3,19 +3,32 @@
  * Manages FCM device token registration, refresh, and unregistration with backend.
  */
 
-import { Platform } from 'react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
 import Constants from 'expo-constants';
+import messaging from '@react-native-firebase/messaging';
 import { deviceStorage } from '@/storage/device';
 import { registerPushDevice, unregisterPushDevice } from './api';
 
-// Safely attempt to import Firebase messaging if available
-let messagingModule: any = null;
-try {
-  messagingModule = require('@react-native-firebase/messaging').default;
-} catch {
-  // Messaging module not linked or running in unsupported environment
-  messagingModule = null;
-}
+const requestNotificationPermission = async (): Promise<boolean> => {
+  if (Platform.OS === 'android') {
+    if (Number(Platform.Version) < 33) return true;
+
+    const result = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+    );
+    return result === PermissionsAndroid.RESULTS.GRANTED;
+  }
+
+  if (Platform.OS === 'ios') {
+    const status = await messaging().requestPermission();
+    return (
+      status === messaging.AuthorizationStatus.AUTHORIZED ||
+      status === messaging.AuthorizationStatus.PROVISIONAL
+    );
+  }
+
+  return false;
+};
 
 export const pushNotificationService = {
   /**
@@ -23,35 +36,24 @@ export const pushNotificationService = {
    */
   async registerDeviceToken(): Promise<string | null> {
     try {
+      if (Platform.OS === 'web') return null;
+
       const deviceId = await deviceStorage.getOrCreateDeviceId();
       const appVersion = Constants.expoConfig?.version || '1.0.0';
-      const platform = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'web' ? 'web' : 'android';
+      const platform = Platform.OS === 'ios' ? 'ios' : 'android';
 
-      let pushToken: string | null = null;
-
-      if (messagingModule) {
-        try {
-          const messaging = messagingModule();
-          const authStatus = await messaging.requestPermission();
-          const enabled =
-            authStatus === 1 || // AUTHORIZED
-            authStatus === 2; // PROVISIONAL
-
-          if (!enabled) {
-            console.log('[PushNotification] User declined push notification permission');
-            return null;
-          }
-
-          pushToken = await messaging.getToken();
-        } catch (fcmError) {
-          console.warn('[PushNotification] Firebase messaging getToken error:', fcmError);
-        }
-      }
-
-      if (!pushToken) {
-        console.log('[PushNotification] No push token generated, skipping backend registration');
+      const permissionGranted = await requestNotificationPermission();
+      if (!permissionGranted) {
+        console.log('[PushNotification] User declined push notification permission');
         return null;
       }
+
+      const firebaseMessaging = messaging();
+      if (Platform.OS === 'ios' && !firebaseMessaging.isDeviceRegisteredForRemoteMessages) {
+        await firebaseMessaging.registerDeviceForRemoteMessages();
+      }
+
+      const pushToken = await firebaseMessaging.getToken();
 
       await registerPushDevice({
         pushToken,
@@ -72,11 +74,10 @@ export const pushNotificationService = {
    * Listen for token refresh and sync with backend
    */
   setupTokenRefreshListener(onTokenRefreshed?: (newToken: string) => void): () => void {
-    if (!messagingModule) return () => {};
+    if (Platform.OS === 'web') return () => {};
 
     try {
-      const messaging = messagingModule();
-      const unsubscribe = messaging.onTokenRefresh(async (newToken: string) => {
+      const unsubscribe = messaging().onTokenRefresh(async (newToken: string) => {
         try {
           const deviceId = await deviceStorage.getOrCreateDeviceId();
           const appVersion = Constants.expoConfig?.version || '1.0.0';
@@ -116,6 +117,12 @@ export const pushNotificationService = {
       }
     } catch (error) {
       console.warn('[PushNotification] Failed to unregister device:', error);
+    } finally {
+      if (Platform.OS !== 'web') {
+        await messaging()
+          .deleteToken()
+          .catch(error => console.warn('[PushNotification] Failed to revoke FCM token:', error));
+      }
     }
   },
 };

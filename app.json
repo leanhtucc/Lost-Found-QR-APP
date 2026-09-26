@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.lostfound.app"
     },
     "android": {
+      "permissions": ["android.permission.POST_NOTIFICATIONS"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/logoApp.png",
         "backgroundColor": "#000000"
@@ -80,7 +81,8 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/auth"
+      "@react-native-firebase/auth",
+      "@react-native-firebase/messaging"
     ]
   }
 }

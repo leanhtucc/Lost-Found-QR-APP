@@ -58,6 +58,7 @@ export default {
     },
     android: {
       package: 'com.lostfound.app',
+      permissions: ['android.permission.POST_NOTIFICATIONS'],
       adaptiveIcon: {
         foregroundImage: './assets/logoApp.png',
         backgroundColor: '#000000',
@@ -107,6 +108,7 @@ export default {
       // config plugin here only after GOOGLE_IOS_CLIENT_ID is configured.
       '@react-native-firebase/app',
       '@react-native-firebase/auth',
+      '@react-native-firebase/messaging',
     ],
     extra: {
       apiUrl,

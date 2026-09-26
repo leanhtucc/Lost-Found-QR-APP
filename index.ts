@@ -1,5 +1,15 @@
 import { registerRootComponent } from 'expo';
 import * as ExpoSplashScreen from 'expo-splash-screen';
+import messaging from '@react-native-firebase/messaging';
+
+// FCM invokes this handler when a data message arrives while the app is in the
+// background or terminated. Notification payloads are displayed by the OS;
+// persisted notification state is reconciled when the app becomes active.
+messaging().setBackgroundMessageHandler(async remoteMessage => {
+  if (__DEV__) {
+    console.log('[FCM] Background message received:', remoteMessage.messageId);
+  }
+});
 
 ExpoSplashScreen.preventAutoHideAsync().catch(() => {
   // Ignore if splash is already controlled by native runtime.

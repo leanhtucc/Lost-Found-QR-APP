@@ -17,6 +17,7 @@ import RootStack from './navigation';
 import { AuthProvider } from '@contexts/AuthContext';
 import { ToastProvider } from '@contexts/ToastContext';
 import { ItemsProvider } from '@/contexts';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ErrorBoundary } from '@/components';
 import { logo } from '@assets';
 
@@ -105,15 +106,17 @@ const AppRoot: React.FC = () => {
         <ErrorBoundary>
           <KeyboardProvider>
             <AuthProvider>
-              <ToastProvider>
-                <ItemsProvider>
-                  <RootStack />
-                  {showCustomSplash ? (
-                    <CustomSplashScreen opacity={splashOpacity} versionLabel={versionLabel} />
-                  ) : null}
-                  <StatusBar style="light" />
-                </ItemsProvider>
-              </ToastProvider>
+              <NotificationProvider>
+                <ToastProvider>
+                  <ItemsProvider>
+                    <RootStack />
+                    {showCustomSplash ? (
+                      <CustomSplashScreen opacity={splashOpacity} versionLabel={versionLabel} />
+                    ) : null}
+                    <StatusBar style="light" />
+                  </ItemsProvider>
+                </ToastProvider>
+              </NotificationProvider>
             </AuthProvider>
           </KeyboardProvider>
         </ErrorBoundary>
