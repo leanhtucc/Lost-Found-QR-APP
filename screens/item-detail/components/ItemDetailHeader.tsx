@@ -10,11 +10,10 @@ import { ArrowLeft, Trash2 } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
 
 interface ItemDetailHeaderProps {
-  itemId: string;
   onDelete: () => void;
 }
 
-export const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ itemId, onDelete }) => {
+export const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ onDelete }) => {
   const navigation = useNavigation();
 
   const handleDelete = () => {
@@ -42,9 +41,6 @@ export const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ itemId, onDe
 
         <View className="items-center">
           <Text className="text-lg font-bold text-fb-content">Chi tiết món đồ</Text>
-          <Text className="mt-0.5 max-w-[170px] text-[10px] text-fb-label" numberOfLines={1}>
-            {itemId}
-          </Text>
         </View>
 
         <TouchableOpacity

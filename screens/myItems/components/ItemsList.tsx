@@ -6,9 +6,7 @@ import { StatusFilterType } from '../hooks/useItemsFilter';
 import { EmptyState } from './EmptyState';
 import { MY_ITEMS_COLORS, MY_ITEMS_RADIUS, MY_ITEMS_SHADOW } from '../constants/ui';
 import { getCategoryLabel } from '@/constants/categories';
-
-const isLostLike = (status: Item['status']): boolean =>
-  status === 'LOST' || status === 'PENDING_PAYMENT';
+import { StatusBadge } from '@/components/atoms';
 
 interface ItemsListProps {
   items: Item[];
@@ -46,37 +44,9 @@ export const ItemsList: React.FC<ItemsListProps> = ({
       {filteredItems.length > 0 ? (
         <View style={styles.listWrap}>
           {filteredItems.map(item => {
-            const lostLike = isLostLike(item.status);
-            const isPendingPayment = item.status === 'PENDING_PAYMENT';
-            const badgeText = isPendingPayment
-              ? 'Chờ thanh toán'
-              : lostLike
-                ? 'Đang mất'
-                : 'An toàn';
-
-            const iconBackground = lostLike
-              ? isPendingPayment
-                ? MY_ITEMS_COLORS.pendingSoft
-                : MY_ITEMS_COLORS.lostSoft
-              : MY_ITEMS_COLORS.safeSoft;
-
-            const iconColor = lostLike
-              ? isPendingPayment
-                ? MY_ITEMS_COLORS.pendingText
-                : MY_ITEMS_COLORS.lostText
-              : MY_ITEMS_COLORS.safeText;
-
-            const badgeBackground = lostLike
-              ? isPendingPayment
-                ? MY_ITEMS_COLORS.pendingSoft
-                : MY_ITEMS_COLORS.lostSoft
-              : MY_ITEMS_COLORS.safeSoft;
-
-            const badgeTextColor = lostLike
-              ? isPendingPayment
-                ? MY_ITEMS_COLORS.pendingText
-                : MY_ITEMS_COLORS.lostText
-              : MY_ITEMS_COLORS.safeText;
+            const isLost = item.status === 'LOST';
+            const iconBackground = isLost ? MY_ITEMS_COLORS.lostSoft : MY_ITEMS_COLORS.safeSoft;
+            const iconColor = isLost ? MY_ITEMS_COLORS.lostText : MY_ITEMS_COLORS.safeText;
 
             const shortAddress =
               item.captureAddress ||
@@ -88,6 +58,8 @@ export const ItemsList: React.FC<ItemsListProps> = ({
                 activeOpacity={0.9}
                 style={styles.card}
                 onPress={() => onSelectItem(item.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Xem chi tiết ${item.name}`}
               >
                 <View style={styles.cardRow}>
                   {item.imagePublicUrl ? (
@@ -114,15 +86,11 @@ export const ItemsList: React.FC<ItemsListProps> = ({
                         {shortAddress}
                       </Text>
                     ) : (
-                      <Text style={styles.itemCode}>
-                        ID: {item.publicItemId || item.itemId || item.id}
-                      </Text>
+                      <Text style={styles.itemCode}>Chưa có vị trí đăng ký</Text>
                     )}
                   </View>
 
-                  <View style={[styles.badge, { backgroundColor: badgeBackground }]}>
-                    <Text style={[styles.badgeText, { color: badgeTextColor }]}>{badgeText}</Text>
-                  </View>
+                  <StatusBadge status={item.status} size="sm" />
                 </View>
               </TouchableOpacity>
             );
@@ -202,16 +170,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: MY_ITEMS_COLORS.textMuted,
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.2,
   },
   thumbnailWrap: {
     width: 48,

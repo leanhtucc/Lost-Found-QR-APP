@@ -15,6 +15,7 @@ import { ItemsList } from './components/ItemsList';
 import { AddItemModal, AddItemSubmitData } from './components/AddItemModal';
 import { uploadApi } from '@/services/upload';
 import { MY_ITEMS_COLORS } from './constants/ui';
+import { ErrorState, LoadingState } from '@/components/atoms';
 
 type RootStackParamList = {
   ItemDetails: { itemId: string };
@@ -25,7 +26,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const MyItemsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { items, loadItems, addItem } = useItems();
+  const { items, loading, error, loadItems, refresh, addItem } = useItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<Item['category'] | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
@@ -127,13 +128,19 @@ export const MyItemsScreen: React.FC = () => {
 
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-        <ItemsList
-          items={items}
-          filteredItems={filteredItems}
-          statusFilter={statusFilter}
-          onSelectItem={handleSelectItem}
-          onAddClick={handleAddItem}
-        />
+        {loading ? (
+          <LoadingState message="Đang tải đồ dùng của bạn..." className="min-h-[280px]" />
+        ) : error ? (
+          <ErrorState message={error} onRetry={() => refresh('all')} className="min-h-[280px]" />
+        ) : (
+          <ItemsList
+            items={items}
+            filteredItems={filteredItems}
+            statusFilter={statusFilter}
+            onSelectItem={handleSelectItem}
+            onAddClick={handleAddItem}
+          />
+        )}
       </ScrollView>
 
       <AddItemModal

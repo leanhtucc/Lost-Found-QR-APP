@@ -10,6 +10,30 @@ interface UseItemsFilterProps {
   statusFilter: StatusFilterType;
 }
 
+export const filterItems = ({
+  items,
+  searchQuery,
+  categoryFilter,
+  statusFilter,
+}: UseItemsFilterProps): Item[] =>
+  items.filter(item => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      normalizedQuery === '' || item.name.toLowerCase().includes(normalizedQuery);
+    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'safe' && item.status === 'SAFE') ||
+      (statusFilter === 'lost' && item.status === 'LOST');
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+export const getItemStatusCounts = (items: Item[]) => ({
+  safeCount: items.filter(item => item.status === 'SAFE').length,
+  lostCount: items.filter(item => item.status === 'LOST').length,
+});
+
 export const useItemsFilter = ({
   items,
   searchQuery,
@@ -17,29 +41,10 @@ export const useItemsFilter = ({
   statusFilter,
 }: UseItemsFilterProps) => {
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
-      const matchesSearch =
-        searchQuery.trim() === '' ||
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-
-      const matchesStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'safe' && item.status === 'SAFE') ||
-        (statusFilter === 'lost' && (item.status === 'LOST' || item.status === 'PENDING_PAYMENT'));
-
-      return matchesSearch && matchesCategory && matchesStatus;
-    });
+    return filterItems({ items, searchQuery, categoryFilter, statusFilter });
   }, [items, searchQuery, categoryFilter, statusFilter]);
 
-  const lostCount = useMemo(
-    () => items.filter(item => item.status === 'LOST' || item.status === 'PENDING_PAYMENT').length,
-    [items]
-  );
-
-  const safeCount = useMemo(() => items.filter(item => item.status === 'SAFE').length, [items]);
+  const { lostCount, safeCount } = useMemo(() => getItemStatusCounts(items), [items]);
 
   return { filteredItems, lostCount, safeCount };
 };

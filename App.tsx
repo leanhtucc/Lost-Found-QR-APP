@@ -4,7 +4,14 @@ import '@/styles/global.css';
 import AppRoot from './app-root';
 // eslint-disable-next-line import/no-named-as-default
 import ENV from './constants/environment';
+import { LogBox } from 'react-native';
 import { initTelegramLogger } from './services/telegram';
+
+// Ignore known non-breaking library-level events on Fabric / New Architecture
+LogBox.ignoreLogs([
+  'Unsupported top level event type "topSvgLayout" dispatched',
+  'This method is deprecated (as well as all React Native Firebase namespaced API)',
+]);
 
 /**
  * Initialize Telegram Bot error tracking & startup notifications

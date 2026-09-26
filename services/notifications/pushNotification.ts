@@ -5,7 +5,14 @@
 
 import { PermissionsAndroid, Platform } from 'react-native';
 import Constants from 'expo-constants';
-import messaging from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  getToken,
+  onTokenRefresh,
+  deleteToken,
+  requestPermission,
+  registerDeviceForRemoteMessages,
+} from '@react-native-firebase/messaging';
 import { deviceStorage } from '@/storage/device';
 import { registerPushDevice, unregisterPushDevice } from './api';
 
@@ -20,11 +27,9 @@ const requestNotificationPermission = async (): Promise<boolean> => {
   }
 
   if (Platform.OS === 'ios') {
-    const status = await messaging().requestPermission();
-    return (
-      status === messaging.AuthorizationStatus.AUTHORIZED ||
-      status === messaging.AuthorizationStatus.PROVISIONAL
-    );
+    const authStatus = await requestPermission(getMessaging());
+    // 1 = AUTHORIZED, 2 = PROVISIONAL
+    return authStatus === 1 || authStatus === 2;
   }
 
   return false;
@@ -48,12 +53,28 @@ export const pushNotificationService = {
         return null;
       }
 
-      const firebaseMessaging = messaging();
-      if (Platform.OS === 'ios' && !firebaseMessaging.isDeviceRegisteredForRemoteMessages) {
-        await firebaseMessaging.registerDeviceForRemoteMessages();
+      const firebaseMessaging = getMessaging();
+      if (Platform.OS === 'ios') {
+        try {
+          await registerDeviceForRemoteMessages(firebaseMessaging);
+        } catch (regError) {
+          console.warn('[PushNotification] Remote message registration warning:', regError);
+        }
       }
 
-      const pushToken = await firebaseMessaging.getToken();
+      let pushToken: string;
+      try {
+        pushToken = await getToken(firebaseMessaging);
+      } catch (tokenError: any) {
+        const errorMsg = String(tokenError?.message || tokenError);
+        if (errorMsg.includes('FIS_AUTH_ERROR')) {
+          console.warn(
+            '[PushNotification] Firebase Installations Auth Error (FIS_AUTH_ERROR). Verify Google Cloud API key restrictions and package name/SHA-1 in Firebase Console.'
+          );
+          return null;
+        }
+        throw tokenError;
+      }
 
       await registerPushDevice({
         pushToken,
@@ -77,7 +98,7 @@ export const pushNotificationService = {
     if (Platform.OS === 'web') return () => {};
 
     try {
-      const unsubscribe = messaging().onTokenRefresh(async (newToken: string) => {
+      const unsubscribe = onTokenRefresh(getMessaging(), async (newToken: string) => {
         try {
           const deviceId = await deviceStorage.getOrCreateDeviceId();
           const appVersion = Constants.expoConfig?.version || '1.0.0';
@@ -119,9 +140,9 @@ export const pushNotificationService = {
       console.warn('[PushNotification] Failed to unregister device:', error);
     } finally {
       if (Platform.OS !== 'web') {
-        await messaging()
-          .deleteToken()
-          .catch(error => console.warn('[PushNotification] Failed to revoke FCM token:', error));
+        await deleteToken(getMessaging()).catch(error =>
+          console.warn('[PushNotification] Failed to revoke FCM token:', error)
+        );
       }
     }
   },

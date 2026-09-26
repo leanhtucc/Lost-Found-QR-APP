@@ -90,11 +90,12 @@ export const DiscoveryFilterBar: React.FC<DiscoveryFilterBarProps> = ({
               style={[styles.categoryChip, isActive && styles.categoryChipActive]}
             >
               {IconComponent && (
-                <IconComponent
-                  size={13}
-                  color={isActive ? FIND_BACK.primaryLight : FIND_BACK.mutedText}
-                  style={styles.categoryIcon}
-                />
+                <View style={styles.categoryIcon}>
+                  <IconComponent
+                    size={13}
+                    color={isActive ? FIND_BACK.primaryLight : FIND_BACK.mutedText}
+                  />
+                </View>
               )}
               <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
                 {cat.label}

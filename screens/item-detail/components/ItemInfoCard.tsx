@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { MapPin, ShieldCheck } from 'lucide-react-native';
+import { MapPin, Package, ShieldCheck } from 'lucide-react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { DARK_GOOGLE_MAP_STYLE } from '@/constants/googleMapStyle';
 import { Item } from '@/types/item';
@@ -43,16 +43,21 @@ export const ItemInfoCard: React.FC<ItemInfoCardProps> = ({ item }) => {
       className="mb-4 overflow-hidden rounded-3xl border border-fb-border-subtle bg-fb-surface p-5"
     >
       {/* Ảnh lớn của món đồ nếu có */}
-      {item.imagePublicUrl && !imageFailed ? (
-        <View className="mb-4 h-48 w-full overflow-hidden rounded-2xl bg-black/40">
+      <View className="mb-4 h-40 w-full overflow-hidden rounded-2xl bg-fb-surface-elevated">
+        {item.imagePublicUrl && !imageFailed ? (
           <Image
             source={{ uri: item.imagePublicUrl }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
             onError={() => setImageFailed(true)}
           />
-        </View>
-      ) : null}
+        ) : (
+          <View className="h-full w-full items-center justify-center">
+            <Package size={36} color={FIND_BACK.labelText} strokeWidth={1.6} />
+            <Text className="mt-2 text-sm text-fb-muted">Chưa có hình ảnh</Text>
+          </View>
+        )}
+      </View>
 
       <View className="flex-row items-center gap-4">
         {/* Icon */}
@@ -62,7 +67,9 @@ export const ItemInfoCard: React.FC<ItemInfoCardProps> = ({ item }) => {
 
         {/* Info */}
         <View className="flex-1">
-          <Text className="mb-1 text-xl font-bold text-fb-content">{item.name}</Text>
+          <Text className="mb-1 text-xl font-bold text-fb-content" numberOfLines={2}>
+            {item.name}
+          </Text>
           <Text className="text-sm text-fb-muted">{getCategoryLabel(item.category)}</Text>
         </View>
 

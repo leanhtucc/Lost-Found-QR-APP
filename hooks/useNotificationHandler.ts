@@ -6,7 +6,12 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import messaging from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  onMessage,
+  onNotificationOpenedApp,
+  getInitialNotification,
+} from '@react-native-firebase/messaging';
 import type { RootStackParamList } from '@/navigation';
 import {
   markNotificationAsOpened,
@@ -69,14 +74,16 @@ export function useNotificationHandler() {
 
   useEffect(() => {
     try {
+      const messagingInstance = getMessaging();
+
       // 1. App in Foreground
-      const unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
+      const unsubscribeOnMessage = onMessage(messagingInstance, async remoteMessage => {
         console.log('[NotificationHandler] Foreground notification received:', remoteMessage);
         await refreshUnreadCount();
       });
 
       // 2. App in Background (opened by user click)
-      const unsubscribeOnOpened = messaging().onNotificationOpenedApp(remoteMessage => {
+      const unsubscribeOnOpened = onNotificationOpenedApp(messagingInstance, remoteMessage => {
         console.log(
           '[NotificationHandler] Notification opened from background:',
           remoteMessage?.data
@@ -87,8 +94,7 @@ export function useNotificationHandler() {
       });
 
       // 3. App in Quit State (opened by user click from cold start)
-      messaging()
-        .getInitialNotification()
+      getInitialNotification(messagingInstance)
         .then(remoteMessage => {
           if (remoteMessage?.data) {
             console.log(

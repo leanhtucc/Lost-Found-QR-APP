@@ -266,8 +266,6 @@ const normalizeItemStatus = (status: unknown): ItemStatus => {
   switch (normalized) {
     case 'SAFE':
       return 'SAFE';
-    case 'PENDING_PAYMENT':
-      return 'PENDING_PAYMENT';
     case 'LOST':
       return 'LOST';
     case 'FOUND':
@@ -291,7 +289,6 @@ const normalizeStatusFilter = (status: unknown): ItemStatus | undefined => {
 
   switch (normalized) {
     case 'SAFE':
-    case 'PENDING_PAYMENT':
     case 'LOST':
     case 'FOUND':
     case 'RESOLVED':
@@ -754,9 +751,7 @@ export const itemsApi = {
     });
 
     const safeCount = response.items.filter(item => item.status === 'SAFE').length;
-    const lostCount = response.items.filter(
-      item => item.status === 'LOST' || item.status === 'PENDING_PAYMENT'
-    ).length;
+    const lostCount = response.items.filter(item => item.status === 'LOST').length;
 
     return {
       items: response.items,

@@ -109,15 +109,24 @@ export const getNotifications = async (
  */
 export const getUnreadCount = async (): Promise<number> => {
   const url = buildNotificationsUrl('unread-count');
-  const headers = await createHeaders();
-
-  const response = await fetchWithAuth(url, { method: 'GET', headers });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+  try {
+    const headers = await createHeaders();
+    const response = await fetchWithAuth(url, { method: 'GET', headers });
+    if (response.ok) {
+      const result: UnreadCountResponse = await response.json();
+      return result.data?.unread_count ?? 0;
+    }
+  } catch {
+    // unread-count endpoint may not be implemented on server
   }
 
-  const result: UnreadCountResponse = await response.json();
-  return result.data.unread_count;
+  // Graceful fallback: GET /v1/notifications returns total_unread
+  try {
+    const notifData = await getNotifications({ limit: 1 });
+    return notifData?.total_unread ?? 0;
+  } catch {
+    return 0;
+  }
 };
 
 /**

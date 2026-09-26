@@ -18,7 +18,7 @@ export type ItemCategory =
   | 'other';
 
 // Item Status
-export type ItemStatus = 'SAFE' | 'PENDING_PAYMENT' | 'LOST' | 'FOUND' | 'RESOLVED';
+export type ItemStatus = 'SAFE' | 'LOST' | 'FOUND' | 'RESOLVED';
 
 // Location coordinates
 export interface Location {

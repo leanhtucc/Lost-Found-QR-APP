@@ -184,7 +184,7 @@ export default function ItemDetailScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
-        <ItemDetailHeader itemId={itemId} onDelete={handleDelete} />
+        <ItemDetailHeader onDelete={handleDelete} />
         <LoadingState message="Đang tải thông tin món đồ..." />
       </SafeAreaView>
     );
@@ -193,7 +193,7 @@ export default function ItemDetailScreen() {
   if (errorMessage || !item) {
     return (
       <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
-        <ItemDetailHeader itemId={itemId} onDelete={handleDelete} />
+        <ItemDetailHeader onDelete={handleDelete} />
         <ErrorState
           message={errorMessage || 'Không tìm thấy thông tin món đồ này.'}
           onRetry={loadItem}
@@ -206,7 +206,7 @@ export default function ItemDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
-      <ItemDetailHeader itemId={itemId} onDelete={handleDelete} />
+      <ItemDetailHeader onDelete={handleDelete} />
 
       <ScrollView
         className="flex-1"

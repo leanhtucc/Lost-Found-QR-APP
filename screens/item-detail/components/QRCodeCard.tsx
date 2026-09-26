@@ -68,14 +68,12 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
         </View>
       </ViewShot>
 
-      <Text className="mb-4 mt-4 text-xs text-fb-label">ID: {itemId}</Text>
-
       {/* Share Button */}
       <TouchableOpacity
         onPress={handleShareQR}
         accessibilityRole="button"
         accessibilityLabel="Chia sẻ mã QR"
-        className="flex-row items-center gap-2 rounded-2xl border border-fb-primary/25 bg-fb-primary/10 px-6 py-3"
+        className="mt-5 min-h-12 flex-row items-center gap-2 rounded-2xl border border-fb-primary/25 bg-fb-primary/10 px-6 py-3"
       >
         <Share2 size={18} color={FIND_BACK.primaryLight} />
         <Text className="font-semibold text-fb-primary-light">Chia sẻ mã QR</Text>

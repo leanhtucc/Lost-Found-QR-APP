@@ -50,6 +50,7 @@ interface ItemsContextType {
   summary: ItemsSummary | null;
   loading: boolean;
   refreshing: boolean;
+  error: string | null;
   loadItems: (
     statusFilter?: ItemStatus | 'all',
     showLoader?: boolean,
@@ -66,6 +67,7 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [summary, setSummary] = useState<ItemsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchSummaryAndItems = async (statusFilter?: ItemStatus | 'all') => {
     // We only call getItems to avoid /summary endpoint which is throwing Validation failed!
@@ -76,9 +78,7 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // We compute local summary manually to avoid backend crash
     const safeItems = itemsRes.items.filter(item => item.status === 'SAFE').length;
-    const lostItems = itemsRes.items.filter(
-      item => item.status === 'LOST' || item.status === 'PENDING_PAYMENT'
-    ).length;
+    const lostItems = itemsRes.items.filter(item => item.status === 'LOST').length;
     const foundItems = itemsRes.items.filter(item => item.status === 'FOUND').length;
 
     const summaryData: ItemsSummary = {
@@ -101,6 +101,7 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       try {
         if (showLoader) setLoading(true);
+        setError(null);
 
         if (enableRetry) {
           try {
@@ -133,6 +134,7 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const message = error?.message || '';
 
         if (message === 'No authentication token found') {
+          setError('Bạn cần đăng nhập để xem danh sách đồ dùng.');
           return;
         }
 
@@ -147,18 +149,8 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return;
         }
 
-        if (typeof message === 'string' && message.toLowerCase().includes('validation failed')) {
-          setItems([]);
-          setSummary({
-            totalItems: 0,
-            safeItems: 0,
-            lostItems: 0,
-            foundItems: 0,
-          });
-          return;
-        }
-
         console.error('Failed to load items:', error);
+        setError(message || 'Không thể tải danh sách đồ dùng. Vui lòng thử lại.');
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -195,6 +187,7 @@ export const ItemsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     summary,
     loading,
     refreshing,
+    error,
     loadItems,
     refresh,
     addItem,

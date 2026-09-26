@@ -1,0 +1,757 @@
+# ROLE
+
+Bạn là Senior React Native Engineer + Mobile QA Engineer.
+
+Bạn đang làm việc trong:
+
+Lost & Found QR / FindBack mobile app.
+
+Phase 1 đã triển khai.
+
+Kết quả hiện tại:
+
+- Mobile TypeScript: PASS
+- ESLint: PASS
+- Prettier: PASS
+- Jest: 21 suites / 153 tests PASS
+- Phase 1 bổ sung: 6 tests PASS
+- Expo Doctor: 15/18
+- Mobile Code Acceptance: PASS
+- Device Acceptance: UNVERIFIED
+- Overall Phase 1: PARTIAL
+
+Nhiệm vụ hiện tại:
+
+PHASE 1 — FINAL MOBILE DEVICE & INTEGRATION ACCEPTANCE
+
+Mục tiêu:
+chạy app thực tế với backend development thật, kiểm tra Home / My Items / Item Detail trên Android và đóng Phase 1.
+
+Đây KHÔNG phải feature-development phase.
+
+==================================================
+1. STRICT SCOPE
+==================================================
+
+Chỉ test/fix:
+
+- Design Foundation.
+- Home.
+- My Items.
+- Item Detail.
+- Loading/Error/Empty states.
+- Responsive.
+- Accessibility cơ bản.
+- Backend integration Phase 1.
+- Android runtime.
+- Expo Doctor issues liên quan trực tiếp.
+
+KHÔNG implement:
+
+- QR Resolver mới.
+- Scan routing mới.
+- Guest Finder.
+- Real Chat.
+- Return Flow.
+- Payment.
+- Refresh token queue.
+- Radar background lifecycle.
+- Security architecture.
+
+Không redesign lại UI Phase 1 nếu không có runtime bug.
+
+==================================================
+2. BEFORE RUNNING
+==================================================
+
+Đọc:
+
+- AGENTS.md / AI-AGENT.md.
+- README.
+- package.json.
+- app.config.js / app.json.
+- docs/phase-1-mobile-acceptance.md.
+- Design System.
+- Home.
+- My Items.
+- Item Detail.
+- API configuration/environment.
+
+Kiểm tra:
+
+git status --short
+git diff --stat
+git diff
+git diff --check
+
+Không commit.
+Không push.
+Không sửa prompt.txt.
+
+==================================================
+3. BACKEND CONNECTION
+==================================================
+
+Xác minh mobile đang trỏ tới backend development thật.
+
+Không dùng mock backend.
+
+Không dùng production backend để test phá dữ liệu.
+
+Kiểm tra:
+
+API base URL
+Android emulator networking
+physical-device LAN URL nếu dùng máy thật
+HTTPS/HTTP compatibility
+CORS không áp dụng native fetch như browser nhưng server/network vẫn phải reachable
+
+Nếu Android emulator dùng backend localhost trên PC:
+xác minh address phù hợp môi trường,
+không tự hardcode nếu project đã có env mechanism.
+
+==================================================
+4. DEVICE PRIORITY
+==================================================
+
+Ưu tiên theo thứ tự:
+
+1. Android physical device.
+2. Android Emulator.
+3. Static analysis nếu không có device.
+
+Nếu có thiết bị thật:
+ưu tiên chạy ít nhất một vòng full acceptance trên máy thật.
+
+Ghi:
+
+Device:
+Android version:
+Screen size:
+Build type:
+Backend URL/environment:
+
+Nếu không có device/emulator:
+không được kết luận DEVICE PASS.
+
+==================================================
+5. START APP
+==================================================
+
+Sử dụng workflow thật của project.
+
+Ví dụ tùy repo:
+
+npx expo run:android
+
+hoặc:
+
+npm run android
+
+hoặc dev-client workflow hiện tại.
+
+Không chạy Expo Go nếu project native dependencies yêu cầu Development Build.
+
+Xác minh:
+
+- build thành công.
+- app launch.
+- không crash startup.
+- fonts load.
+- navigation load.
+- no fatal red screen.
+
+==================================================
+6. LOGIN / AUTH PRECONDITION
+==================================================
+
+Đăng nhập bằng development test account thực.
+
+Không hardcode bypass auth.
+
+Sau login phải vào main app bình thường.
+
+Nếu auth fail do Phase 2 architecture:
+ghi nhận đúng nguyên nhân.
+
+Chỉ sửa nếu Phase 1 thay đổi gây regression.
+
+==================================================
+7. HOME RUNTIME ACCEPTANCE
+==================================================
+
+Test Home bằng backend thật.
+
+A. Header
+
+[ ] FindBack hiển thị đúng.
+[ ] Username đúng.
+[ ] Long username không overflow nếu test được.
+[ ] Avatar hợp lệ.
+[ ] Broken/missing avatar fallback.
+[ ] Notification icon không chạm status bar.
+[ ] Safe Area đúng.
+
+B. Map
+
+[ ] Dark map render.
+[ ] User location marker.
+[ ] Permission allowed.
+[ ] Permission denied.
+[ ] Map vẫn không crash khi denied.
+[ ] Lost markers từ backend thật.
+[ ] Marker press.
+[ ] Marker popup.
+[ ] Popup close.
+
+Không refactor location lifecycle.
+
+C. Radar status
+
+Xác minh text không misleading.
+
+Đúng semantics:
+
+loading:
+"Đang quét..."
+
+realtime connected:
+"Trực tiếp"
+
+socket/realtime disconnected:
+"Radar tạm ngắt"
+hoặc wording tương đương.
+
+Không gọi "Ngoại tuyến" chỉ vì socket disconnected nếu app không biết network state.
+
+D. Home info contrast
+
+Xác minh dòng kiểu:
+
+"Bạn có X vật dụng đang báo mất..."
+
+đọc rõ trên nền tối.
+
+Không còn text black/dark-on-dark.
+
+E. Empty state
+
+Dùng backend 0-item scenario.
+
+Xác minh:
+
+[ ] Không hiện Empty khi đang loading.
+[ ] Không hiện Empty khi error.
+[ ] Không hiện Empty thay cho permission denied.
+[ ] Empty State không bị FAB đè.
+[ ] Empty State không bị Bottom Tab che.
+
+F. Data state
+
+Dùng backend 20-item scenario.
+
+Xác minh:
+
+[ ] Item cards render.
+[ ] Image.
+[ ] Missing image fallback.
+[ ] Status.
+[ ] Long title.
+[ ] Distance/location nếu data có.
+[ ] Card press navigation.
+
+G. Bottom Sheet
+
+Test:
+
+collapsed
+middle
+expanded
+
+[ ] Gesture.
+[ ] No clipping.
+[ ] List scroll.
+[ ] FAB không bị che.
+[ ] Bottom Tabs không overlap.
+
+==================================================
+8. MY ITEMS RUNTIME ACCEPTANCE
+==================================================
+
+Test với dữ liệu thật.
+
+A. 0 items
+
+[ ] Empty state đúng.
+
+B. 20 items
+
+[ ] Count đúng backend.
+[ ] Tổng cộng đúng.
+[ ] An toàn đúng.
+[ ] Đang mất đúng.
+[ ] Các status khác không làm crash.
+
+C. Category filter
+
+[ ] Horizontal scroll trên màn nhỏ.
+[ ] Selected state rõ.
+[ ] Item cuối không clip.
+
+D. Search
+
+[ ] Search có kết quả.
+[ ] Search không kết quả.
+[ ] Clear search.
+[ ] Không render Empty generic sai context.
+
+E. Cards
+
+Test:
+
+[ ] valid image.
+[ ] no image.
+[ ] broken image.
+[ ] long title.
+[ ] long category.
+[ ] SAFE.
+[ ] LOST.
+[ ] real other status.
+
+Xác minh raw database ID không còn chiếm UI chính.
+
+==================================================
+9. ITEM DETAIL RUNTIME ACCEPTANCE
+==================================================
+
+Đi từ My Items → Item Detail bằng data thật.
+
+A. Layout
+
+Thứ tự phải là:
+
+Header
+Item Info
+Lost Mode
+QR
+Supporting content nếu có
+
+Không đổi.
+
+B. Header
+
+[ ] Không show raw internal database ID dưới title.
+
+C. Hero
+
+[ ] Image hợp lý.
+[ ] Missing image fallback.
+[ ] Broken image fallback.
+[ ] Long title không overflow.
+[ ] Status badge đúng.
+
+D. Loading
+
+Test khi request đang chạy.
+
+[ ] LoadingState render.
+
+E. Error
+
+Có thể tạm dùng invalid/missing item hoặc development scenario.
+
+[ ] ErrorState.
+[ ] Không auto goBack.
+[ ] Retry button.
+[ ] Back button.
+[ ] Retry không loop.
+
+F. Lost Mode
+
+SAFE:
+
+[ ] Switch/action hiển thị đúng.
+
+LOST:
+
+[ ] Current state đúng.
+[ ] Message hiển thị.
+[ ] Edit UI hoạt động.
+
+KHÔNG kiểm tra/fix lost-message location bug trong Phase 1.
+Chỉ đảm bảo Phase 1 không phá behavior hiện tại.
+
+G. QR presentation
+
+[ ] QR render.
+[ ] White quiet zone.
+[ ] QR không méo.
+[ ] Không bị crop.
+[ ] Share button visible.
+[ ] Scroll tới được cuối card.
+[ ] Label = "Chia sẻ mã QR".
+[ ] Không hiện alert "Đã lưu mã QR" sai semantics.
+
+KHÔNG thay QR payload.
+
+==================================================
+10. SMALL SCREEN ACCEPTANCE
+==================================================
+
+Ưu tiên test viewport/device gần:
+
+360 x 800
+
+Nếu emulator hiện tại khác:
+tạo/đổi emulator chỉ khi workflow an toàn.
+
+Kiểm tra:
+
+Home
+My Items
+Item Detail
+
+Không được có:
+
+- horizontal overflow.
+- clipped button.
+- text unreadable.
+- FAB overlap.
+- Bottom Tab overlap.
+- QR bị cắt.
+
+==================================================
+11. FONT SCALE ACCEPTANCE
+==================================================
+
+Nếu Android environment cho phép:
+
+test font scale khoảng:
+
+1.0
+1.3
+
+1.5 nếu dễ thực hiện.
+
+Ít nhất kiểm tra:
+
+Home header
+My Items stats
+Item cards
+Item Detail title
+StatusBadge
+buttons
+ErrorState
+EmptyState
+
+Nếu font scale lớn gây layout hơi cao nhưng vẫn scroll/read được:
+có thể chấp nhận.
+
+Nếu action biến mất hoặc text overlap:
+fix trong Phase 1.
+
+==================================================
+12. ACCESSIBILITY RUNTIME SANITY
+==================================================
+
+Không cần full WCAG audit.
+
+Kiểm tra các action quan trọng có:
+
+- đủ vùng bấm.
+- accessibilityRole phù hợp khi implementation hỗ trợ.
+- accessibilityLabel cho icon-only actions.
+- trạng thái không chỉ thể hiện bằng màu.
+
+Quan trọng:
+
+Home notification
+avatar
+report FAB
+Bottom Sheet item
+My Items add
+Item row
+Item Detail back
+delete
+Lost Mode
+QR share
+
+==================================================
+13. EXPO DOCTOR — 15/18
+==================================================
+
+Chạy lại:
+
+npx expo-doctor
+
+Với từng issue còn lại, phân loại:
+
+A. BLOCKER
+Có nguy cơ:
+- build fail
+- runtime fail
+- package incompatibility
+- native configuration invalid
+
+→ phải sửa nếu thuộc Phase 1/release foundation và sửa an toàn.
+
+B. WARNING
+Metadata / ecosystem warning không gây runtime bug.
+
+→ document, không ép sửa.
+
+C. KNOWN / FALSE POSITIVE
+Có lý do rõ.
+
+→ document.
+
+Không nâng Expo SDK.
+
+Không nâng React Native.
+
+Không đổi dependency lớn chỉ để đạt 18/18.
+
+Report dạng:
+
+Issue 1:
+classification:
+action:
+reason:
+
+Issue 2:
+...
+
+Issue 3:
+...
+
+==================================================
+14. ONLY FIX RUNTIME PHASE 1 BUGS
+==================================================
+
+Được phép sửa:
+
+- contrast.
+- overlap.
+- broken fallback.
+- wrong empty/loading/error rendering.
+- missing accessibility label.
+- small-screen layout.
+- Radar status wording.
+- Item Detail scroll.
+- Phase 1 runtime regression.
+
+Không làm cosmetic redesign.
+
+Không sửa feature ngoài scope.
+
+==================================================
+15. AFTER ANY FIX
+==================================================
+
+Rerun:
+
+npm run type-check
+npm run lint
+npm run format:check
+
+hoặc scripts tương ứng.
+
+Run full Jest:
+
+npm test -- --runInBand
+
+nếu test script/project dùng command khác:
+dùng command thật.
+
+Run:
+
+npx expo-doctor
+
+Run:
+
+git diff --check
+
+Không dùng chỉ test subset rồi kết luận full PASS.
+
+==================================================
+16. REGRESSION CHECK
+==================================================
+
+Xác minh diff Phase 1 không thay:
+
+- QR encoded payload.
+- Scanner routing.
+- API routes.
+- Auth architecture.
+- Chat.
+- Return Session.
+- Payment.
+- Radar lifecycle.
+
+Nếu phát hiện accidental change:
+restore/reconcile.
+
+Không restore prompt.txt.
+
+prompt.txt phải giữ nguyên.
+
+==================================================
+17. UPDATE ACCEPTANCE REPORT
+==================================================
+
+Cập nhật:
+
+docs/phase-1-mobile-acceptance.md
+
+Thêm:
+
+## Android Runtime Acceptance
+
+Device:
+Android:
+Viewport:
+Backend:
+Build type:
+
+Home:
+PASS/PARTIAL/FAIL
+
+My Items:
+PASS/PARTIAL/FAIL
+
+Item Detail:
+PASS/PARTIAL/FAIL
+
+Responsive:
+PASS/PARTIAL
+
+Accessibility:
+PASS/PARTIAL
+
+## Expo Doctor
+
+15/18 or final result.
+
+Mỗi issue còn lại:
+classification + rationale.
+
+## Validation
+
+TypeScript:
+ESLint:
+Prettier:
+Jest suites:
+Jest tests:
+Expo Doctor:
+git diff --check:
+
+==================================================
+18. FINAL PHASE 1 GATE
+==================================================
+
+Chỉ ghi:
+
+MOBILE PHASE 1: PASS
+
+nếu:
+
+- Code acceptance vẫn PASS.
+- Android runtime PASS.
+- App nói chuyện với backend development thật.
+- Home PASS.
+- My Items PASS.
+- Item Detail PASS.
+- Không còn Phase 1 P0/P1 runtime bug.
+- TypeScript PASS.
+- ESLint PASS.
+- Prettier PASS.
+- Full Jest PASS.
+- Expo Doctor không còn BLOCKER.
+- git diff --check PASS.
+
+Có thể còn Expo Doctor warnings nếu đã được document và không phải blocker.
+
+==================================================
+19. PROJECT PHASE 1 FINAL STATUS
+==================================================
+
+Nếu Backend report đã:
+
+BACKEND PHASE 1: PASS
+
+và Mobile đạt:
+
+MOBILE PHASE 1: PASS
+
+thì cập nhật cuối report:
+
+PHASE 1 — DESIGN FOUNDATION & UI ACCEPTANCE
+STATUS: CLOSED
+
+Backend: PASS
+Mobile Code: PASS
+Mobile Device: PASS
+Overall: PASS
+
+Phase 1 closed date:
+[current date]
+
+Nếu một trong hai chưa PASS:
+
+STATUS: PARTIAL
+
+và ghi blocker cụ thể.
+
+Không tự chuyển sang Phase 2.
+
+==================================================
+20. FINAL RESPONSE
+==================================================
+
+Trả cho tôi:
+
+# PHASE 1 FINAL ACCEPTANCE
+
+Backend:
+PASS / PARTIAL
+
+Mobile Code:
+PASS / FAIL
+
+Android Device:
+PASS / PARTIAL / UNVERIFIED
+
+Expo Doctor:
+x/18
+Blockers:
+...
+
+Validation:
+TypeScript:
+ESLint:
+Prettier:
+Jest:
+git diff --check:
+
+Runtime bugs found:
+...
+
+Runtime bugs fixed:
+...
+
+Remaining blockers:
+...
+
+OVERALL:
+PASS / PARTIAL / FAIL
+
+Nếu OVERALL = PASS:
+
+PHASE 1 CLOSED ✅
+
+Nếu không:
+không dùng chữ completed/100%.
+
+Không commit.
+Không push.
+Không bắt đầu Phase 2.

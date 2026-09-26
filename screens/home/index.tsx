@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Navigation as NavigationIcon } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { RootStackParamList } from '@navigation/index';
-import { DiscoveryFilterType, MapDiscoveryCard } from '@/types/radar';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useNotificationContext } from '@/contexts/NotificationContext';
@@ -77,6 +76,7 @@ export const HomeScreen: React.FC = () => {
     isRealtimeConnected,
     lastUpdatedAt,
     currentLocation,
+    refreshFailed,
     handleUserLocationChange,
     refreshDiscovery,
     fetchViewportDiscovery,
@@ -335,6 +335,7 @@ export const HomeScreen: React.FC = () => {
             nearbyCount={nearbyCount}
             isRealtimeConnected={isRealtimeConnected}
             isRadarLoading={isRadarLoading}
+            hasError={refreshFailed}
             hasLocationPermission={locationPermissionStatus === 'granted'}
             onRequestLocation={handleRequestLocation}
             lastUpdatedAt={lastUpdatedAt}

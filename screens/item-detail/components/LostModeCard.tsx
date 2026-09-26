@@ -80,6 +80,7 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
           value={isLost}
           onValueChange={handleToggle}
           disabled={isBackendManaged}
+          accessibilityLabel="Bật hoặc tắt chế độ thất lạc"
           activeTrackColor={FIND_BACK.danger}
           inactiveTrackColor={FIND_BACK.surfaceElevated}
         />
@@ -118,6 +119,9 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
             <TouchableOpacity
               onPress={handleUpdate}
               disabled={isUpdating}
+              accessibilityRole="button"
+              accessibilityLabel="Cập nhật lời nhắn thất lạc"
+              accessibilityState={{ disabled: isUpdating, busy: isUpdating }}
               className={`flex-1 items-center justify-center rounded-2xl bg-fb-primary py-3 ${
                 isUpdating ? 'opacity-50' : ''
               }`}

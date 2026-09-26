@@ -20,6 +20,7 @@ describe('Design Atoms (Foundational UI Components)', () => {
             <StatusBadge status="FOUND" />
             <StatusBadge status="RESOLVED" />
             <StatusBadge status="PENDING_PAYMENT" />
+            <StatusBadge status="UNEXPECTED_STATUS" />
           </>
         );
       });
@@ -30,6 +31,7 @@ describe('Design Atoms (Foundational UI Components)', () => {
       expect(textNodes).toContain('Nhặt được');
       expect(textNodes).toContain('Đã hoàn trả');
       expect(textNodes).toContain('Chờ thanh toán');
+      expect(textNodes).toContain('Không xác định');
     });
   });
 

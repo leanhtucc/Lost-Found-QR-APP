@@ -4,6 +4,7 @@ import { DiscoveryFilterType, HomeLostFeedCard, MapDiscoveryCard } from '@/types
 import { HomeItemCard } from './HomeItemCard';
 import { EmptyState } from '@/components/atoms/EmptyState';
 import { LoadingState } from '@/components/atoms/LoadingState';
+import { ErrorState } from '@/components/atoms/ErrorState';
 import { FIND_BACK } from '@/constants/theme';
 import { MapPinOff, Radar } from 'lucide-react-native';
 
@@ -14,6 +15,7 @@ interface BottomSheetContentProps {
   nearbyCount: number;
   isRealtimeConnected?: boolean;
   isRadarLoading?: boolean;
+  hasError?: boolean;
   hasLocationPermission?: boolean;
   onRequestLocation?: () => void;
   lastUpdatedAt?: string | number | null;
@@ -28,6 +30,7 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
   nearbyCount,
   isRealtimeConnected = false,
   isRadarLoading = false,
+  hasError = false,
   hasLocationPermission = true,
   onRequestLocation,
   lastUpdatedAt,
@@ -76,7 +79,7 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
 
       {/* Subtitle / notice if user has lost items */}
       {myLostCount > 0 ? (
-        <Text className="mt-2 text-xs text-fb-subtle">
+        <Text className="mt-2 text-sm leading-5 text-fb-muted">
           Bạn có {myLostCount} vật dụng đang báo mất. Quản lý chi tiết tại mục Đồ của tôi.
         </Text>
       ) : null}
@@ -97,6 +100,13 @@ export const BottomSheetContent: React.FC<BottomSheetContentProps> = ({
           <View className="items-center justify-center py-8">
             <LoadingState message="Đang quét đồ thất lạc trong bán kính 10 km..." />
           </View>
+        ) : hasError && feedCards.length === 0 ? (
+          <ErrorState
+            title="Không thể tải dữ liệu Radar"
+            message="Kết nối tới dữ liệu khám phá đang gặp sự cố. Vui lòng thử lại."
+            onRetry={onRefresh}
+            className="py-4"
+          />
         ) : feedCards.length > 0 ? (
           <ScrollView
             horizontal

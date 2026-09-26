@@ -36,6 +36,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={onAction}
+          accessibilityRole="button"
+          accessibilityLabel={actionTitle}
           className="mt-4 rounded-xl border border-fb-primary/25 bg-fb-primary/10 px-5 py-2.5"
         >
           <Text className="text-xs font-semibold text-fb-primary-light">{actionTitle}</Text>

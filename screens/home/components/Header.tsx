@@ -3,7 +3,7 @@
  * Header của màn hình Home với thông tin user và notifications
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Bell, Menu, User } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
@@ -25,6 +25,11 @@ export const Header: React.FC<HeaderProps> = ({
   onProfilePress,
 }) => {
   const firstName = userName.split(' ').pop() || userName;
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [userAvatar]);
 
   return (
     <View className="flex-row items-center justify-between px-6 pb-3 pt-5">
@@ -38,9 +43,11 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Menu size={18} color={FIND_BACK.primaryLight} />
         </TouchableOpacity>
-        <View>
+        <View className="max-w-[190px]">
           <Text className="text-[32px] font-extrabold text-fb-primary/95">FindBack</Text>
-          <Text className="-mt-1 text-[11px] text-fb-muted">Xin chào, {firstName}</Text>
+          <Text className="-mt-1 text-xs text-fb-muted" numberOfLines={1}>
+            Xin chào, {firstName}
+          </Text>
         </View>
       </View>
 
@@ -67,8 +74,13 @@ export const Header: React.FC<HeaderProps> = ({
           accessibilityLabel="Mở hồ sơ"
           className="h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-fb-primary/35 bg-fb-surface"
         >
-          {userAvatar ? (
-            <Image source={{ uri: userAvatar }} className="w-full h-full" resizeMode="cover" />
+          {userAvatar && !avatarFailed ? (
+            <Image
+              source={{ uri: userAvatar }}
+              className="w-full h-full"
+              resizeMode="cover"
+              onError={() => setAvatarFailed(true)}
+            />
           ) : (
             <User size={18} color={FIND_BACK.primaryLight} />
           )}

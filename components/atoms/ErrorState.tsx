@@ -38,6 +38,8 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onRetry}
+            accessibilityRole="button"
+            accessibilityLabel={retryTitle}
             className="flex-row items-center gap-2 rounded-xl bg-fb-primary px-5 py-2.5"
           >
             <RefreshCw size={14} color={FIND_BACK.bodyText} />
@@ -49,6 +51,8 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onSecondaryAction}
+            accessibilityRole="button"
+            accessibilityLabel={secondaryActionTitle}
             className="rounded-xl border border-fb-border-subtle bg-fb-surface-elevated px-4 py-2.5"
           >
             <Text className="text-xs font-medium text-fb-muted">{secondaryActionTitle}</Text>
