@@ -5,9 +5,8 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import * as Linking from 'expo-linking';
 
 // Screens
 import {
@@ -44,6 +43,7 @@ import { FIND_BACK } from '@constants/theme';
 import AuthCodeVerifyScreen from '@/screens/auth/codeVerify';
 import AuthForgotPasswordScreen from '@/screens/auth/forgotPass';
 import AuthResetPasswordScreen from '@/screens/auth/resetPass';
+import { linking } from './linking';
 
 import { useNotificationHandler } from '@/hooks/useNotificationHandler';
 
@@ -107,29 +107,7 @@ const AUTH_ROUTE_NAMES: (keyof RootStackParamList)[] = [
   'Congratulation',
 ];
 
-// Deep linking configuration - Professional Lost & Found
-const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: [Linking.createURL('/'), 'lostfoundqr://', 'lostfound://', 'lostfoundapp://'],
-  config: {
-    screens: {
-      ResetPassword: {
-        path: 'reset-password',
-        parse: {
-          token: (token: string) => token,
-        },
-      },
-      ItemDetails: {
-        path: 'item/:itemId',
-        parse: {
-          itemId: (itemId: string) => itemId,
-        },
-      },
-      Login: 'login',
-      AuthRegister: 'register',
-      ForgotPassword: 'forgot-password',
-    },
-  },
-};
+const GUEST_ROUTE_NAMES: (keyof RootStackParamList)[] = ['PublicItemDetails'];
 
 // Screen options for smooth transitions
 const screenOptions = {
@@ -206,10 +184,12 @@ export default function RootStack() {
     }
 
     const currentRouteName = navigationRef.current.getCurrentRoute()?.name as
-      | keyof RootStackParamList
-      | undefined;
+      keyof RootStackParamList | undefined;
     const isCurrentAuthRoute = currentRouteName
       ? AUTH_ROUTE_NAMES.includes(currentRouteName)
+      : false;
+    const isCurrentGuestRoute = currentRouteName
+      ? GUEST_ROUTE_NAMES.includes(currentRouteName)
       : false;
 
     if (isAuthenticated) {
@@ -226,7 +206,7 @@ export default function RootStack() {
       ? 'Login'
       : 'Onboarding';
 
-    if (!currentRouteName || !isCurrentAuthRoute) {
+    if (!currentRouteName || (!isCurrentAuthRoute && !isCurrentGuestRoute)) {
       navigationRef.current.reset({
         index: 0,
         routes: [{ name: unauthTargetRoute }],

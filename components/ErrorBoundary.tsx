@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { reportErrorToTelegram } from '@/services/telegram';
+import * as Sentry from '@sentry/react-native';
 
 interface Props {
   children: ReactNode;
@@ -23,14 +23,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    reportErrorToTelegram(error, {
-      context: 'React ErrorBoundary Component',
-      isFatal: false,
-      metadata: {
-        componentStack: errorInfo.componentStack,
-      },
-    }).catch(() => {
-      // Ignore network failures
+    Sentry.captureException(error, {
+      tags: { source: 'react-error-boundary' },
+      extra: { componentStack: errorInfo.componentStack },
     });
   }
 
@@ -50,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <Text style={styles.icon}>⚠️</Text>
             <Text style={styles.title}>Đã xảy ra sự cố</Text>
             <Text style={styles.message}>
-              Hệ thống đã tự động ghi nhận lỗi và gửi về đội ngũ phát triển qua Telegram.
+              Hệ thống đã tự động ghi nhận lỗi để đội ngũ phát triển kiểm tra.
             </Text>
             {__DEV__ && this.state.error ? (
               <View style={styles.debugBox}>

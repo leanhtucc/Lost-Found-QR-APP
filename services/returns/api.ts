@@ -6,8 +6,7 @@
  * áp dụng cơ chế Zero-Trust Identity và If-Match Concurrency Control.
  */
 
-import { authStorage } from '@/storage/auth';
-import { authApi } from '@/services/auth';
+import { apiClient } from '@/services/http';
 import { buildV1Url } from '@/services/shared/url';
 import {
   ReturnSession,
@@ -25,41 +24,16 @@ const USE_MOCK_FALLBACK = __DEV__ && false;
 // ─── Headers & Auth ────────────────────────────────────────────────────────────
 
 const createHeaders = async (extraHeaders?: Record<string, string>): Promise<HeadersInit> => {
-  const token = await authStorage.getAccessToken();
-  if (!token) {
-    throw new Error('No access token found. Please login again.');
-  }
   return {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
     ...extraHeaders,
   };
 };
 
 const fetchWithAuth = async (url: string, options: RequestInit): Promise<Response> => {
   const existingHeaders = (options.headers as Record<string, string>) || {};
-  let headers = await createHeaders(existingHeaders);
-  let response = await fetch(url, { ...options, headers });
-
-  if (response.status === 401) {
-    try {
-      const refreshToken = await authStorage.getRefreshToken();
-      if (!refreshToken) throw new Error('No refresh token available');
-
-      const refreshResponse = await authApi.refreshToken({ refreshToken });
-      if (refreshResponse.success && refreshResponse.data) {
-        headers = await createHeaders(existingHeaders);
-        response = await fetch(url, { ...options, headers });
-      } else {
-        throw new Error('Failed to refresh token');
-      }
-    } catch (error) {
-      console.error('[ReturnAPI] Token refresh failed:', error);
-      throw error;
-    }
-  }
-
-  return response;
+  const headers = await createHeaders(existingHeaders);
+  return apiClient.fetch(url, { ...options, headers });
 };
 
 /**

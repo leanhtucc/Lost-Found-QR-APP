@@ -49,6 +49,7 @@ android-service-account.json
 google-services.json
 GoogleService-Info.plist
 secrets.json
+.agents/skills
 
 # Firebase Android configuration is required by Expo/EAS prebuild.
 # OAuth client IDs and Firebase Android API keys are public app configuration;
@@ -66,3 +67,10 @@ secrets.json
 /assets/svgs/output/
 
 
+build/
+coverage/
+firebase-service-account.json
+credentials/
+.env*
+!.env.example
+!.env*.example

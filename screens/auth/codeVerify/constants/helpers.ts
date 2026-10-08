@@ -7,7 +7,8 @@ export const maskEmailForLog = (email: string): string => {
 };
 
 export const logCodeVerify = (event: string, details?: Record<string, unknown>) => {
-  console.log(`${CODE_VERIFY_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
+  void details;
+  console.log(`${CODE_VERIFY_LOG_TAG} ${new Date().toISOString()} ${event}`);
 };
 
 export const maskEmailAddress = (email: string): string => {

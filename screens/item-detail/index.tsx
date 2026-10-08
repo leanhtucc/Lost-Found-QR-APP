@@ -175,12 +175,6 @@ export default function ItemDetailScreen() {
     }
   };
 
-  const handleOpenChat = () => {
-    // TODO: Navigate to chat screen
-    // navigation.navigate('ChatScreen', { itemId: item.id });
-    Alert.alert('Thông báo', 'Tính năng chat đang được phát triển');
-  };
-
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
@@ -221,7 +215,6 @@ export default function ItemDetailScreen() {
           item={item}
           onToggleLost={handleToggleLost}
           onUpdateMessage={handleUpdateMessage}
-          onOpenChat={handleOpenChat}
         />
 
         {/* QR Code Identity */}

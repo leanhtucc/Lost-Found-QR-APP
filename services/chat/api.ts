@@ -3,28 +3,13 @@
  * Service xử lý các API liên quan đến chat
  */
 
-import {
-  CreateChannelResponse,
-  GetInboxResponse,
-  CloseChannelResponse,
-  Conversation,
-} from '@/types/chat';
-import { authStorage } from '@/storage/auth';
+import { CreateChannelResponse, GetInboxResponse, Conversation } from '@/types/chat';
 import { buildStreamUrl } from '@services/shared/url';
-
-import { sessionEvents } from '@/lib/sessionEvents';
+import { apiClient } from '@services/http';
 
 const createHeaders = async (): Promise<HeadersInit> => {
-  const token = await authStorage.getAccessToken();
-
-  if (!token) {
-    sessionEvents.emitSessionExpired();
-    throw new Error('No access token found');
-  }
-
   return {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
   };
 };
 
@@ -40,15 +25,12 @@ export const createChannel = async (
   try {
     const url = buildStreamUrl('channels', itemId, finderId);
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'POST',
       headers,
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
-        sessionEvents.emitSessionExpired();
-      }
       throw new Error(`HTTP ${response.status}`);
     }
 
@@ -68,15 +50,12 @@ export const getInbox = async (): Promise<{ total: number; channels: Conversatio
   try {
     const url = buildStreamUrl('channels');
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'GET',
       headers,
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
-        sessionEvents.emitSessionExpired();
-      }
       throw new Error(`HTTP ${response.status}`);
     }
 
@@ -122,20 +101,17 @@ export const closeChannel = async (channelId: string): Promise<void> => {
   try {
     const url = buildStreamUrl('channels', channelId, 'close');
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'PUT',
       headers,
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
-        sessionEvents.emitSessionExpired();
-      }
       throw new Error(`HTTP ${response.status}`);
     }
 
-    const result: CloseChannelResponse = await response.json();
-    console.log('Channel closed:', result.message);
+    await response.json();
+    console.log('Channel closed successfully');
   } catch (error) {
     console.error('Error closing channel:', error);
     throw error;
@@ -150,15 +126,12 @@ export const getChannelById = async (channelId: string): Promise<any> => {
   try {
     const url = buildStreamUrl('channels', channelId);
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'GET',
       headers,
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
-        sessionEvents.emitSessionExpired();
-      }
       throw new Error(`HTTP ${response.status}`);
     }
 

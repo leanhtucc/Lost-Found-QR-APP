@@ -296,10 +296,10 @@ const scanResult = await itemsApi.scanQR('abc123xyz789def0');
 
 if (scanResult.action === 'open_chat') {
   // Mở chat để liên hệ chủ sở hữu
-  console.log('Item đang mất:', scanResult.item_info.lost_message);
+  console.log('Lost item message available:', Boolean(scanResult.item_info.lost_message));
 } else {
   // Chỉ hiển thị thông tin
-  console.log('Item an toàn, thuộc về:', scanResult.item_info.owner_info.display_name);
+  console.log('Safe item owner information available:', Boolean(scanResult.item_info.owner_info));
 }
 ```
 

@@ -22,7 +22,8 @@ const maskEmailForLog = (email: string): string => {
 };
 
 const logRegisterScreen = (event: string, details?: Record<string, unknown>) => {
-  console.log(`${REGISTER_SCREEN_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
+  void details;
+  console.log(`${REGISTER_SCREEN_LOG_TAG} ${new Date().toISOString()} ${event}`);
 };
 
 export const RegisterScreen: React.FC = () => {

@@ -163,7 +163,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
               key={item.id}
               activeOpacity={0.88}
               onPress={() => {
-                console.log(`[ItemSelectionStep] Tapped item: ${item.id} - ${item.name}`);
+                console.log('[ItemSelectionStep] Item selected');
                 onSelectItem(item.id);
               }}
               disabled={isDisabled}

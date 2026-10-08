@@ -77,17 +77,12 @@ export function useNotificationHandler() {
       const messagingInstance = getMessaging();
 
       // 1. App in Foreground
-      const unsubscribeOnMessage = onMessage(messagingInstance, async remoteMessage => {
-        console.log('[NotificationHandler] Foreground notification received:', remoteMessage);
+      const unsubscribeOnMessage = onMessage(messagingInstance, async () => {
         await refreshUnreadCount();
       });
 
       // 2. App in Background (opened by user click)
       const unsubscribeOnOpened = onNotificationOpenedApp(messagingInstance, remoteMessage => {
-        console.log(
-          '[NotificationHandler] Notification opened from background:',
-          remoteMessage?.data
-        );
         if (remoteMessage?.data) {
           void handleNotificationNavigation(remoteMessage.data);
         }
@@ -97,10 +92,6 @@ export function useNotificationHandler() {
       getInitialNotification(messagingInstance)
         .then(remoteMessage => {
           if (remoteMessage?.data) {
-            console.log(
-              '[NotificationHandler] Notification opened from quit state:',
-              remoteMessage.data
-            );
             void handleNotificationNavigation(remoteMessage.data);
           }
         })

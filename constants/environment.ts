@@ -7,6 +7,16 @@ import Constants from 'expo-constants';
 
 // Get extra config from expo
 const expoExtra = Constants.expoConfig?.extra || {};
+export type AppEnvironment = 'development' | 'preview' | 'production';
+
+const resolveEnvironment = (): AppEnvironment => {
+  const value = expoExtra.environment || process.env.ENV || process.env.APP_ENV || 'development';
+  if (value === 'test') return 'development';
+  if (!['development', 'preview', 'production'].includes(value)) {
+    throw new Error(`[ENV] Unsupported environment: ${String(value)}`);
+  }
+  return value as AppEnvironment;
+};
 
 const resolveGoogleWebClientId = (): string => {
   const value = expoExtra.googleWebClientId || process.env.GOOGLE_WEB_CLIENT_ID;
@@ -34,19 +44,23 @@ const resolveRequiredApiUrl = (): string => {
   return rawApiUrl.trim().replace(/\/+$/, '');
 };
 
+const environment = resolveEnvironment();
+
 // Environment configuration
 export const ENV = {
   // Required API URL from env/app.config (no hardcoded fallback)
   API_URL: resolveRequiredApiUrl(),
 
   // Current environment
-  ENVIRONMENT: expoExtra.environment || process.env.ENV || 'development',
+  ENVIRONMENT: environment,
 
   // Check if we're in development mode
-  IS_DEV: __DEV__,
+  IS_DEV: environment === 'development',
+
+  IS_PREVIEW: environment === 'preview',
 
   // Check if we're in production mode
-  IS_PROD: !__DEV__,
+  IS_PROD: environment === 'production',
 
   SENTRY_DSN: expoExtra.sentryDsn || process.env.SENTRY_DSN || '',
 
@@ -59,22 +73,6 @@ export const ENV = {
   GOOGLE_IOS_CLIENT_ID: expoExtra.googleIosClientId || process.env.GOOGLE_IOS_CLIENT_ID || '',
   GOOGLE_ANDROID_CLIENT_ID:
     expoExtra.googleAndroidClientId || process.env.GOOGLE_ANDROID_CLIENT_ID || '',
-
-  // Telegram Error Reporting
-  TELEGRAM_BOT_TOKEN:
-    (process.env.EXPO_PUBLIC_TELEGRAM_BOT_TOKEN as string | undefined) ||
-    (expoExtra.telegramBotToken as string | undefined) ||
-    (process.env.TELEGRAM_BOT_TOKEN as string | undefined) ||
-    '',
-  TELEGRAM_CHAT_ID:
-    (process.env.EXPO_PUBLIC_TELEGRAM_CHAT_ID as string | undefined) ||
-    (expoExtra.telegramChatId as string | undefined) ||
-    (process.env.TELEGRAM_CHAT_ID as string | undefined) ||
-    '',
-  TELEGRAM_TEST_ON_LAUNCH:
-    (process.env.EXPO_PUBLIC_TELEGRAM_TEST_ON_LAUNCH ||
-      expoExtra.telegramTestOnLaunch ||
-      process.env.TELEGRAM_TEST_ON_LAUNCH) === 'true' || expoExtra.telegramTestOnLaunch === true,
 };
 // Helper function to get API URL
 export const getApiUrl = (): string => {

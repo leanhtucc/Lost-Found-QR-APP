@@ -6,6 +6,8 @@
  * REWARD_RELEASING -> REWARD_PAID -> RATING_PENDING -> COMPLETED
  */
 
+import type { ChannelId, FoundReportId, ItemInternalId, ReturnSessionId } from './identifiers';
+
 export type ReturnSessionStatus =
   | 'CHAT_ACTIVE'
   | 'MEETUP_PROPOSED'
@@ -108,11 +110,11 @@ export interface FinderRating {
 }
 
 export interface ReturnSession {
-  id: string; // returnSessionId
-  channelId: string;
+  id: ReturnSessionId;
+  channelId: ChannelId;
   sourceType: ReturnSourceType;
-  itemId?: string;
-  foundReportId?: string;
+  itemId?: ItemInternalId;
+  foundReportId?: FoundReportId;
   itemName: string;
   itemCategory?: string;
   itemImageUrl?: string | null;

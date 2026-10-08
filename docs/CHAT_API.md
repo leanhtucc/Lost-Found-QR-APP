@@ -63,8 +63,7 @@ import { createChannel } from '@/services/chat';
 
 // Khi user quét QR code
 const data = await createChannel('item_123', 'current_user_id');
-console.log(`Channel ID: ${data.channel.id}`);
-console.log(`Item: ${data.itemName}`);
+console.log('Chat channel created:', Boolean(data.channel.id));
 
 // Navigate to chat screen
 navigation.navigate('ChatScreen', {
@@ -111,10 +110,7 @@ import { getInbox } from '@/services/chat';
 const data = await getInbox();
 console.log(`Total conversations: ${data.total}`);
 
-data.channels.forEach(channel => {
-  console.log(`${channel.receiver.name}: ${channel.last_message}`);
-  console.log(`Unread: ${channel.unread_count}`);
-});
+console.log(`Unread conversations: ${data.channels.filter(channel => channel.unread_count > 0).length}`);
 ```
 
 ---

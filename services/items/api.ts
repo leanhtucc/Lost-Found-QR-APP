@@ -25,9 +25,7 @@ import {
   buildV1Url,
   getFullImageUrl,
 } from '@services/shared/url';
-import { authStorage } from '@storage/auth';
-import { authApi } from '@services/auth';
-import { sessionEvents } from '@/lib/sessionEvents';
+import { apiClient } from '@services/http';
 
 export interface EligibleForReportItem {
   /** Temporary compatibility alias returned by the backend. */
@@ -172,84 +170,9 @@ interface CreateGuardianItemEnvelope {
  */
 const getItemsApiUrl = () => buildItemsUrl();
 
-/**
- * Helper function để lấy token
- */
-const getToken = async (): Promise<string> => {
-  const token = await authStorage.getAccessToken();
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-  return token;
-};
-
-/**
- * Helper function để tạo headers
- */
-const createHeaders = async (includeAuth = true): Promise<HeadersInit> => {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  if (includeAuth) {
-    const token = await getToken();
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  return headers;
-};
-
-/**
- * Helper function để thực hiện fetch với Bearer token và auto-refresh khi gặp 401
- */
+/** Centralized auth, timeout and single-flight refresh policy. */
 const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
-  const existingHeaders = (options.headers as Record<string, string>) || {};
-  let headers = await createHeaders(true);
-  let response = await fetch(url, {
-    ...options,
-    headers: {
-      ...headers,
-      ...existingHeaders,
-    },
-  });
-
-  if (response.status === 401) {
-    if (__DEV__) {
-      console.log('[ItemsAPI] 401 Unauthorized encountered, attempting refresh...');
-    }
-    try {
-      const refreshToken = await authStorage.getRefreshToken();
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const refreshResult = await authApi.refreshToken({ refreshToken });
-      if (refreshResult.success && refreshResult.data) {
-        if (__DEV__) {
-          console.log('[ItemsAPI] Refresh token successful, retrying request...');
-        }
-        headers = await createHeaders(true);
-        response = await fetch(url, {
-          ...options,
-          headers: {
-            ...headers,
-            ...existingHeaders,
-          },
-        });
-        if (response.status !== 401) {
-          return response;
-        }
-      }
-      throw new Error(refreshResult.message || 'Token refresh failed');
-    } catch (refreshErr) {
-      console.warn('[ItemsAPI] Refresh failed, emitting session expired:', refreshErr);
-      await authStorage.clearAll();
-      sessionEvents.emitSessionExpired();
-      throw new Error('Token expired');
-    }
-  }
-
-  return response;
+  return apiClient.fetch(url, options);
 };
 
 const parseJsonSafely = async <T>(response: Response): Promise<T | null> => {
@@ -406,7 +329,6 @@ export const itemsApi = {
       throw new Error('imageUri is required');
     }
 
-    const token = await getToken();
     const formData = new FormData();
 
     formData.append('image', {
@@ -418,29 +340,20 @@ export const itemsApi = {
     // V2: endpoint đổi từ analyze-image → analyze-item (hỗ trợ cả /api và /v1)
     let response: Response;
     try {
-      response = await fetch(buildApiUrl('ai', 'analyze-item'), {
+      response = await apiClient.fetch(buildApiUrl('ai', 'analyze-item'), {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 
       if (!response.ok && (response.status === 404 || response.status === 405)) {
-        response = await fetch(buildV1Url('ai', 'analyze-item'), {
+        response = await apiClient.fetch(buildV1Url('ai', 'analyze-item'), {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           body: formData,
         });
       }
     } catch {
-      response = await fetch(buildV1Url('ai', 'analyze-item'), {
+      response = await apiClient.fetch(buildV1Url('ai', 'analyze-item'), {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
     }
@@ -626,16 +539,7 @@ export const itemsApi = {
     const url = queryParams.toString() ? `${baseUrl}?${queryParams.toString()}` : baseUrl;
 
     if (__DEV__) {
-      console.log('[ItemsAPI][getItems] Request', {
-        url,
-        rawParams: params,
-        sentQuery: {
-          status: status ?? null,
-          category: category ?? null,
-          page: page ?? null,
-          limit: limit ?? null,
-        },
-      });
+      console.log('[ItemsAPI][getItems] Request started');
     }
 
     const response = await fetchWithAuth(url, {
@@ -645,14 +549,6 @@ export const itemsApi = {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       const message = error.message || 'Failed to fetch items';
-      if (
-        message.toLowerCase().includes('token expired') ||
-        message.toLowerCase().includes('jwt expired') ||
-        message.toLowerCase().includes('session expired')
-      ) {
-        await authStorage.clearAll();
-        sessionEvents.emitSessionExpired();
-      }
       throw new Error(message);
     }
 
@@ -694,15 +590,7 @@ export const itemsApi = {
     const url = queryParams.toString() ? `${baseUrl}?${queryParams.toString()}` : baseUrl;
 
     if (__DEV__) {
-      console.log('[ItemsAPI][getMyVaultItems] Request', {
-        url,
-        rawParams: params,
-        sentQuery: {
-          category: category ?? null,
-          page: page ?? null,
-          limit: limit ?? null,
-        },
-      });
+      console.log('[ItemsAPI][getMyVaultItems] Request started');
     }
 
     const response = await fetchWithAuth(url, {
@@ -875,11 +763,9 @@ export const itemsApi = {
   async getPublicItem(identifier: string): Promise<any> {
     const url = `${getItemsApiUrl()}/public/${identifier}`;
 
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      auth: 'none',
     });
 
     if (!response.ok) {
@@ -1083,8 +969,9 @@ export const itemsApi = {
       throw new Error('phoneNumber is required');
     }
 
-    const response = await fetch(buildScanUrl('guest-init'), {
+    const response = await apiClient.fetch(buildScanUrl('guest-init'), {
       method: 'POST',
+      auth: 'none',
       headers: {
         'Content-Type': 'application/json',
       },

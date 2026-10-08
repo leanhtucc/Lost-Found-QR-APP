@@ -9,7 +9,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 // Mock Expo Constants
 jest.mock('expo-constants', () => ({
   expoConfig: {
-    name: 'LostAndFoundQR',
+    name: 'FindBack',
     slug: 'lost-and-found-qr',
     version: '1.0.0',
     extra: {
@@ -17,9 +17,6 @@ jest.mock('expo-constants', () => ({
       environment: 'test',
       googleMapsApiKey: 'mock-google-maps-key',
       googleWebClientId: '123456789-mock.apps.googleusercontent.com',
-      telegramBotToken: 'mock-bot-token',
-      telegramChatId: '-100mockchat',
-      telegramTestOnLaunch: false,
     },
   },
 }));

@@ -133,7 +133,7 @@ const MyComponent = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('Login success:', user);
+      console.log('Login success:', Boolean(user));
       // Navigate hoặc update state
     }
   }, [user]);

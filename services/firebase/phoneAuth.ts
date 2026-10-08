@@ -94,7 +94,6 @@ export const firebasePhoneAuth = {
       // Trên Android tự động xử lý reCAPTCHA verification
       const confirmation = await auth().signInWithPhoneNumber(normalizedPhone);
 
-      console.log('[FirebasePhoneAuth] OTP sent successfully to:', normalizedPhone);
       return {
         success: true,
         confirmation,

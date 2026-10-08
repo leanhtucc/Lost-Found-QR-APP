@@ -14,8 +14,7 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
   const insets = useSafeAreaInsets();
   const focusedRoute = state.routes[state.index];
   const tabBarStyle = descriptors[focusedRoute.key]?.options?.tabBarStyle as
-    | { display?: string; height?: number }
-    | undefined;
+    { display?: string; height?: number } | undefined;
   const activeTintColor =
     (descriptors[focusedRoute.key]?.options?.tabBarActiveTintColor as string | undefined) ??
     FALLBACK_ACTIVE_COLOR;

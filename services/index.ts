@@ -12,4 +12,3 @@ export * from './moderation';
 export * from './chat';
 export * from './reports';
 export * from './shared/url';
-export * from './telegram';

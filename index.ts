@@ -6,9 +6,9 @@ import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebas
 // background or terminated. Notification payloads are displayed by the OS;
 // persisted notification state is reconciled when the app becomes active.
 try {
-  setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
+  setBackgroundMessageHandler(getMessaging(), async () => {
     if (__DEV__) {
-      console.log('[FCM] Background message received:', remoteMessage.messageId);
+      console.log('[FCM] Background message received');
     }
   });
 } catch (error) {

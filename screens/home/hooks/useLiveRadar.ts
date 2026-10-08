@@ -247,7 +247,7 @@ export const useLiveRadar = ({
 
     const ack = await sendRadarHeartbeat(socket, buildHeartbeatPayload(coords));
     if (!ack.success && ack.message) {
-      console.log('[Radar] Heartbeat ack:', ack.message);
+      console.log('[Radar] Heartbeat rejected');
     }
   }, [buildHeartbeatPayload]);
 
@@ -255,7 +255,7 @@ export const useLiveRadar = ({
     async (socket: RadarSocket, coords: RadarCoordinates) => {
       const ack = await subscribeRadar(socket, buildSubscribePayload(coords));
       if (!ack.success && ack.message) {
-        console.log('[Radar] Subscribe failed:', ack.message);
+        console.log('[Radar] Subscribe rejected');
       }
     },
     [buildSubscribePayload]
@@ -299,14 +299,11 @@ export const useLiveRadar = ({
       socket.on('radar:new-lost-item', (payload: RadarRealtimeLostItemPayload) => {
         const normalizedItem = normalizeRealtimeItem(payload);
         if (!normalizedItem) {
-          if (__DEV__) {
-            console.log('[Radar] Realtime payload ignored (invalid):', payload);
-          }
           return;
         }
 
         if (__DEV__) {
-          console.log('[Radar] Realtime new item:', normalizedItem.itemId);
+          console.log('[Radar] Realtime item received');
         }
 
         setRadarItems(previous => mergeRadarItems(previous, [normalizedItem]));
@@ -390,7 +387,7 @@ export const useLiveRadar = ({
         await emitSubscribe(socket, coords);
         const heartbeatAck = await sendRadarHeartbeat(socket, buildHeartbeatPayload(coords));
         if (!heartbeatAck.success && heartbeatAck.message) {
-          console.log(`[Radar] ${source} heartbeat ack:`, heartbeatAck.message);
+          console.log(`[Radar] ${source} heartbeat rejected`);
         }
       }
 

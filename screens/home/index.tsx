@@ -123,51 +123,6 @@ export const HomeScreen: React.FC = () => {
     }
   }, [handleUserLocationChange, locationPermissionStatus]);
 
-  useEffect(() => {
-    if (!__DEV__) {
-      return;
-    }
-
-    const cardsPreview = discoveryCards.slice(0, 5).map(card => ({
-      discoveryKey: card.discoveryKey,
-      rawId: card.rawId,
-      source: card.source,
-      name: card.name,
-      isOwn: card.isOwn,
-      distanceLabel: card.distanceLabel,
-    }));
-
-    const pinsPreview = mapPins.slice(0, 5).map(pin => ({
-      discoveryKey: pin.discoveryKey,
-      lat: pin.lat,
-      lng: pin.lng,
-      isOwn: pin.isOwn,
-      source: pin.source,
-    }));
-
-    console.log('[Home] Discovery feed:', {
-      cardsCount: discoveryCards.length,
-      pinsCount: mapPins.length,
-      typeFilter,
-      categoryFilter,
-      myLostCount,
-      nearbyCount,
-      isRadarLoading,
-      lastUpdatedAt,
-      cardsPreview,
-      pinsPreview,
-    });
-  }, [
-    isRadarLoading,
-    lastUpdatedAt,
-    discoveryCards,
-    mapPins,
-    myLostCount,
-    nearbyCount,
-    typeFilter,
-    categoryFilter,
-  ]);
-
   useFocusEffect(
     useCallback(() => {
       void syncOnTabFocus();

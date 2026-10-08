@@ -9,9 +9,7 @@ import {
   RadarNearbyQuery,
 } from '@/types/radar';
 import { buildHomeUrl, buildMapUrl, buildV1Url } from '@services/shared/url';
-import { authStorage } from '@storage/auth';
-import { authApi } from '@services/auth';
-import { sessionEvents } from '@/lib/sessionEvents';
+import { apiClient } from '@services/http';
 
 const DEFAULT_RADIUS = 10000;
 const MIN_RADIUS = 1;
@@ -30,121 +28,12 @@ const assertRange = (value: number, field: string, min: number, max: number): vo
   }
 };
 
-const createAuthHeaders = async (): Promise<HeadersInit> => {
-  const token = await authStorage.getAccessToken();
-  if (!token) {
-    sessionEvents.emitSessionExpired();
-    throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-  }
-
-  return {
-    Authorization: `Bearer ${token}`,
-  };
-};
-
 const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
-  let headers: HeadersInit;
-  try {
-    headers = await createAuthHeaders();
-  } catch (err) {
-    throw err;
-  }
-
-  let response = await fetch(url, {
-    ...options,
-    headers: {
-      ...headers,
-      ...options.headers,
-    },
-  });
-
-  if (response.status === 401) {
-    console.log('[RadarAPI] 401 Unauthorized encountered, attempting refresh...');
-    try {
-      const refreshToken = await authStorage.getRefreshToken();
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const refreshResult = await authApi.refreshToken({ refreshToken });
-      if (refreshResult.success && refreshResult.data) {
-        console.log('[RadarAPI] Refresh token successful, retrying request...');
-        const newHeaders = await createAuthHeaders();
-        response = await fetch(url, {
-          ...options,
-          headers: {
-            ...newHeaders,
-            ...options.headers,
-          },
-        });
-      } else {
-        throw new Error(refreshResult.message || 'Refresh failed');
-      }
-    } catch (refreshErr) {
-      console.warn('[RadarAPI] Refresh failed, emitting session expired:', refreshErr);
-      await authStorage.clearAll();
-      sessionEvents.emitSessionExpired();
-      throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-    }
-  }
-
-  return response;
+  return apiClient.fetch(url, options);
 };
 
 const fetchWithOptionalAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
-  const token = await authStorage.getAccessToken();
-  const headers: Record<string, string> = {};
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  let response = await fetch(url, {
-    ...options,
-    headers: {
-      ...headers,
-      ...options.headers,
-    },
-  });
-
-  if (response.status === 401 && token) {
-    console.log('[RadarAPI] 401 on optional auth, attempting refresh...');
-    try {
-      const refreshToken = await authStorage.getRefreshToken();
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const refreshResult = await authApi.refreshToken({ refreshToken });
-      if (refreshResult.success && refreshResult.data) {
-        const newToken = await authStorage.getAccessToken();
-        if (newToken) {
-          headers['Authorization'] = `Bearer ${newToken}`;
-        }
-        response = await fetch(url, {
-          ...options,
-          headers: {
-            ...headers,
-            ...options.headers,
-          },
-        });
-        if (response.status !== 401) {
-          return response;
-        }
-      }
-      throw new Error(refreshResult.message || 'Refresh failed');
-    } catch (refreshErr) {
-      console.warn(
-        '[RadarAPI] User token expired and refresh failed on optional auth, emitting session expired:',
-        refreshErr
-      );
-      await authStorage.clearAll();
-      sessionEvents.emitSessionExpired();
-      throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-    }
-  }
-
-  return response;
+  return apiClient.fetch(url, { ...options, auth: 'optional' });
 };
 
 const parseJsonSafely = async <T>(response: Response): Promise<T | null> => {
@@ -206,7 +95,6 @@ const normalizeHomeLostFeedCard = (payload: unknown): HomeLostFeedCard | null =>
   const rawId = item.itemId || item.id || item._id;
 
   if (!rawId) {
-    if (__DEV__) console.log('[RadarAPI] Dropping card due to missing ID:', item);
     return null;
   }
 
@@ -307,7 +195,6 @@ const normalizeNearbyItem = (payloadRaw: unknown): RadarLostItem | null => {
   const rawId = payload.itemId || payload.id || payload._id;
 
   if (!rawId) {
-    if (__DEV__) console.log('[RadarAPI] Dropping nearby due to missing ID:', payload);
     return null;
   }
   const itemId = String(rawId);

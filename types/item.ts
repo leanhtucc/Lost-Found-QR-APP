@@ -4,6 +4,7 @@
  */
 
 import { User } from '@/services/auth/types';
+import type { ItemId, ItemInternalId, QRCodeId } from './identifiers';
 
 // Item Categories
 export type ItemCategory =
@@ -28,10 +29,10 @@ export interface Location {
 
 // Main Item interface - matches backend schema
 export interface Item {
-  id: string; // UUID - Database ID
-  itemId: string; // nanoid(16) / cuid - Unique ID cho QR
-  publicItemId?: string; // Public Item ID
-  qrCodeId?: string; // Mã dùng để quét QR
+  id: ItemInternalId; // Internal database primary key; owner API compatibility
+  itemId: ItemId; // Stable public item identity
+  publicItemId?: ItemId; // Compatibility alias of itemId
+  qrCodeId?: QRCodeId; // QR lookup identity
   ownerId: string; // User ID của chủ sở hữu
   owner?: User; // Full owner info with trust metrics
   name: string; // Tên vật phẩm (max 100 chars)

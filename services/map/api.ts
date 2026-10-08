@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import { buildV1Url, buildApiUrl } from '@services/shared/url';
-import { authStorage } from '@storage/auth';
+import { apiClient } from '@services/http';
 import {
   AutocompleteOptions,
   MapApiResponse,
@@ -10,14 +10,9 @@ import {
 } from './types';
 
 const createHeaders = async (): Promise<HeadersInit> => {
-  const token = await authStorage.getAccessToken();
-  const headers: Record<string, string> = {
+  return {
     'Content-Type': 'application/json',
   };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-  return headers;
 };
 
 const parseJsonSafely = async <T>(response: Response): Promise<T | null> => {
@@ -71,11 +66,11 @@ export const mapApi = {
       }
 
       let url = `${buildV1Url('map', 'autocomplete')}?${queryParams}`;
-      let response = await fetch(url, { method: 'GET', headers });
+      let response = await apiClient.fetch(url, { method: 'GET', headers, auth: 'optional' });
 
       if (!response.ok && response.status === 404) {
         url = `${buildApiUrl('map', 'autocomplete')}?${queryParams}`;
-        response = await fetch(url, { method: 'GET', headers });
+        response = await apiClient.fetch(url, { method: 'GET', headers, auth: 'optional' });
       }
 
       const payload = await parseJsonSafely<MapApiResponse<MapAutocompletePrediction[]>>(response);
@@ -165,11 +160,11 @@ export const mapApi = {
       }
 
       let url = `${buildV1Url('map', 'place-details')}?${queryParams}`;
-      let response = await fetch(url, { method: 'GET', headers });
+      let response = await apiClient.fetch(url, { method: 'GET', headers, auth: 'optional' });
 
       if (!response.ok && response.status === 404) {
         url = `${buildApiUrl('map', 'place-details')}?${queryParams}`;
-        response = await fetch(url, { method: 'GET', headers });
+        response = await apiClient.fetch(url, { method: 'GET', headers, auth: 'optional' });
       }
 
       const payload = await parseJsonSafely<MapApiResponse<MapPlaceDetails>>(response);
@@ -191,11 +186,11 @@ export const mapApi = {
     try {
       const headers = await createHeaders();
       let url = `${buildV1Url('map', 'reverse-geocode')}?lat=${lat}&lng=${lng}`;
-      let response = await fetch(url, { method: 'GET', headers });
+      let response = await apiClient.fetch(url, { method: 'GET', headers, auth: 'optional' });
 
       if (!response.ok && response.status === 404) {
         url = `${buildApiUrl('map', 'reverse-geocode')}?lat=${lat}&lng=${lng}`;
-        response = await fetch(url, { method: 'GET', headers });
+        response = await apiClient.fetch(url, { method: 'GET', headers, auth: 'optional' });
       }
 
       const payload = await parseJsonSafely<MapApiResponse<MapGeocodeResult>>(response);
@@ -238,11 +233,11 @@ export const mapApi = {
     try {
       const headers = await createHeaders();
       let url = `${buildV1Url('map', 'geocode')}?address=${encodeURIComponent(trimmed)}`;
-      let response = await fetch(url, { method: 'GET', headers });
+      let response = await apiClient.fetch(url, { method: 'GET', headers, auth: 'optional' });
 
       if (!response.ok && response.status === 404) {
         url = `${buildApiUrl('map', 'geocode')}?address=${encodeURIComponent(trimmed)}`;
-        response = await fetch(url, { method: 'GET', headers });
+        response = await apiClient.fetch(url, { method: 'GET', headers, auth: 'optional' });
       }
 
       const payload = await parseJsonSafely<MapApiResponse<MapGeocodeResult>>(response);

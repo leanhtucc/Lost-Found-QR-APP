@@ -1,757 +1,638 @@
-# ROLE
+# MOBILE PHASE 2 — FINAL RUNTIME ACCEPTANCE
 
-Bạn là Senior React Native Engineer + Mobile QA Engineer.
+Backend Phase 2 đã chính thức PASS.
 
-Bạn đang làm việc trong:
+Mobile Phase 2 hiện tại:
 
-Lost & Found QR / FindBack mobile app.
-
-Phase 1 đã triển khai.
-
-Kết quả hiện tại:
-
-- Mobile TypeScript: PASS
+- Central API Client: implemented
+- ApiError: implemented
+- Single refresh-token queue: implemented
+- All major REST services migrated
+- Identifier types standardized
+- app.config.js is the only Expo config
+- TypeScript: PASS
 - ESLint: PASS
 - Prettier: PASS
-- Jest: 21 suites / 153 tests PASS
-- Phase 1 bổ sung: 6 tests PASS
-- Expo Doctor: 15/18
-- Mobile Code Acceptance: PASS
-- Device Acceptance: UNVERIFIED
-- Overall Phase 1: PARTIAL
+- Jest: 24 suites / 169 tests PASS
+- Central API Client mandatory tests: 10/10 PASS
+- Expo Doctor: 16/18, no BLOCKER
+- git diff --check: PASS
+- Firebase configuration has been independently verified healthy
+- Telegram client logger removed
+- QR Resolver / scanner ownership inference remains deferred to Phase 3
 
-Nhiệm vụ hiện tại:
+Current verdict:
 
-PHASE 1 — FINAL MOBILE DEVICE & INTEGRATION ACCEPTANCE
+MOBILE PHASE 2: PARTIAL
 
-Mục tiêu:
-chạy app thực tế với backend development thật, kiểm tra Home / My Items / Item Detail trên Android và đóng Phase 1.
+Reason:
+real authenticated Android runtime acceptance has not been completed.
 
-Đây KHÔNG phải feature-development phase.
+Your only task is to FINISH MOBILE PHASE 2 RUNTIME ACCEPTANCE.
+
+Do not implement Phase 3.
 
 ==================================================
 1. STRICT SCOPE
 ==================================================
 
-Chỉ test/fix:
+Only verify/fix:
 
-- Design Foundation.
-- Home.
-- My Items.
-- Item Detail.
-- Loading/Error/Empty states.
-- Responsive.
-- Accessibility cơ bản.
-- Backend integration Phase 1.
-- Android runtime.
-- Expo Doctor issues liên quan trực tiếp.
+- Backend connectivity
+- Metro/dev-client runtime
+- Login
+- Home REST requests
+- My Items
+- Item Detail
+- Logout/login
+- Runtime refresh-token success
+- Parallel 401 refresh behavior
+- Refresh failure behavior
+- Firebase FIS runtime confirmation
+- Final validation
 
-KHÔNG implement:
+Do NOT change:
 
-- QR Resolver mới.
-- Scan routing mới.
-- Guest Finder.
-- Real Chat.
-- Return Flow.
-- Payment.
-- Refresh token queue.
-- Radar background lifecycle.
-- Security architecture.
+- QR payload
+- QR Resolver
+- Scanner routing
+- isOwnItem inference
+- Guest Finder
+- Chat architecture
+- Return Session
+- Payment
+- Radar background lifecycle
+- Expo/RN version
 
-Không redesign lại UI Phase 1 nếu không có runtime bug.
+Do not redesign UI.
 
 ==================================================
-2. BEFORE RUNNING
+2. READ CURRENT STATE
 ==================================================
 
-Đọc:
+Read:
 
-- AGENTS.md / AI-AGENT.md.
-- README.
-- package.json.
-- app.config.js / app.json.
-- docs/phase-1-mobile-acceptance.md.
-- Design System.
-- Home.
-- My Items.
-- Item Detail.
-- API configuration/environment.
+docs/phase-2-mobile-architecture.md
+docs/phase-2-mobile-acceptance.md
+services/http/apiClient.ts
+AuthContext / auth storage
+.env
+.env.dev
+app.config.js
+package.json
 
-Kiểm tra:
+Check:
 
 git status --short
 git diff --stat
 git diff
 git diff --check
 
-Không commit.
-Không push.
-Không sửa prompt.txt.
+Do not overwrite existing Phase 2 work.
+
+Do not commit.
+Do not push.
 
 ==================================================
-3. BACKEND CONNECTION
+3. RESOLVE DEVELOPMENT BACKEND URL
 ==================================================
 
-Xác minh mobile đang trỏ tới backend development thật.
+The current .env.dev previously pointed to:
 
-Không dùng mock backend.
+http://192.168.10.102:3000
 
-Không dùng production backend để test phá dữ liệu.
+Do NOT assume port 3000 is correct.
 
-Kiểm tra:
+Determine the backend's actual listening host and port.
 
-API base URL
-Android emulator networking
-physical-device LAN URL nếu dùng máy thật
-HTTPS/HTTP compatibility
-CORS không áp dụng native fetch như browser nhưng server/network vẫn phải reachable
+The backend must be reachable from the physical Android device.
 
-Nếu Android emulator dùng backend localhost trên PC:
-xác minh address phù hợp môi trường,
-không tự hardcode nếu project đã có env mechanism.
+Required:
 
-==================================================
-4. DEVICE PRIORITY
-==================================================
+backend bind:
+0.0.0.0:<actual-port>
 
-Ưu tiên theo thứ tự:
+Mobile:
+http://192.168.10.102:<actual-port>
 
-1. Android physical device.
-2. Android Emulator.
-3. Static analysis nếu không có device.
+Do not use:
 
-Nếu có thiết bị thật:
-ưu tiên chạy ít nhất một vòng full acceptance trên máy thật.
+localhost
+127.0.0.1
 
-Ghi:
+for a physical-device API URL.
 
-Device:
-Android version:
-Screen size:
-Build type:
-Backend URL/environment:
+Before launching the app, prove connectivity.
 
-Nếu không có device/emulator:
-không được kết luận DEVICE PASS.
+From Windows host:
+GET /
+
+From the Android device if possible:
+GET /
+
+Expected API root response must succeed.
+
+If the backend is not running:
+start the backend development server from the backend repository using its actual development environment.
+
+Do not use production Supabase mutations for this test.
 
 ==================================================
-5. START APP
+4. ENV CONFIG DECISION
 ==================================================
 
-Sử dụng workflow thật của project.
+Current app.config.js has a development-host guard.
 
-Ví dụ tùy repo:
+The default .env currently contains a remote API URL while ENV=development,
+which intentionally fails unless ALLOW_REMOTE_DEV_API=true.
 
-npx expo run:android
+For this acceptance run, use one explicit development configuration.
 
-hoặc:
+Preferred:
 
-npm run android
+ENVFILE=.env.dev
 
-hoặc dev-client workflow hiện tại.
+and configure .env.dev with the reachable LAN development backend.
 
-Không chạy Expo Go nếu project native dependencies yêu cầu Development Build.
+Do not disable the guard.
 
-Xác minh:
+Do not silently point development to production.
 
-- build thành công.
-- app launch.
-- không crash startup.
-- fonts load.
-- navigation load.
-- no fatal red screen.
+Do not set ALLOW_REMOTE_DEV_API=true unless deliberately testing the approved remote development backend.
+
+Record the chosen configuration in the report.
 
 ==================================================
-6. LOGIN / AUTH PRECONDITION
+5. START METRO
 ==================================================
 
-Đăng nhập bằng development test account thực.
+The installed Android build is an Expo dev-client.
 
-Không hardcode bypass auth.
+Therefore JS does not execute until it connects to Metro.
 
-Sau login phải vào main app bình thường.
+Start Metro using the project's real workflow.
 
-Nếu auth fail do Phase 2 architecture:
-ghi nhận đúng nguyên nhân.
+For example, only if appropriate:
 
-Chỉ sửa nếu Phase 1 thay đổi gây regression.
+ENVFILE=.env.dev npx expo start --dev-client
+
+Use the Windows equivalent environment syntax if necessary.
+
+Ensure the physical device connects to Metro.
+
+Verify that:
+
+- React Native JS actually starts
+- AuthContext initializes
+- REST requests appear
+- Firebase initializes
+
+Do not confuse opening DevLauncherActivity with the app JS actually running.
 
 ==================================================
-7. HOME RUNTIME ACCEPTANCE
+6. PHYSICAL DEVICE
 ==================================================
 
-Test Home bằng backend thật.
+Use the already connected device if available:
 
-A. Header
+OPPO CPH2591
+Android 15
+package:
+com.lostfound.app
 
-[ ] FindBack hiển thị đúng.
-[ ] Username đúng.
-[ ] Long username không overflow nếu test được.
-[ ] Avatar hợp lệ.
-[ ] Broken/missing avatar fallback.
-[ ] Notification icon không chạm status bar.
-[ ] Safe Area đúng.
+Verify:
 
-B. Map
+adb devices
 
-[ ] Dark map render.
-[ ] User location marker.
-[ ] Permission allowed.
-[ ] Permission denied.
-[ ] Map vẫn không crash khi denied.
-[ ] Lost markers từ backend thật.
-[ ] Marker press.
-[ ] Marker popup.
-[ ] Popup close.
+Then launch/connect the dev-client.
 
-Không refactor location lifecycle.
+Capture enough logs to prove the runtime flow.
 
-C. Radar status
+Do not log:
 
-Xác minh text không misleading.
+JWT
+refresh token
+password
+private user data
 
-Đúng semantics:
+==================================================
+7. LOGIN RUNTIME
+==================================================
 
-loading:
-"Đang quét..."
+Use a development test account.
 
-realtime connected:
-"Trực tiếp"
-
-socket/realtime disconnected:
-"Radar tạm ngắt"
-hoặc wording tương đương.
-
-Không gọi "Ngoại tuyến" chỉ vì socket disconnected nếu app không biết network state.
-
-D. Home info contrast
-
-Xác minh dòng kiểu:
-
-"Bạn có X vật dụng đang báo mất..."
-
-đọc rõ trên nền tối.
-
-Không còn text black/dark-on-dark.
-
-E. Empty state
-
-Dùng backend 0-item scenario.
-
-Xác minh:
-
-[ ] Không hiện Empty khi đang loading.
-[ ] Không hiện Empty khi error.
-[ ] Không hiện Empty thay cho permission denied.
-[ ] Empty State không bị FAB đè.
-[ ] Empty State không bị Bottom Tab che.
-
-F. Data state
-
-Dùng backend 20-item scenario.
-
-Xác minh:
-
-[ ] Item cards render.
-[ ] Image.
-[ ] Missing image fallback.
-[ ] Status.
-[ ] Long title.
-[ ] Distance/location nếu data có.
-[ ] Card press navigation.
-
-G. Bottom Sheet
+Do not hardcode credentials in source.
 
 Test:
 
-collapsed
-middle
-expanded
+Login
+→ backend
+→ tokens
+→ session
+→ Home
 
-[ ] Gesture.
-[ ] No clipping.
-[ ] List scroll.
-[ ] FAB không bị che.
-[ ] Bottom Tabs không overlap.
+Verify:
 
-==================================================
-8. MY ITEMS RUNTIME ACCEPTANCE
-==================================================
+- HTTP request succeeds
+- Central API Client is used
+- Authorization works
+- no unexpected refresh
+- Home opens
 
-Test với dữ liệu thật.
+If test credentials are not available:
+stop and report that exact blocker.
 
-A. 0 items
-
-[ ] Empty state đúng.
-
-B. 20 items
-
-[ ] Count đúng backend.
-[ ] Tổng cộng đúng.
-[ ] An toàn đúng.
-[ ] Đang mất đúng.
-[ ] Các status khác không làm crash.
-
-C. Category filter
-
-[ ] Horizontal scroll trên màn nhỏ.
-[ ] Selected state rõ.
-[ ] Item cuối không clip.
-
-D. Search
-
-[ ] Search có kết quả.
-[ ] Search không kết quả.
-[ ] Clear search.
-[ ] Không render Empty generic sai context.
-
-E. Cards
-
-Test:
-
-[ ] valid image.
-[ ] no image.
-[ ] broken image.
-[ ] long title.
-[ ] long category.
-[ ] SAFE.
-[ ] LOST.
-[ ] real other status.
-
-Xác minh raw database ID không còn chiếm UI chính.
+Do not invent credentials.
 
 ==================================================
-9. ITEM DETAIL RUNTIME ACCEPTANCE
+8. HOME REST RUNTIME
 ==================================================
 
-Đi từ My Items → Item Detail bằng data thật.
-
-A. Layout
-
-Thứ tự phải là:
-
-Header
-Item Info
-Lost Mode
-QR
-Supporting content nếu có
-
-Không đổi.
-
-B. Header
-
-[ ] Không show raw internal database ID dưới title.
-
-C. Hero
-
-[ ] Image hợp lý.
-[ ] Missing image fallback.
-[ ] Broken image fallback.
-[ ] Long title không overflow.
-[ ] Status badge đúng.
-
-D. Loading
-
-Test khi request đang chạy.
-
-[ ] LoadingState render.
-
-E. Error
-
-Có thể tạm dùng invalid/missing item hoặc development scenario.
-
-[ ] ErrorState.
-[ ] Không auto goBack.
-[ ] Retry button.
-[ ] Back button.
-[ ] Retry không loop.
-
-F. Lost Mode
-
-SAFE:
-
-[ ] Switch/action hiển thị đúng.
-
-LOST:
-
-[ ] Current state đúng.
-[ ] Message hiển thị.
-[ ] Edit UI hoạt động.
-
-KHÔNG kiểm tra/fix lost-message location bug trong Phase 1.
-Chỉ đảm bảo Phase 1 không phá behavior hiện tại.
-
-G. QR presentation
-
-[ ] QR render.
-[ ] White quiet zone.
-[ ] QR không méo.
-[ ] Không bị crop.
-[ ] Share button visible.
-[ ] Scroll tới được cuối card.
-[ ] Label = "Chia sẻ mã QR".
-[ ] Không hiện alert "Đã lưu mã QR" sai semantics.
-
-KHÔNG thay QR payload.
-
-==================================================
-10. SMALL SCREEN ACCEPTANCE
-==================================================
-
-Ưu tiên test viewport/device gần:
-
-360 x 800
-
-Nếu emulator hiện tại khác:
-tạo/đổi emulator chỉ khi workflow an toàn.
-
-Kiểm tra:
+Verify real backend calls:
 
 Home
-My Items
-Item Detail
+Radar HTTP snapshot
+Notifications if loaded here
+other initial authenticated REST calls
 
-Không được có:
+Socket behavior is not the target of this Phase.
 
-- horizontal overflow.
-- clipped button.
-- text unreadable.
-- FAB overlap.
-- Bottom Tab overlap.
-- QR bị cắt.
+Verify:
 
-==================================================
-11. FONT SCALE ACCEPTANCE
-==================================================
+- API client reaches backend
+- no timeout
+- Authorization header handled centrally
+- no duplicate refresh calls
+- ApiError behavior works
 
-Nếu Android environment cho phép:
-
-test font scale khoảng:
-
-1.0
-1.3
-
-1.5 nếu dễ thực hiện.
-
-Ít nhất kiểm tra:
-
-Home header
-My Items stats
-Item cards
-Item Detail title
-StatusBadge
-buttons
-ErrorState
-EmptyState
-
-Nếu font scale lớn gây layout hơi cao nhưng vẫn scroll/read được:
-có thể chấp nhận.
-
-Nếu action biến mất hoặc text overlap:
-fix trong Phase 1.
+Do not modify Radar lifecycle.
 
 ==================================================
-12. ACCESSIBILITY RUNTIME SANITY
+9. MY ITEMS RUNTIME
 ==================================================
 
-Không cần full WCAG audit.
+Navigate to My Items.
 
-Kiểm tra các action quan trọng có:
+Verify:
 
-- đủ vùng bấm.
-- accessibilityRole phù hợp khi implementation hỗ trợ.
-- accessibilityLabel cho icon-only actions.
-- trạng thái không chỉ thể hiện bằng màu.
+- real authenticated request
+- data loads
+- no timeout
+- item count appears
+- images/statuses render
+- request passes through Central API Client
 
-Quan trọng:
-
-Home notification
-avatar
-report FAB
-Bottom Sheet item
-My Items add
-Item row
-Item Detail back
-delete
-Lost Mode
-QR share
+This proves Items service migration works in runtime.
 
 ==================================================
-13. EXPO DOCTOR — 15/18
+10. ITEM DETAIL RUNTIME
 ==================================================
 
-Chạy lại:
+Open an actual item.
 
-npx expo-doctor
+Verify:
 
-Với từng issue còn lại, phân loại:
+- GET Item Detail succeeds
+- real backend data appears
+- no networking regression
 
-A. BLOCKER
-Có nguy cơ:
-- build fail
-- runtime fail
-- package incompatibility
-- native configuration invalid
+Also test one safe 404 scenario if practical.
 
-→ phải sửa nếu thuộc Phase 1/release foundation và sửa an toàn.
+Expected:
 
-B. WARNING
-Metadata / ecosystem warning không gây runtime bug.
+404
+→ ApiError
+→ UI ErrorState
 
-→ document, không ép sửa.
-
-C. KNOWN / FALSE POSITIVE
-Có lý do rõ.
-
-→ document.
-
-Không nâng Expo SDK.
-
-Không nâng React Native.
-
-Không đổi dependency lớn chỉ để đạt 18/18.
-
-Report dạng:
-
-Issue 1:
-classification:
-action:
-reason:
-
-Issue 2:
-...
-
-Issue 3:
-...
+No crash.
 
 ==================================================
-14. ONLY FIX RUNTIME PHASE 1 BUGS
+11. LOGOUT / LOGIN AGAIN
 ==================================================
 
-Được phép sửa:
+Test:
 
-- contrast.
-- overlap.
-- broken fallback.
-- wrong empty/loading/error rendering.
-- missing accessibility label.
-- small-screen layout.
-- Radar status wording.
-- Item Detail scroll.
-- Phase 1 runtime regression.
+authenticated session
+→ logout
+→ login again
 
-Không làm cosmetic redesign.
+Verify:
 
-Không sửa feature ngoài scope.
+- logout backend call works
+- tokens/session cleared correctly
+- protected REST calls no longer use old token
+- new login gets a fresh usable session
+
+Backend Phase 2 now performs tokenVersion-based revocation,
+so ensure Mobile handles this behavior correctly.
 
 ==================================================
-15. AFTER ANY FIX
+12. RUNTIME REFRESH SUCCESS
 ==================================================
 
-Rerun:
+This is a REQUIRED acceptance gate.
+
+Unit tests already prove the algorithm.
+
+Now prove it in runtime.
+
+Use a DEVELOPMENT-SAFE method to create an expired access token.
+
+Preferred options:
+
+- short access-token TTL in development
+- controlled test token
+- backend-supported development test path
+
+Do not modify production auth settings.
+
+Do not expose credentials.
+
+Then:
+
+1. Login normally.
+2. Wait/make access token expire.
+3. Trigger an authenticated request.
+4. Observe:
+
+original request
+→ 401
+→ exactly one refresh
+→ new access token
+→ original request retry
+→ success
+
+Verify user remains logged in.
+
+==================================================
+13. PARALLEL 401 RUNTIME
+==================================================
+
+This is the most important runtime proof in Phase 2.
+
+Create the condition where the access token is expired,
+then cause multiple authenticated requests close together.
+
+For example, if naturally available:
+
+Home:
+- Items/Home request
+- Radar HTTP snapshot
+- Notifications
+
+Do not fabricate production UI behavior just to create requests.
+
+Observe backend/client logs.
+
+Expected:
+
+Request A → 401
+Request B → 401
+Request C → 401
+
+exactly ONE:
+
+POST /api/auth/refresh
+
+Then all waiting requests retry using the new token.
+
+Acceptance requirement:
+
+refresh request count = 1
+
+Not 2.
+Not 3.
+
+Capture safe evidence in the acceptance report.
+
+Never paste actual JWTs.
+
+==================================================
+14. REFRESH FAILURE RUNTIME
+==================================================
+
+Use a development-safe invalid/revoked refresh session.
+
+Backend Phase 2 supports deterministic revoked/invalid behavior.
+
+Test:
+
+A
+B
+C
+→ expired access token
+→ shared refresh
+→ refresh FAIL
+
+Expected:
+
+- refresh request occurs once
+- waiting requests fail correctly
+- session clear occurs once
+- session-expired signal occurs once
+- navigation/login transition occurs once
+- no retry loop
+- no repeated refresh
+- no app crash
+
+This runtime test plus the existing unit tests closes the core Phase 2 objective.
+
+==================================================
+15. FIREBASE FIS RUNTIME CONFIRMATION
+==================================================
+
+Previous investigation proved:
+
+- package com.lostfound.app matches
+- google-services.json matches installed APK
+- SHA-1 matches
+- Firebase Installations API returns HTTP 200
+- API key restriction permits package + SHA
+- device clock is correct
+
+Do NOT alter Firebase Console restrictions.
+
+Do NOT replace google-services.json unless new evidence shows it is wrong.
+
+To re-confirm runtime:
+
+1. Clear app data or reinstall the dev-client if safe.
+2. Connect to Metro.
+3. Launch JS runtime.
+4. Observe Firebase initialization.
+5. Confirm FIS_AUTH_ERROR does not recur.
+
+If needed, call the existing Firebase initialization path or Firebase Installations ID retrieval already supported by the project.
+
+Do not add debug-only Firebase production code unnecessarily.
+
+If FIS succeeds:
+mark PASS.
+
+If FIS_AUTH_ERROR reproduces:
+capture the exact error and investigate only from new evidence.
+
+==================================================
+16. TELEGRAM SECURITY
+==================================================
+
+Do not add Telegram token back to the mobile app.
+
+Verify source/env no longer contains:
+
+EXPO_PUBLIC_TELEGRAM_BOT_TOKEN
+EXPO_PUBLIC_TELEGRAM_CHAT_ID
+EXPO_PUBLIC_TELEGRAM_TEST_ON_LAUNCH
+
+Do not print the old token.
+
+Owner must separately revoke/rotate the previously exposed token in @BotFather.
+
+This owner action should remain documented but does not require putting any secret back in Mobile.
+
+==================================================
+17. STATIC VALIDATION AFTER RUNTIME
+==================================================
+
+After any runtime fix, run again:
 
 npm run type-check
 npm run lint
 npm run format:check
-
-hoặc scripts tương ứng.
-
-Run full Jest:
-
 npm test -- --runInBand
 
-nếu test script/project dùng command khác:
-dùng command thật.
+Run Expo Doctor using the correct development env:
 
-Run:
+ENVFILE=.env.dev npx expo-doctor
 
-npx expo-doctor
+Use the correct Windows command syntax if necessary.
 
-Run:
+Then:
 
 git diff --check
 
-Không dùng chỉ test subset rồi kết luận full PASS.
+Expected baseline:
+
+TypeScript PASS
+ESLint 0 errors
+Prettier PASS
+Jest all suites PASS
+Expo Doctor no BLOCKER
+git diff --check PASS
+
+Do not upgrade Expo/RN just to reach 18/18.
 
 ==================================================
-16. REGRESSION CHECK
+18. EXPO DOCTOR
 ==================================================
 
-Xác minh diff Phase 1 không thay:
+Current baseline:
 
-- QR encoded payload.
-- Scanner routing.
-- API routes.
-- Auth architecture.
-- Chat.
-- Return Session.
-- Payment.
-- Radar lifecycle.
+16/18
 
-Nếu phát hiện accidental change:
-restore/reconcile.
+Known remaining groups:
 
-Không restore prompt.txt.
+- Native/New Architecture package metadata warnings
+- SDK package minor/patch drift
 
-prompt.txt phải giữ nguyên.
+Reclassify only if runtime evidence changes their risk.
+
+If no BLOCKER:
+they do not prevent Phase 2 PASS.
 
 ==================================================
-17. UPDATE ACCEPTANCE REPORT
+19. REPORT
 ==================================================
 
-Cập nhật:
+Update:
 
-docs/phase-1-mobile-acceptance.md
+docs/phase-2-mobile-acceptance.md
 
-Thêm:
+Add a final section:
 
-## Android Runtime Acceptance
+## Final Runtime Acceptance
 
 Device:
 Android:
-Viewport:
-Backend:
-Build type:
+Backend URL:
+Backend port:
+ENVFILE:
+Metro:
+Test account:
+do not include password
+
+Login:
+PASS/FAIL
 
 Home:
-PASS/PARTIAL/FAIL
+PASS/FAIL
 
 My Items:
-PASS/PARTIAL/FAIL
+PASS/FAIL
 
 Item Detail:
-PASS/PARTIAL/FAIL
+PASS/FAIL
 
-Responsive:
-PASS/PARTIAL
+Logout/Login:
+PASS/FAIL
 
-Accessibility:
-PASS/PARTIAL
+Refresh success:
+PASS/FAIL
 
-## Expo Doctor
+Parallel 401:
+PASS/FAIL
+Refresh requests observed: N
 
-15/18 or final result.
+Refresh failure:
+PASS/FAIL
 
-Mỗi issue còn lại:
-classification + rationale.
+Firebase FIS:
+PASS/FAIL
 
-## Validation
+## Final Validation
 
-TypeScript:
-ESLint:
-Prettier:
-Jest suites:
-Jest tests:
-Expo Doctor:
-git diff --check:
-
-==================================================
-18. FINAL PHASE 1 GATE
-==================================================
-
-Chỉ ghi:
-
-MOBILE PHASE 1: PASS
-
-nếu:
-
-- Code acceptance vẫn PASS.
-- Android runtime PASS.
-- App nói chuyện với backend development thật.
-- Home PASS.
-- My Items PASS.
-- Item Detail PASS.
-- Không còn Phase 1 P0/P1 runtime bug.
-- TypeScript PASS.
-- ESLint PASS.
-- Prettier PASS.
-- Full Jest PASS.
-- Expo Doctor không còn BLOCKER.
-- git diff --check PASS.
-
-Có thể còn Expo Doctor warnings nếu đã được document và không phải blocker.
-
-==================================================
-19. PROJECT PHASE 1 FINAL STATUS
-==================================================
-
-Nếu Backend report đã:
-
-BACKEND PHASE 1: PASS
-
-và Mobile đạt:
-
-MOBILE PHASE 1: PASS
-
-thì cập nhật cuối report:
-
-PHASE 1 — DESIGN FOUNDATION & UI ACCEPTANCE
-STATUS: CLOSED
-
-Backend: PASS
-Mobile Code: PASS
-Mobile Device: PASS
-Overall: PASS
-
-Phase 1 closed date:
-[current date]
-
-Nếu một trong hai chưa PASS:
-
-STATUS: PARTIAL
-
-và ghi blocker cụ thể.
-
-Không tự chuyển sang Phase 2.
-
-==================================================
-20. FINAL RESPONSE
-==================================================
-
-Trả cho tôi:
-
-# PHASE 1 FINAL ACCEPTANCE
-
-Backend:
-PASS / PARTIAL
-
-Mobile Code:
-PASS / FAIL
-
-Android Device:
-PASS / PARTIAL / UNVERIFIED
-
-Expo Doctor:
-x/18
-Blockers:
-...
-
-Validation:
 TypeScript:
 ESLint:
 Prettier:
 Jest:
+Expo Doctor:
 git diff --check:
 
-Runtime bugs found:
-...
+==================================================
+20. PASS GATE
+==================================================
 
-Runtime bugs fixed:
-...
+Only output:
 
-Remaining blockers:
-...
+MOBILE PHASE 2: PASS
 
-OVERALL:
-PASS / PARTIAL / FAIL
+if ALL are true:
 
-Nếu OVERALL = PASS:
+- physical Android JS runtime actually executed
+- backend reachable
+- login works
+- Home REST works
+- My Items works
+- Item Detail works
+- logout/login works
+- refresh success verified in runtime
+- parallel 401 runtime results in exactly ONE refresh
+- refresh failure clears session exactly once
+- no infinite refresh loop
+- Firebase FIS_AUTH_ERROR does not reproduce or is resolved from evidence
+- TypeScript PASS
+- ESLint no errors
+- Prettier PASS
+- Jest PASS
+- Expo Doctor no BLOCKER
+- git diff --check PASS
 
-PHASE 1 CLOSED ✅
+Otherwise:
 
-Nếu không:
-không dùng chữ completed/100%.
+MOBILE PHASE 2: PARTIAL
 
-Không commit.
-Không push.
-Không bắt đầu Phase 2.
+with exact blockers.
+
+Do not start Phase 3.
+Do not commit.
+Do not push.

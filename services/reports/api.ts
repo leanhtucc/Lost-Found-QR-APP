@@ -1,6 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import { buildBaseUrl, buildReportsUrl } from '@services/shared/url';
-import { authStorage } from '@storage/auth';
+import { apiClient } from '@services/http';
 
 interface ReportLostItemLocation {
   lat: number;
@@ -81,15 +81,9 @@ export interface GuardianReportCreationResult {
 }
 
 const createAuthHeaders = async (customIdempotencyKey?: string): Promise<HeadersInit> => {
-  const token = await authStorage.getAccessToken();
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-
   const idempotencyKey = customIdempotencyKey || Crypto.randomUUID();
 
   return {
-    Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
     'Idempotency-Key': idempotencyKey,
   };
@@ -180,7 +174,7 @@ export const reportsApi = {
     }
 
     const headers = await createAuthHeaders(payload.idempotencyKey);
-    const response = await fetch(buildBaseUrl('v1', 'reports'), {
+    const response = await apiClient.fetch(buildBaseUrl('v1', 'reports'), {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -248,7 +242,7 @@ export const reportsApi = {
     }
 
     const headers = await createAuthHeaders();
-    const response = await fetch(buildReportsUrl('lost-item'), {
+    const response = await apiClient.fetch(buildReportsUrl('lost-item'), {
       method: 'POST',
       headers,
       body: JSON.stringify({

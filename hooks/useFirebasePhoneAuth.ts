@@ -41,7 +41,8 @@ const serializeError = (error: unknown) => {
 };
 
 const logOtpHook = (event: string, details?: Record<string, unknown>) => {
-  console.log(`${OTP_HOOK_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
+  void details;
+  console.log(`${OTP_HOOK_LOG_TAG} ${new Date().toISOString()} ${event}`);
 };
 
 // ─── Interface ───────────────────────────────────────────────────────────────

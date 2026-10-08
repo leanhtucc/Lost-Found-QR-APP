@@ -13,12 +13,7 @@ import {
 } from 'react-native';
 
 export type AppButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'outlined'
-  | 'inverted'
-  | 'danger'
-  | 'success';
+  'primary' | 'secondary' | 'outlined' | 'inverted' | 'danger' | 'success';
 
 export interface ButtonProps extends Omit<PressableProps, 'children'> {
   variant?: AppButtonVariant;

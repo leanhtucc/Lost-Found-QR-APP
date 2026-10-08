@@ -21,48 +21,20 @@ import {
   RegisterPushDeviceResponse,
   UnreadCountResponse,
 } from '@/types/notification';
-import { authStorage } from '@/storage/auth';
-import { authApi } from '@/services/auth';
-import { sessionEvents } from '@/lib/sessionEvents';
+import { apiClient } from '@/services/http';
 import { buildNotificationsUrl, buildAuthUrl } from '@services/shared/url';
 
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 
 const createHeaders = async (): Promise<HeadersInit> => {
-  const token = await authStorage.getAccessToken();
-  if (!token) throw new Error('No access token found. Please login again.');
   return {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
   };
 };
 
 /** Auto-refresh on 401 */
 const fetchWithAuth = async (url: string, options: RequestInit): Promise<Response> => {
-  let response = await fetch(url, options);
-
-  if (response.status === 401) {
-    console.log('[NotifAPI] Token expired, attempting refresh…');
-    try {
-      const refreshToken = await authStorage.getRefreshToken();
-      if (!refreshToken) throw new Error('No refresh token available');
-
-      const refreshResponse = await authApi.refreshToken({ refreshToken });
-      if (refreshResponse.success && refreshResponse.data) {
-        const newHeaders = await createHeaders();
-        response = await fetch(url, { ...options, headers: newHeaders });
-      } else {
-        throw new Error('Failed to refresh token');
-      }
-    } catch (error) {
-      console.error('[NotifAPI] Token refresh failed:', error);
-      await authStorage.clearAll();
-      sessionEvents.emitSessionExpired();
-      throw new Error('Session expired. Please login again.');
-    }
-  }
-
-  return response;
+  return apiClient.fetch(url, options);
 };
 
 // ─── Public API ──────────────────────────────────────────────────────────────
@@ -91,7 +63,7 @@ export const getNotifications = async (
   const url = `${buildNotificationsUrl()}?${query}`;
   const headers = await createHeaders();
 
-  console.log('[NotifAPI] GET', url);
+  console.log('[NotifAPI] Notifications requested');
   const response = await fetchWithAuth(url, { method: 'GET', headers });
 
   if (!response.ok) {
@@ -137,7 +109,7 @@ export const markNotificationAsRead = async (notificationId: string): Promise<No
   const url = buildNotificationsUrl(notificationId, 'read');
   const headers = await createHeaders();
 
-  console.log('[NotifAPI] PATCH', url);
+  console.log('[NotifAPI] Notification update requested');
   const response = await fetchWithAuth(url, { method: 'PATCH', headers });
 
   if (!response.ok) {
@@ -157,7 +129,7 @@ export const markAllNotificationsAsRead = async (): Promise<number> => {
   const url = buildNotificationsUrl('read-all');
   const headers = await createHeaders();
 
-  console.log('[NotifAPI] POST', url);
+  console.log('[NotifAPI] Mark-all-read requested');
   const response = await fetchWithAuth(url, { method: 'POST', headers });
 
   if (!response.ok) {
@@ -180,7 +152,7 @@ export const registerPushDevice = async (
   const url = buildNotificationsUrl('devices');
   const headers = await createHeaders();
 
-  console.log('[NotifAPI] POST devices', url, { platform: data.platform, deviceId: data.deviceId });
+  console.log('[NotifAPI] Push device registration requested');
   const response = await fetchWithAuth(url, {
     method: 'POST',
     headers,
@@ -206,7 +178,7 @@ export const unregisterPushDevice = async (
   const url = buildNotificationsUrl('devices', encodeURIComponent(deviceId));
   const headers = await createHeaders();
 
-  console.log('[NotifAPI] DELETE device', url);
+  console.log('[NotifAPI] Push device removal requested');
   const response = await fetchWithAuth(url, {
     method: 'DELETE',
     headers,
@@ -230,7 +202,7 @@ export const markNotificationAsOpened = async (
   const url = buildNotificationsUrl(notificationId, 'opened');
   const headers = await createHeaders();
 
-  console.log('[NotifAPI] POST opened', url);
+  console.log('[NotifAPI] Notification-open event requested');
   const response = await fetchWithAuth(url, {
     method: 'POST',
     headers,
@@ -276,7 +248,7 @@ export const updateNotificationPreferences = async (
   const url = buildNotificationsUrl('preferences');
   const headers = await createHeaders();
 
-  console.log('[NotifAPI] PATCH preferences', url, preferences);
+  console.log('[NotifAPI] Notification preferences update requested');
   const response = await fetchWithAuth(url, {
     method: 'PATCH',
     headers,
@@ -306,8 +278,8 @@ export const updatePushToken = async (pushToken: string): Promise<void> => {
     });
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const result = await response.json();
-    console.log('[NotifAPI] Push token updated:', result.message);
+    await response.json();
+    console.log('[NotifAPI] Push token registration updated');
   } catch (error) {
     console.error('[NotifAPI] Error updating push token:', error);
     throw error;

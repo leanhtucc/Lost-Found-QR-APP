@@ -1,11 +1,12 @@
 import * as Crypto from 'expo-crypto';
-import { authStorage } from '@storage/auth';
+import { apiClient } from '@services/http';
 import { buildApiUrl, buildV1Url } from '@services/shared/url';
 import type { ItemCategory } from '@/types/item';
 import type { HomeLostFeedCard, HomeLostFeedPin } from '@/types/radar';
+import type { ChannelId, FoundReportId, ReturnSessionId } from '@/types/identifiers';
 
 export interface FoundReport {
-  id: string;
+  id: FoundReportId;
   name: string;
   category: ItemCategory;
   description?: string | null;
@@ -20,11 +21,11 @@ export interface FoundReport {
 
 export interface FoundReportClaim {
   id: string;
-  foundReportId: string;
+  foundReportId: FoundReportId;
   claimantId: string;
   ownershipProof: string;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
-  returnSessionId?: string | null;
+  returnSessionId?: ReturnSessionId | null;
   claimant?: { displayName: string; photoURL?: string | null };
   createdAt: string;
 }
@@ -58,11 +59,9 @@ export const foundReportsApi = {
     ) {
       throw new Error('Vui lòng xác nhận vị trí nhặt được.');
     }
-    const token = await authStorage.getAccessToken();
-    if (!token) throw new Error('Vui lòng đăng nhập để đăng bài.');
-    const response = await fetch(buildApiUrl('found-reports'), {
+    const response = await apiClient.fetch(buildApiUrl('found-reports'), {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     const json = await response.json();
@@ -73,9 +72,8 @@ export const foundReportsApi = {
     return json.data;
   },
   async get(id: string): Promise<FoundReport> {
-    const token = await authStorage.getAccessToken();
-    const response = await fetch(buildApiUrl('found-reports', encodeURIComponent(id)), {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    const response = await apiClient.fetch(buildApiUrl('found-reports', encodeURIComponent(id)), {
+      auth: 'optional',
     });
     const json = await response.json();
     if (!response.ok || !json?.success || !json.data?.id) {
@@ -84,11 +82,9 @@ export const foundReportsApi = {
     return json.data;
   },
   async createClaim(id: string, ownershipProof: string): Promise<FoundReportClaim> {
-    const token = await authStorage.getAccessToken();
-    if (!token) throw new Error('Vui lòng đăng nhập để nhận đồ.');
-    const response = await fetch(buildApiUrl('found-reports', id, 'claims'), {
+    const response = await apiClient.fetch(buildApiUrl('found-reports', id, 'claims'), {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ownershipProof }),
     });
     const json = await response.json();
@@ -96,37 +92,35 @@ export const foundReportsApi = {
     return json.data;
   },
   async getMyClaim(id: string): Promise<FoundReportClaim | null> {
-    const token = await authStorage.getAccessToken();
-    if (!token) return null;
-    const response = await fetch(buildApiUrl('found-reports', id, 'claims', 'mine'), {
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await apiClient.fetch(buildApiUrl('found-reports', id, 'claims', 'mine'), {
+      auth: 'optional',
     });
+    if (response.status === 401) return null;
     const json = await response.json();
     if (!response.ok) throw new Error(json?.message || 'Không thể tải yêu cầu nhận đồ.');
     return json.data;
   },
   async getClaims(id: string): Promise<FoundReportClaim[]> {
-    const token = await authStorage.getAccessToken();
-    if (!token) return [];
-    const response = await fetch(buildApiUrl('found-reports', id, 'claims'), {
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await apiClient.fetch(buildApiUrl('found-reports', id, 'claims'), {
+      auth: 'optional',
     });
+    if (response.status === 401) return [];
     const json = await response.json();
     if (!response.ok) throw new Error(json?.message || 'Không thể tải danh sách yêu cầu.');
     return json.data;
   },
   async reviewClaim(id: string, claimId: string, decision: 'accept' | 'reject') {
-    const token = await authStorage.getAccessToken();
-    if (!token) throw new Error('Vui lòng đăng nhập lại.');
-    const response = await fetch(buildApiUrl('found-reports', id, 'claims', claimId, decision), {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await apiClient.fetch(
+      buildApiUrl('found-reports', id, 'claims', claimId, decision),
+      {
+        method: 'POST',
+      }
+    );
     const json = await response.json();
     if (!response.ok) throw new Error(json?.message || 'Không thể xử lý yêu cầu.');
     return json.data as {
-      returnSessionId?: string;
-      channel?: { channelId: string };
+      returnSessionId?: ReturnSessionId;
+      channel?: { channelId: ChannelId };
     };
   },
   async getFeed(query: {
@@ -146,18 +140,12 @@ export const foundReportsApi = {
       params.set('category', query.category);
     }
 
-    const token = await authStorage.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
     const v1Url = `${buildV1Url('found-reports', 'feed')}?${params.toString()}`;
     const apiUrl = `${buildApiUrl('found-reports', 'feed')}?${params.toString()}`;
 
-    let response = await fetch(v1Url, { method: 'GET', headers });
+    let response = await apiClient.fetch(v1Url, { method: 'GET', auth: 'optional' });
     if (!response.ok && (response.status === 404 || response.status === 405)) {
-      response = await fetch(apiUrl, { method: 'GET', headers });
+      response = await apiClient.fetch(apiUrl, { method: 'GET', auth: 'optional' });
     }
 
     const json = await response.json();

@@ -38,6 +38,7 @@ import {
 } from './types';
 import { authStorage } from '@storage/auth';
 import { buildAuthUrl } from '@services/shared/url';
+import { apiClient, isApiError } from '@services/http';
 
 const AUTH_API_LOG_TAG = '[Auth:ApiService]';
 
@@ -49,31 +50,8 @@ const maskEmailForLog = (email?: string): string => {
 };
 
 const logAuthApi = (event: string, details?: Record<string, unknown>) => {
-  console.log(`${AUTH_API_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
-};
-
-interface LegacyTokenPair {
-  accessToken?: string;
-  refreshToken?: string;
-  access_token?: string;
-  refresh_token?: string;
-}
-
-type AuthTokenPayload = {
-  accessToken?: string;
-  refreshToken?: string;
-  access_token?: string;
-  refresh_token?: string;
-  token?: string | LegacyTokenPair;
-  tokens?: {
-    accessToken?: string;
-    refreshToken?: string;
-    access_token?: string;
-    refresh_token?: string;
-    access?: { token?: string };
-    refresh?: { token?: string };
-  };
-  data?: AuthTokenPayload;
+  void details;
+  console.log(`${AUTH_API_LOG_TAG} ${new Date().toISOString()} ${event}`);
 };
 
 const isNonEmptyString = (value: unknown): value is string =>
@@ -145,23 +123,24 @@ async function apiRequest<T>(
 ): Promise<ApiResponse<T>> {
   const url = buildAuthUrl(endpoint);
 
-  const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  // Add auth token if available
-  if (includeStoredAuth) {
-    const token = await authStorage.getAccessToken();
-    if (token) {
-      defaultHeaders['Authorization'] = `Bearer ${token}`;
-    }
-  }
+  const publicEndpoints = new Set([
+    '/register',
+    '/verify-otp',
+    '/resend-otp',
+    '/login',
+    '/google',
+    '/firebase-verify',
+    '/forgot-password',
+    '/reset-password',
+  ]);
+  const auth = !includeStoredAuth || publicEndpoints.has(endpoint) ? 'none' : 'required';
 
   try {
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       ...options,
+      auth,
       headers: {
-        ...defaultHeaders,
+        'Content-Type': 'application/json',
         ...options.headers,
       },
     });
@@ -191,7 +170,9 @@ async function apiRequest<T>(
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Network error',
-      error: 'NETWORK_ERROR',
+      error: isApiError(error)
+        ? { code: error.code, detail: error.details as string | undefined }
+        : 'NETWORK_ERROR',
     };
   }
 }
@@ -498,25 +479,17 @@ export const authApi = {
    * Refresh access token using refresh token
    */
   async refreshToken(data: RefreshTokenRequest): Promise<ApiResponse<RefreshTokenResponseData>> {
-    const response = await apiRequest<RefreshTokenResponseData>('/refresh', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-
-    // Update stored tokens on success
-    if (response.success && response.data) {
-      const extractedTokens = extractAuthTokens(response.data);
-      if (!extractedTokens) {
-        return withInvalidAuthPayload(
-          response,
-          'Thiếu access token hoặc refresh token từ refresh.'
-        );
-      }
-
-      await authStorage.saveTokens(extractedTokens.accessToken, extractedTokens.refreshToken);
+    void data;
+    try {
+      const tokens = await apiClient.refreshSession();
+      return { success: true, message: 'Token refreshed successfully', data: tokens };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Token refresh failed',
+        error: isApiError(error) ? { code: error.code } : 'NETWORK_ERROR',
+      };
     }
-
-    return response;
   },
 
   /**

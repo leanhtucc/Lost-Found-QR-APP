@@ -241,7 +241,7 @@ export const useReportFlow = () => {
           const nextSelected = hasPrevious
             ? prev
             : normalizedItems.find(item => item.isEligible)?.id || '';
-          console.log(`[useReportFlow] Setting selectedItemId to: ${nextSelected}`);
+          console.log('[useReportFlow] Setting selected item');
           return nextSelected;
         });
       } else {
@@ -284,7 +284,7 @@ export const useReportFlow = () => {
 
   useEffect(() => {
     let isMounted = true;
-    console.log(`[useReportFlow] selectedItemId changed: ${selectedItemId}`);
+    console.log('[useReportFlow] Selected item changed');
 
     if (!selectedItemId) {
       setSelectionSummary(null);
@@ -685,8 +685,6 @@ export const useReportFlow = () => {
           hasInsurance: false,
         });
 
-        console.log('[useReportFlow] Data vật phẩm báo cáo mới (createdItem):', createdItem);
-
         const refreshedItems = await loadUserItems();
         // V2: dùng qrCodeId (không phải itemId) để khớp với list returned bởi eligible-for-report
         const hasCreatedItem = refreshedItems.some(
@@ -703,7 +701,7 @@ export const useReportFlow = () => {
               item => item.id === createdItem.itemId || item.id === createdItem.qrCodeId
             )?.id ?? createdItem.itemId;
 
-          console.log(`[useReportFlow] Auto-selecting new item: ${targetId}`);
+          console.log('[useReportFlow] Auto-selecting new item');
           setSelectedItemId(targetId);
 
           setLocalImages(prev => ({

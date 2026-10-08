@@ -187,7 +187,7 @@ import { getFlaggedMessages } from '@/services/moderation';
 
 const data = await getFlaggedMessages('channel_id');
 console.log(`Total flagged: ${data.total}`);
-console.log(data.messages);
+console.log(`Flagged messages available: ${data.messages.length}`);
 ```
 
 ---
@@ -292,9 +292,7 @@ const data = await getFlaggedMessages(channelId);
 
 if (data.total > 0) {
   console.log(`Có ${data.total} tin nhắn bị báo cáo:`);
-  data.messages.forEach(msg => {
-    console.log(`- "${msg.text}" từ ${msg.user.name}`);
-  });
+  console.log(`Có ${data.total} tin nhắn bị báo cáo.`);
 }
 ```
 

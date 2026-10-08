@@ -235,14 +235,11 @@ export const useMapDiscovery = ({
   }, []);
 
   const emitSubscribe = useCallback(async (socket: RadarSocket, coords: RadarCoordinates) => {
-    const ack = await subscribeRadar(socket, {
+    await subscribeRadar(socket, {
       latitude: coords.latitude,
       longitude: coords.longitude,
       radius: activeRadiusRef.current,
     });
-    if (__DEV__) {
-      console.log('[useMapDiscovery] Subscribed radar:', ack);
-    }
   }, []);
 
   const sendHeartbeat = useCallback(async (coords?: RadarCoordinates) => {
@@ -272,7 +269,6 @@ export const useMapDiscovery = ({
 
       socket.on('connect', () => {
         setIsRealtimeConnected(true);
-        if (__DEV__) console.log('[useMapDiscovery] Socket connected:', socket.id);
         const coords = locationRef.current;
         if (coords) void emitSubscribe(socket, coords);
       });

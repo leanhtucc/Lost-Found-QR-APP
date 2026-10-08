@@ -81,7 +81,8 @@ const formatAuthErrorMessage = (
 };
 
 const logRegisterFlow = (event: string, details?: Record<string, unknown>) => {
-  console.log(`${AUTH_REGISTER_LOG_TAG} ${new Date().toISOString()} ${event}`, details || {});
+  void details;
+  console.log(`${AUTH_REGISTER_LOG_TAG} ${new Date().toISOString()} ${event}`);
 };
 
 interface UseAuthReturn {

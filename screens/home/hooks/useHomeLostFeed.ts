@@ -115,15 +115,11 @@ export const useHomeLostFeed = ({
 
   const emitSubscribe = useCallback(
     async (socket: RadarSocket, coords: RadarCoordinates) => {
-      const ack = await subscribeRadar(socket, {
+      await subscribeRadar(socket, {
         latitude: coords.latitude,
         longitude: coords.longitude,
         radius: normalizedRadius,
       });
-
-      if (__DEV__) {
-        console.log('[RadarSocket] Subscribed radar:', ack);
-      }
     },
     [normalizedRadius]
   );
@@ -161,7 +157,6 @@ export const useHomeLostFeed = ({
 
       socket.on('connect', () => {
         setIsRealtimeConnected(true);
-        if (__DEV__) console.log('[RadarSocket] Connected, socket id:', socket.id);
         const coords = locationRef.current;
         if (coords) {
           void emitSubscribe(socket, coords);
@@ -182,7 +177,7 @@ export const useHomeLostFeed = ({
         if (!item || !item.itemId) return;
 
         if (__DEV__) {
-          console.log('[RadarSocket] Received radar:new-lost-item:', item.itemId);
+          console.log('[RadarSocket] New lost item received');
         }
 
         const distanceMeters =
@@ -236,7 +231,7 @@ export const useHomeLostFeed = ({
         if (!data || !data.itemId) return;
 
         if (__DEV__) {
-          console.log('[RadarSocket] Received radar:lost-item-removed:', data.itemId, data.status);
+          console.log('[RadarSocket] Lost item removed');
         }
 
         // Xóa item khỏi danh sách cards và xóa marker tương ứng trên bản đồ theo itemId
@@ -315,12 +310,6 @@ export const useHomeLostFeed = ({
         };
 
         if (__DEV__) {
-          console.log('[HomeFeed] Loaded lost feed:', {
-            myLostCount: data.myLostCount,
-            nearbyCount: data.nearbyCount,
-            cardsCount: data.cards.length,
-            pinsCount: data.pins.length,
-          });
         }
       } catch (error) {
         if (requestId === radarRequestIdRef.current) {
@@ -373,12 +362,6 @@ export const useHomeLostFeed = ({
           setLastUpdatedAt(new Date().toISOString());
 
           if (__DEV__) {
-            console.log('[useHomeLostFeed] Viewport feed updated:', {
-              requestId,
-              radius: clamped,
-              pinsCount: data.pins.length,
-              cardsCount: data.cards.length,
-            });
           }
         } catch (error) {
           if (requestId === radarRequestIdRef.current) {

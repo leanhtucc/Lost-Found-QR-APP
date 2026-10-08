@@ -13,14 +13,12 @@ import {
   BanResponse,
   FlaggedMessagesResponse,
 } from '@/types/moderation';
-import { authStorage } from '@/storage/auth';
 import { buildStreamUrl } from '@services/shared/url';
+import { apiClient } from '@services/http';
 
 const createHeaders = async (): Promise<HeadersInit> => {
-  const token = await authStorage.getAccessToken();
   return {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
   };
 };
 
@@ -32,7 +30,7 @@ export const flagMessage = async (messageId: string): Promise<FlagResponse> => {
   try {
     const url = buildStreamUrl('messages', messageId, 'flag');
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'POST',
       headers,
     });
@@ -57,7 +55,7 @@ export const unflagMessage = async (messageId: string): Promise<UnflagResponse> 
   try {
     const url = buildStreamUrl('messages', messageId, 'flag');
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'DELETE',
       headers,
     });
@@ -95,7 +93,7 @@ export const muteUser = async (
       queryParams.toString() ? `?${queryParams}` : ''
     }`;
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'POST',
       headers,
     });
@@ -124,7 +122,7 @@ export const unmuteUser = async (
   try {
     const url = buildStreamUrl('channels', channelId, 'mute', targetUserId);
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'DELETE',
       headers,
     });
@@ -155,7 +153,7 @@ export const banUser = async (
   try {
     const url = buildStreamUrl('channels', channelId, 'ban', targetUserId);
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(params || {}),
@@ -183,7 +181,7 @@ export const getFlaggedMessages = async (
   try {
     const url = buildStreamUrl('channels', channelId, 'flagged-messages');
     const headers = await createHeaders();
-    const response = await fetch(url, {
+    const response = await apiClient.fetch(url, {
       method: 'GET',
       headers,
     });

@@ -83,7 +83,7 @@ export const pushNotificationService = {
         appVersion,
       });
 
-      console.log('[PushNotification] Device registered successfully:', { deviceId, platform });
+      console.log('[PushNotification] Device registered successfully');
       return pushToken;
     } catch (error) {
       console.error('[PushNotification] Failed to register device token:', error);
@@ -134,7 +134,7 @@ export const pushNotificationService = {
       const deviceId = await deviceStorage.getDeviceId();
       if (deviceId) {
         await unregisterPushDevice(deviceId);
-        console.log('[PushNotification] Device unregistered from backend:', deviceId);
+        console.log('[PushNotification] Device unregistered from backend');
       }
     } catch (error) {
       console.warn('[PushNotification] Failed to unregister device:', error);

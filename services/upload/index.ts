@@ -3,8 +3,8 @@
  * Handles file upload operations
  */
 
-import { authStorage } from '@storage/auth';
 import { buildBaseUrl, buildUploadUrl } from '@services/shared/url';
+import { apiClient } from '@services/http';
 
 // ==================== TYPES ====================
 
@@ -113,23 +113,10 @@ export const uploadApi = {
     try {
       const uploadUrl = buildUploadUrl('image');
 
-      // DEBUG: Log API URL
-      console.log('=== UPLOAD DEBUG ===');
-      console.log('API Base URL:', buildBaseUrl());
-      console.log('Upload URL:', uploadUrl);
-      console.log('File URI:', uri);
-
-      // Get auth token
-      const token = await authStorage.getAccessToken();
-      console.log('Has Token:', !!token);
-
       // Create form data
       const formData = new FormData();
       const fileName = getFileName(uri);
       const mimeType = getMimeType(fileName);
-
-      console.log('File Name:', fileName);
-      console.log('MIME Type:', mimeType);
 
       // Append file to form data
       // React Native requires this specific format for file uploads
@@ -139,16 +126,11 @@ export const uploadApi = {
         type: mimeType,
       } as unknown as Blob);
 
-      console.log('Making fetch request to:', uploadUrl);
+      console.log('Starting image upload');
 
       // Make upload request
-      const response = await fetch(uploadUrl, {
+      const response = await apiClient.fetch(uploadUrl, {
         method: 'POST',
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          // Note: Don't set Content-Type manually for multipart/form-data
-          // fetch will set it automatically with the correct boundary
-        },
         body: formData,
       });
 
@@ -180,13 +162,8 @@ export const uploadApi = {
     try {
       const deleteUrl = buildUploadUrl(filename);
 
-      const token = await authStorage.getAccessToken();
-
-      const response = await fetch(deleteUrl, {
+      const response = await apiClient.fetch(deleteUrl, {
         method: 'DELETE',
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
       });
 
       const data = await response.json();

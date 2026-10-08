@@ -53,7 +53,6 @@ export const ScanScreen: React.FC = () => {
         return;
       }
 
-      console.log('Scan result:', result);
       const rootNavigation = navigation.getParent<ScanNavigationProp>() ?? navigation;
 
       if (result.action === 'open_chat') {

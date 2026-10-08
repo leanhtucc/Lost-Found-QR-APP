@@ -78,9 +78,9 @@ const checkStorage = async () => {
   const refreshToken = await authStorage.getRefreshToken();
   const user = await authStorage.getUser();
 
-  console.log('Access Token:', accessToken);
-  console.log('Refresh Token:', refreshToken);
-  console.log('User:', user);
+  console.log('Access token saved:', Boolean(accessToken));
+  console.log('Refresh token saved:', Boolean(refreshToken));
+  console.log('User profile saved:', Boolean(user));
 };
 
 // Call after successful login
@@ -222,7 +222,7 @@ const testGoogleLogin = async () => {
 
     if (hasToken && user) {
       console.log('✅ Test PASSED!');
-      console.log('User:', user.email);
+      console.log('Authenticated user profile is available:', Boolean(user));
     } else {
       console.log('❌ Test FAILED!');
     }
@@ -254,20 +254,12 @@ const testGoogleLogin = async () => {
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const url = `${AUTH_BASE_URL}${endpoint}`;
 
-  console.log('📡 API Request:', {
-    url,
-    method: options.method,
-    headers: options.headers,
-    body: options.body,
-  });
+  console.log('📡 API request started:', options.method || 'GET');
 
   const response = await fetch(url, options);
   const data = await response.json();
 
-  console.log('📡 API Response:', {
-    status: response.status,
-    data,
-  });
+  console.log('📡 API response received:', response.status);
 
   return data;
 }
