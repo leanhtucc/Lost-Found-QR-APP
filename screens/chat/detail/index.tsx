@@ -4,7 +4,7 @@
  * Tích hợp ReturnProgressCard, MeetupModal và điều hướng đến Live Map, Bàn giao, Giải ngân, Đánh giá.
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -15,6 +15,7 @@ import { ChatMessage } from './types';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useReturnStore } from '@/services/returns/store';
 import { useReturnSession } from '@/hooks/useReturnSession';
+import { useStreamChat } from '@/hooks/useStreamChat';
 import { ReturnProgressCard, MeetupModal } from '@/screens/return-flow/components';
 import { Lock, FileText } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
@@ -31,50 +32,6 @@ type ChatRouteParams = {
 
 type ChatNavProp = StackNavigationProp<RootStackParamList>;
 
-// Initial messages
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: '1',
-    senderId: 'owner',
-    content: 'Xin chào! Bạn đã nhặt được ví của tôi ạ?',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    isRead: true,
-    type: 'text',
-  },
-  {
-    id: '2',
-    senderId: 'finder',
-    content: 'Vâng ạ, tôi nhặt được ở canteen tầng 1!',
-    timestamp: new Date(Date.now() - 28 * 60 * 1000),
-    isRead: true,
-    type: 'text',
-  },
-  {
-    id: '3',
-    senderId: 'owner',
-    content: 'Cảm ơn bạn nhiều! Trong ví có CCCD và thẻ sinh viên của mình 😭',
-    timestamp: new Date(Date.now() - 25 * 60 * 1000),
-    isRead: true,
-    type: 'text',
-  },
-  {
-    id: '4',
-    senderId: 'finder',
-    content: 'Đúng rồi ạ! Mình thấy có thẻ sinh viên PTIT. Bạn yên tâm nhé!',
-    timestamp: new Date(Date.now() - 20 * 60 * 1000),
-    isRead: true,
-    type: 'text',
-  },
-  {
-    id: '5',
-    senderId: 'owner',
-    content: 'Mình có thể gặp bạn ở đâu để nhận lại ạ?',
-    timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    isRead: true,
-    type: 'text',
-  },
-];
-
 export default function ChatScreen() {
   const route = useRoute();
   const navigation = useNavigation<ChatNavProp>();
@@ -82,7 +39,7 @@ export default function ChatScreen() {
 
   // Get params from route
   const params = (route.params as ChatRouteParams) || {};
-  const channelId = params.channelId || 'default_channel';
+  const channelId = params.channelId;
   const itemName = params.itemName || 'Ví da cầm tay';
   const userName = params.userName || 'Marcus';
   const userAvatar = params.userAvatar;
@@ -100,18 +57,28 @@ export default function ChatScreen() {
   const startTracking = useReturnStore(state => state.startTracking);
   const isSubmitting = useReturnStore(state => state.isSubmitting);
 
-  const currentUserId = user?.id || user?.memberId || 'finder_user';
+  const chat = useStreamChat(channelId);
+  // Stream's user id is authoritative (guest finders have no AuthContext user).
+  const currentUserId = chat.userId ?? user?.id ?? user?.memberId ?? '';
 
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+  const [localNotices, setLocalNotices] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [isMeetupModalVisible, setIsMeetupModalVisible] = useState(false);
 
   const isCompleted = session?.status === 'COMPLETED';
+  const canSend = chat.status === 'ready' && !isCompleted;
 
-  // Append system message
+  const messages = useMemo(
+    () =>
+      [...chat.messages, ...localNotices].sort(
+        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+      ),
+    [chat.messages, localNotices]
+  );
+
+  // Local-only system notice for return-flow events
   const addSystemMessage = (text: string) => {
-    setMessages(prev => [
+    setLocalNotices(prev => [
       ...prev,
       {
         id: `sys_${Date.now()}`,
@@ -124,38 +91,17 @@ export default function ChatScreen() {
     ]);
   };
 
-  const handleSend = () => {
-    if (!newMessage.trim() || isCompleted) return;
-
-    const message: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: currentUserId,
-      content: newMessage.trim(),
-      timestamp: new Date(),
-      isRead: false,
-      type: 'text',
-    };
-
-    setMessages(prev => [...prev, message]);
+  const handleSend = async () => {
+    const text = newMessage.trim();
+    if (!text || !canSend) return;
     setNewMessage('');
+    const sent = await chat.sendMessage(text);
+    if (!sent) setNewMessage(text);
+  };
 
-    // Simulate partner response if talking
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const partnerRole = currentRole === 'OWNER' ? 'finder' : 'owner';
-      setMessages(prev => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          senderId: partnerRole,
-          content: 'Cảm ơn bạn! Mình sẽ đến đúng giờ đã hẹn nhé 👍',
-          timestamp: new Date(),
-          isRead: true,
-          type: 'text',
-        },
-      ]);
-    }, 1800);
+  const handleChangeText = (text: string) => {
+    setNewMessage(text);
+    if (text) chat.notifyTyping();
   };
 
   const handleProposeMeetupSubmit = async (data: {
@@ -253,7 +199,24 @@ export default function ChatScreen() {
         />
 
         {/* Messages ScrollView */}
-        <ChatMessages messages={messages} currentUserId={currentUserId} isTyping={isTyping} />
+        {chat.status !== 'ready' ? (
+          <View className="items-center bg-fb-surface px-4 py-2">
+            <Text className="text-xs text-fb-muted">
+              {chat.status === 'connecting' ? 'Đang kết nối chat...' : chat.error}
+            </Text>
+            {chat.status === 'error' ? (
+              <TouchableOpacity onPress={chat.retry} className="min-h-[44px] justify-center">
+                <Text className="text-sm font-semibold text-fb-primary-light">Thử lại</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        ) : null}
+
+        <ChatMessages
+          messages={messages}
+          currentUserId={currentUserId}
+          isTyping={chat.isPartnerTyping}
+        />
 
         {/* Return Progress Card (Pinned above input) */}
         <ReturnProgressCard
@@ -290,7 +253,7 @@ export default function ChatScreen() {
         ) : (
           <ChatInput
             value={newMessage}
-            onChangeText={setNewMessage}
+            onChangeText={handleChangeText}
             onSend={handleSend}
             onAttachPress={handleAttach}
             onEmojiPress={handleEmoji}

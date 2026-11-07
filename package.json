@@ -98,6 +98,7 @@
     "reactotron-redux": "^3.2.1",
     "rn-qr-generator": "^2.0.0",
     "socket.io-client": "^4.8.1",
+    "stream-chat": "^9.55.0",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
