@@ -35,6 +35,11 @@ const passwordRules: PasswordRule[] = [
       /\d/.test(password),
   },
   {
+    id: 'lowercase',
+    label: 'Chữ thường',
+    isValid: (password: string) => /[a-z]/.test(password),
+  },
+  {
     id: 'uppercase',
     label: 'Chữ in hoa',
     isValid: (password: string) => /[A-Z]/.test(password),
@@ -115,7 +120,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
     }
   };
 
-  // Strength score (0-3)
+  // Strength score (0-4)
   const strengthScore = passwordValidation.filter(r => r.passed).length;
   const iconColor = (hasError: boolean) => (hasError ? FIND_BACK.danger : FIND_BACK.mutedText);
   const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
@@ -169,30 +174,34 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
           error={errors.password}
         />
 
-        {/* Password strength: three segments plus a text label (never colour alone) */}
-        <View className="mb-2 mt-3 flex-row items-center gap-1">
-          {[1, 2, 3].map(index => (
-            <View
-              key={index}
-              className={`h-1.5 flex-1 rounded-full ${
-                index <= strengthScore
-                  ? strengthScore === 3
-                    ? 'bg-fb-secondary'
-                    : 'bg-fb-primary'
-                  : 'bg-white/10'
-              }`}
-            />
-          ))}
+        {/* Password strength: four segments plus a text label (never colour alone).
+            Margins live on the outer View; NativeWind v2 gap utilities override margins
+            on the same element. */}
+        <View className="mb-2 mt-3">
+          <View className="flex-row items-center">
+            {[1, 2, 3, 4].map(index => (
+              <View
+                key={index}
+                className={`h-1.5 flex-1 rounded-full ${index < 4 ? 'mr-1' : ''} ${
+                  index <= strengthScore
+                    ? strengthScore === 4
+                      ? 'bg-fb-secondary'
+                      : 'bg-fb-primary'
+                    : 'bg-white/10'
+                }`}
+              />
+            ))}
+          </View>
         </View>
         <View className="flex-row items-center justify-between">
           <Text
             className={`text-xs font-semibold ${
-              strengthScore === 3 ? 'text-fb-secondary' : 'text-fb-muted'
+              strengthScore === 4 ? 'text-fb-secondary' : 'text-fb-muted'
             }`}
           >
-            {strengthScore === 0 ? 'Chưa nhập' : strengthScore < 3 ? 'Trung bình' : 'Mạnh'}
+            {strengthScore === 0 ? 'Chưa nhập' : strengthScore < 4 ? 'Trung bình' : 'Mạnh'}
           </Text>
-          <Text className="text-xs text-fb-muted">Gợi ý: thêm ký tự đặc biệt</Text>
+          <Text className="text-xs text-fb-muted">Cần chữ hoa, chữ thường và số</Text>
         </View>
       </View>
 
@@ -224,27 +233,29 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
       />
 
       {/* Consent (required) */}
-      <Pressable
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: acceptedTerms }}
-        accessibilityLabel="Đồng ý Điều khoản dịch vụ và Chính sách bảo mật"
-        onPress={() => setAcceptedTerms(value => !value)}
-        className="min-h-[44px] flex-row items-start gap-3"
-      >
-        <View
-          className={`mt-0.5 h-6 w-6 items-center justify-center rounded-lg border ${
-            acceptedTerms ? 'border-fb-primary bg-fb-primary' : 'border-white/30'
-          }`}
+      <View>
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: acceptedTerms }}
+          accessibilityLabel="Đồng ý Điều khoản dịch vụ và Chính sách bảo mật"
+          onPress={() => setAcceptedTerms(value => !value)}
+          className="min-h-[44px] flex-row items-start"
         >
-          {acceptedTerms ? <Check size={15} color="#FFFFFF" strokeWidth={3} /> : null}
-        </View>
-        <Text className="flex-1 text-[13px] leading-5 text-fb-muted">
-          Tôi đồng ý với{' '}
-          <Text className="font-semibold text-fb-primary-light">Điều khoản dịch vụ</Text> và{' '}
-          <Text className="font-semibold text-fb-primary-light">Chính sách bảo mật</Text>, và cho
-          phép ứng dụng dùng vị trí khi tôi báo mất hoặc nhặt đồ.
-        </Text>
-      </Pressable>
+          <View
+            className={`mr-3 mt-0.5 h-6 w-6 items-center justify-center rounded-lg border ${
+              acceptedTerms ? 'border-fb-primary bg-fb-primary' : 'border-white/30'
+            }`}
+          >
+            {acceptedTerms ? <Check size={15} color="#FFFFFF" strokeWidth={3} /> : null}
+          </View>
+          <Text className="flex-1 text-[13px] leading-5 text-fb-muted">
+            Tôi đồng ý với{' '}
+            <Text className="font-semibold text-fb-primary-light">Điều khoản dịch vụ</Text> và{' '}
+            <Text className="font-semibold text-fb-primary-light">Chính sách bảo mật</Text>, và cho
+            phép ứng dụng dùng vị trí khi tôi báo mất hoặc nhặt đồ.
+          </Text>
+        </Pressable>
+      </View>
 
       <View className="mb-6">
         <Button

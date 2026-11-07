@@ -54,6 +54,7 @@ export default function PublicItemDetailScreen() {
   const [item, setItem] = useState<PublicItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [showGuestIntake, setShowGuestIntake] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
@@ -64,6 +65,7 @@ export default function PublicItemDetailScreen() {
     try {
       setIsLoading(true);
       setError(null);
+      setNotFound(false);
       if (isAuthenticated) {
         try {
           const ownedItem = await itemsApi.getItemById(itemId);
@@ -81,7 +83,15 @@ export default function PublicItemDetailScreen() {
       setGuestSession(await guestSessionStorage.get());
     } catch (err: unknown) {
       console.error('Error loading public item:', err);
-      setError(err instanceof Error ? err.message : 'Không thể tải thông tin món đồ thất lạc');
+      const raw = err instanceof Error ? err.message : '';
+      const status = (err as { status?: number } | null)?.status;
+      const missing = status === 404 || /not.?found|disabled|không tìm thấy/i.test(raw);
+      setNotFound(missing);
+      setError(
+        missing
+          ? 'Mã này không còn hiệu lực. Chủ sở hữu có thể đã tắt mã hoặc món đồ đã bị xoá.'
+          : 'Không thể tải thông tin món đồ. Hãy kiểm tra kết nối Internet rồi thử lại.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -203,11 +213,29 @@ export default function PublicItemDetailScreen() {
           <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-fb-danger/15">
             <ShieldAlert size={32} color={FIND_BACK.danger} />
           </View>
-          <Text className="text-center text-base text-fb-content">{error}</Text>
-          <View className="mt-6 w-full max-w-[240px]">
-            <Button accessibilityLabel="Thử tải lại món đồ" onPress={() => void loadPublicItem()}>
-              Thử lại
-            </Button>
+          {notFound ? (
+            <Text className="mb-2 text-center text-lg font-bold text-fb-content">
+              Không tìm thấy món đồ
+            </Text>
+          ) : null}
+          <Text className="text-center text-base leading-6 text-fb-muted">{error}</Text>
+          <View className="mt-6 w-full max-w-[260px]">
+            {notFound ? (
+              <Button
+                accessibilityLabel="Quay lại"
+                onPress={() =>
+                  navigation.canGoBack()
+                    ? navigation.goBack()
+                    : navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
+                }
+              >
+                Quay lại
+              </Button>
+            ) : (
+              <Button accessibilityLabel="Thử tải lại món đồ" onPress={() => void loadPublicItem()}>
+                Thử lại
+              </Button>
+            )}
           </View>
         </View>
       ) : item ? (

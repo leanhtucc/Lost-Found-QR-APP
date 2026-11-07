@@ -1,5 +1,13 @@
 import React, { forwardRef, useState, type ReactNode } from 'react';
-import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
+import {
+  Pressable,
+  Text,
+  TextInput,
+  View,
+  type StyleProp,
+  type TextInputProps,
+  type ViewStyle,
+} from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
 import { cn } from '@/lib/cn';
@@ -18,7 +26,7 @@ interface FormFieldProps extends TextInputProps {
 
 /** Labelled input: visible label, focus ring, inline error, accessible password toggle. */
 export const FormField = forwardRef<TextInput, FormFieldProps>(function FormField(
-  { label, icon, prefix, error, success, hint, password, onFocus, onBlur, ...rest },
+  { label, icon, prefix, error, success, hint, password, style, onFocus, onBlur, ...rest },
   ref
 ) {
   const [focused, setFocused] = useState(false);
@@ -33,7 +41,7 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
         : 'border-fb-border-glass';
 
   return (
-    <View className="w-full">
+    <View style={style as StyleProp<ViewStyle>}>
       <Text className="mb-2 text-sm font-semibold text-fb-content">{label}</Text>
       <View
         className={cn(
