@@ -14,10 +14,14 @@ describe('guest route allowlist', () => {
     ['/api/stream/token', 'POST'],
     ['/api/returns', 'POST'],
     ['/api/v1/returns/return-1/rating', 'POST'],
-    ['/api/v1/returns/return-1/handover/confirm', 'POST'],
     ['/api/v1/returns/return-1/handover/dispute', 'POST'],
   ])('rejects guest credentials for %s', (url, method) => {
     expect(isGuestRouteAllowed(url, method, 'return-1')).toBe(false);
+  });
+  it('allows the guest finder to confirm handover only for the bound session', () => {
+    const url = '/v1/returns/return-1/handover/confirm';
+    expect(isGuestRouteAllowed(url, 'POST', 'return-1')).toBe(true);
+    expect(isGuestRouteAllowed(url, 'POST', 'return-2')).toBe(false);
   });
   it.each(['/api/guest/refresh', '/api/guest/stream-token'])(
     'allows guest credential endpoints %s',

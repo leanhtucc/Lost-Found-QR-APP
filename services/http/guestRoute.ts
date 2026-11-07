@@ -28,7 +28,7 @@ export const matchGuestRoute = (input: string, method = 'GET'): GuestRouteMatch 
     (rest.length === 2 &&
       ((rest[0] === 'meetup' && ['propose', 'accept', 'reject'].includes(rest[1])) ||
         (rest[0] === 'tracking' && ['start', 'stop'].includes(rest[1])) ||
-        (rest[0] === 'handover' && rest[1] === 'init'))) ||
+        (rest[0] === 'handover' && ['init', 'confirm'].includes(rest[1])))) ||
     (rest.length === 1 && ['arrival', 'cancel'].includes(rest[0]));
   return allowedActions ? { allowed: true, returnSessionId: sessionId } : { allowed: false };
 };
