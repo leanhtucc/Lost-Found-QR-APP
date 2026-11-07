@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, Pressable, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@hooks/useAuth';
 import { useToast } from '@contexts/ToastContext';
 import { LoginForm } from './components/LoginForm';
@@ -8,6 +9,7 @@ import { SocialLoginButtons } from '../components/SocialLoginButtons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { ResponsiveContainer } from '@components/atoms/ResponsiveContainer';
 import { OverlayLoading } from '@components/atoms/OverlayLoading';
+import BrandMark from '@components/icons/BrandMark';
 import { useGoogleAuth } from '@hooks/useGoogleAuth';
 import { FIND_BACK } from '@constants/theme';
 
@@ -73,14 +75,15 @@ export const LoginScreen: React.FC = () => {
         subMessage="Vui lòng chờ trong giây lát..."
       />
 
-      {/* Error Banner theo Figma (Chạy fixed ở Top) */}
-      {loginError && (
-        <View className="bg-fb-danger px-4 py-3 flex-row items-center justify-center">
-          <Text className="text-white text-sm font-medium">
-            ({'! '}) {loginError}
-          </Text>
+      {/* Error banner (screen-level failure) */}
+      {loginError ? (
+        <View
+          accessibilityRole="alert"
+          className="flex-row items-center justify-center bg-fb-danger px-4 py-3"
+        >
+          <Text className="text-sm font-semibold text-white">{loginError}</Text>
         </View>
-      )}
+      ) : null}
 
       <KeyboardAwareScrollView
         className="flex-1"
@@ -89,33 +92,43 @@ export const LoginScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         bottomOffset={20}
       >
-        <ResponsiveContainer className="flex-1 px-6 mt-12 justify-center" variant="form">
-          {/* Titles */}
-          <View className="mb-10">
-            <Text className="text-[32px] font-bold text-white mb-2 tracking-tight">
+        <ResponsiveContainer className="flex-1 px-6" variant="form">
+          {/* Hero */}
+          <View className="items-center pb-8 pt-10">
+            <LinearGradient
+              colors={['rgba(43, 127, 232, 0.35)', 'rgba(43, 127, 232, 0)']}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              pointerEvents="none"
+              style={{ position: 'absolute', top: 0, left: -24, right: -24, height: 220 }}
+            />
+            <BrandMark tile width={84} height={84} accessibilityLabel="Lost and Found QR" />
+            <Text className="mt-6 text-center text-[30px] font-bold tracking-tight text-fb-content">
               Chào mừng trở lại
             </Text>
-            <Text className="text-base text-fb-muted leading-6">
-              Đăng nhập để tiếp tục bảo vệ những món đồ giá trị của bạn.
+            <Text className="mt-2 text-center text-base leading-6 text-fb-muted">
+              Đăng nhập để theo dõi và bảo vệ đồ của bạn.
             </Text>
           </View>
 
-          {/* Login Form */}
           <LoginForm
             onSubmit={handleNormalLogin}
             isLoading={isLoading || isOverlayLoading}
             onForgotPassword={navigateToForgotPassword}
           />
 
-          {/* Social Login */}
           <SocialLoginButtons onGooglePress={handleGoogleLogin} />
 
-          {/* Register Link */}
-          <View className="flex-row justify-center mt-10 mb-4">
-            <Text className="text-sm font-medium text-fb-muted">Bạn chưa có tài khoản?</Text>
-            <TouchableOpacity onPress={navigateToRegister} className="ml-1">
-              <Text className="text-sm font-bold text-fb-primary">Tham gia ngay</Text>
-            </TouchableOpacity>
+          <View className="mb-4 mt-8 flex-row items-center justify-center">
+            <Text className="text-sm text-fb-muted">Bạn chưa có tài khoản?</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={navigateToRegister}
+              hitSlop={8}
+              className="ml-1 min-h-[44px] justify-center"
+            >
+              <Text className="text-sm font-bold text-fb-primary-light">Tham gia ngay</Text>
+            </Pressable>
           </View>
         </ResponsiveContainer>
       </KeyboardAwareScrollView>

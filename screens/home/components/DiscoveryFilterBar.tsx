@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 5,
     borderRadius: 14,
-    backgroundColor: 'rgba(19, 19, 25, 0.82)',
+    backgroundColor: 'rgba(15, 26, 46, 0.82)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   categoryChipActive: {
-    backgroundColor: 'rgba(124, 106, 246, 0.18)',
+    backgroundColor: 'rgba(58, 169, 255, 0.18)',
     borderColor: FIND_BACK.primaryLight,
   },
   categoryIcon: {

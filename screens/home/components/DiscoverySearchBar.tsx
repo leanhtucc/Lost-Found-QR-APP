@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1b1b26',
+    backgroundColor: '#12203A',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: 20,
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     marginTop: 6,
-    backgroundColor: '#161622',
+    backgroundColor: '#0F1A2E',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.14)',
     borderRadius: 16,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(168, 85, 247, 0.15)',
+    backgroundColor: 'rgba(43, 127, 232, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,

@@ -122,7 +122,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
             borderRadius: 20,
             borderWidth: 1,
             borderStyle: 'dashed',
-            borderColor: 'rgba(196,181,253,0.4)',
+            borderColor: 'rgba(124, 196, 255,0.4)',
             backgroundColor: '#1f1f2b',
             alignItems: 'center',
             justifyContent: 'center',
@@ -248,7 +248,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
                     justifyContent: 'center',
                   }}
                 >
-                  <Check size={14} color="#1b0f36" />
+                  <Check size={14} color="#12203A" />
                 </View>
               ) : null}
             </TouchableOpacity>
@@ -340,7 +340,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
               <View
                 key={idx}
                 style={{
-                  backgroundColor: '#1a1a23',
+                  backgroundColor: '#12203A',
                   borderRadius: 999,
                   paddingHorizontal: 10,
                   paddingVertical: 4,
@@ -375,7 +375,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
             <View
               style={{
-                backgroundColor: '#1a1a23',
+                backgroundColor: '#12203A',
                 borderRadius: 999,
                 paddingHorizontal: 10,
                 paddingVertical: 4,
@@ -387,7 +387,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
             </View>
             <View
               style={{
-                backgroundColor: '#1a1a23',
+                backgroundColor: '#12203A',
                 borderRadius: 999,
                 paddingHorizontal: 10,
                 paddingVertical: 4,
@@ -399,7 +399,7 @@ export const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
             </View>
             <View
               style={{
-                backgroundColor: '#1a1a23',
+                backgroundColor: '#12203A',
                 borderRadius: 999,
                 paddingHorizontal: 10,
                 paddingVertical: 4,

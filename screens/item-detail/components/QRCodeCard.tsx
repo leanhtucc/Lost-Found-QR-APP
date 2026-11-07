@@ -54,7 +54,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ itemId, itemName }) => {
   return (
     <Animated.View
       entering={FadeInDown.duration(300).delay(100)}
-      className="mb-4 items-center rounded-3xl border border-fb-border-subtle bg-fb-surface p-6"
+      className="mb-4 items-center rounded-3xl border border-fb-border-glass bg-fb-surface p-6"
     >
       <Text className="text-lg font-bold text-fb-content">Mã QR bảo vệ</Text>
       <Text className="mb-5 mt-1 text-center text-xs leading-5 text-fb-muted">

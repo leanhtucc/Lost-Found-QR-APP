@@ -26,6 +26,7 @@ type ChatRouteParams = {
   userAvatar?: string;
   memberId?: string;
   isVerified?: boolean;
+  returnSessionId?: string;
 };
 
 type ChatNavProp = StackNavigationProp<RootStackParamList>;
@@ -89,7 +90,8 @@ export default function ChatScreen() {
 
   // Return Flow Session
   const { session, currentRole } = useReturnSession({
-    channelId,
+    sessionId: params.returnSessionId,
+    channelId: params.returnSessionId ? undefined : channelId,
   });
 
   const proposeMeetup = useReturnStore(state => state.proposeMeetup);
@@ -224,7 +226,7 @@ export default function ChatScreen() {
   };
 
   const handleMore = () => {
-    Alert.alert('Tùy chọn', 'Kênh hỗ trợ an toàn FindBack: 1900-1234');
+    Alert.alert('Tùy chọn', 'Kênh hỗ trợ an toàn Lost and Found QR: 1900-1234');
   };
 
   const handleAttach = () => {

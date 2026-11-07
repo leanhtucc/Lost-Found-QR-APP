@@ -39,7 +39,7 @@ export const OverlayLoading: React.FC<OverlayLoadingProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(10, 10, 15, 0.78)',
+    backgroundColor: 'rgba(5, 11, 20, 0.78)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 280,
-    backgroundColor: '#17171F',
+    backgroundColor: '#12203A',
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -64,12 +64,12 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(124, 106, 246, 0.12)',
+    backgroundColor: 'rgba(58, 169, 255, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(124, 106, 246, 0.25)',
+    borderColor: 'rgba(58, 169, 255, 0.25)',
   },
   message: {
     fontSize: 16,

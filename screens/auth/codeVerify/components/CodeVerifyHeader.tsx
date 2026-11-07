@@ -20,7 +20,7 @@ export const CodeVerifyHeader: React.FC<CodeVerifyHeaderProps> = ({ onBack }) =>
         <ChevronLeft size={28} color={FIND_BACK.bodyText} />
       </TouchableOpacity>
       <Text className="flex-1 text-center text-lg font-bold text-white mr-10 tracking-wider">
-        FindBack
+        Lost and Found QR
       </Text>
     </Animated.View>
   );

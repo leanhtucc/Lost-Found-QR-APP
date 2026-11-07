@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: REPORT_COLORS.border,
-    backgroundColor: '#17171F',
+    backgroundColor: '#12203A',
     overflow: 'hidden',
   },
   searchResultsList: {
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     borderRadius: REPORT_LAYOUT.cardRadius,
     borderWidth: 1,
     borderColor: REPORT_COLORS.border,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#050B14',
   },
   centerPinContainer: {
     position: 'absolute',
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: 'rgba(139,92,246,0.18)',
+    backgroundColor: 'rgba(43, 127, 232,0.18)',
   },
   centerPinCircle: {
     width: 48,
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#8b5cf6',
+    backgroundColor: '#2B7FE8',
     borderWidth: 3,
     borderColor: 'rgba(255,255,255,0.85)',
     elevation: 8,
@@ -447,13 +447,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.96)',
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.35)',
+    borderColor: 'rgba(43, 127, 232,0.35)',
   },
   centerPinLabelDark: {
     backgroundColor: 'rgba(8,8,15,0.92)',
   },
   centerPinLabelText: {
-    color: '#8b5cf6',
+    color: '#2B7FE8',
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,

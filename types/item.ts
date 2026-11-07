@@ -193,7 +193,10 @@ export interface ScanGuestInitResponse {
   chatToken: string;
   guestId: string;
   channelId: string;
-  guestInfo?: {
+  returnSessionId: string;
+  guestAccessToken: string;
+  guestAccessExpiresAt: string;
+  guestInfo: {
     id: string;
     displayName: string;
   };

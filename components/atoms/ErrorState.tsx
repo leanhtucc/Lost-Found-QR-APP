@@ -25,11 +25,11 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 }) => {
   return (
     <View className={cn('flex-1 items-center justify-center p-6 text-center', className)}>
-      <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10">
-        <AlertTriangle size={32} color={FIND_BACK.danger} strokeWidth={1.8} />
+      <View className="mb-4 h-20 w-20 items-center justify-center rounded-3xl border border-fb-danger/30 bg-fb-danger/10">
+        <AlertTriangle size={36} color={FIND_BACK.danger} strokeWidth={1.8} />
       </View>
-      <Text className="text-center text-base font-bold text-fb-content">{title}</Text>
-      <Text className="mt-1.5 max-w-[290px] text-center text-xs leading-5 text-fb-muted">
+      <Text className="text-center text-lg font-bold text-fb-content">{title}</Text>
+      <Text className="mt-2 max-w-[300px] text-center text-sm leading-5 text-fb-muted">
         {message}
       </Text>
 
@@ -40,10 +40,10 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
             onPress={onRetry}
             accessibilityRole="button"
             accessibilityLabel={retryTitle}
-            className="flex-row items-center gap-2 rounded-xl bg-fb-primary px-5 py-2.5"
+            className="min-h-[48px] flex-row items-center gap-2 rounded-2xl bg-fb-primary px-6"
           >
-            <RefreshCw size={14} color={FIND_BACK.bodyText} />
-            <Text className="text-xs font-semibold text-fb-content">{retryTitle}</Text>
+            <RefreshCw size={16} color="#FFFFFF" />
+            <Text className="text-sm font-semibold text-white">{retryTitle}</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -53,9 +53,9 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
             onPress={onSecondaryAction}
             accessibilityRole="button"
             accessibilityLabel={secondaryActionTitle}
-            className="rounded-xl border border-fb-border-subtle bg-fb-surface-elevated px-4 py-2.5"
+            className="min-h-[48px] justify-center rounded-2xl border border-fb-border-glass bg-fb-surface-elevated px-5"
           >
-            <Text className="text-xs font-medium text-fb-muted">{secondaryActionTitle}</Text>
+            <Text className="text-sm font-medium text-fb-muted">{secondaryActionTitle}</Text>
           </TouchableOpacity>
         ) : null}
       </View>

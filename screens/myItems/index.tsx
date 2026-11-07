@@ -103,7 +103,7 @@ export const MyItemsScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(108, 76, 241, 0.34)', 'rgba(108, 76, 241, 0.12)', 'rgba(14, 14, 19, 0)']}
+        colors={['rgba(43, 127, 232, 0.34)', 'rgba(43, 127, 232, 0.12)', 'rgba(14, 14, 19, 0)']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.heroGlow}

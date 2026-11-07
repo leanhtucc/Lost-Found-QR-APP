@@ -47,7 +47,7 @@ export const AppToggle: React.FC<AppToggleProps> = ({
   disabled = false,
   size = 'md',
   activeTrackColor = FIND_BACK.primary,
-  inactiveTrackColor = '#25252D',
+  inactiveTrackColor = '#1C2B4A',
   activeKnobColor = '#FFFFFF',
   inactiveKnobColor = '#E4E4E7',
   style,

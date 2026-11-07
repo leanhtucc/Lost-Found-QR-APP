@@ -358,7 +358,7 @@ export const MapSection = React.forwardRef<MapSectionHandle, MapSectionProps>(
 
             const pinKey = getPinKey(pin);
             const isFound = isPinFound(pin);
-            const pinColor = isFound ? '#10b981' : pin.isOwn ? '#6366f1' : '#f97316';
+            const pinColor = isFound ? '#10b981' : pin.isOwn ? '#2B7FE8' : '#f97316';
 
             return (
               <Marker
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 16,
-    backgroundColor: 'rgba(19, 19, 25, 0.88)',
+    backgroundColor: 'rgba(15, 26, 46, 0.88)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     zIndex: 25,

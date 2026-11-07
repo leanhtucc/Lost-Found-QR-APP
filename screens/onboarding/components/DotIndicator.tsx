@@ -28,19 +28,19 @@ export const DotIndicator: React.FC<DotIndicatorProps> = ({
         // width, backgroundColor, opacity là Animated.Value → bắt buộc dùng inline style
         const dotWidth = scrollX.interpolate({
           inputRange,
-          outputRange: [6, 20, 6],
+          outputRange: [6, 28, 6],
           extrapolate: 'clamp',
         });
 
         const backgroundColor = scrollX.interpolate({
           inputRange,
-          outputRange: [FIND_BACK.labelText, FIND_BACK.primary, FIND_BACK.labelText],
+          outputRange: [FIND_BACK.surfaceElevated, FIND_BACK.primary, FIND_BACK.surfaceElevated],
           extrapolate: 'clamp',
         });
 
         const opacity = scrollX.interpolate({
           inputRange,
-          outputRange: [0.45, 1, 0.45],
+          outputRange: [0.7, 1, 0.7],
           extrapolate: 'clamp',
         });
 

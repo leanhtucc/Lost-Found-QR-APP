@@ -21,7 +21,7 @@ export const ChatListHeader: React.FC<ChatListHeaderProps> = ({ onBack, unreadCo
             onPress={onBack}
             accessibilityRole="button"
             accessibilityLabel="Quay lại"
-            className="h-11 w-11 items-center justify-center rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated"
+            className="h-11 w-11 items-center justify-center rounded-full border border-fb-border-glass bg-fb-surface-elevated"
           >
             <ArrowLeft size={20} color={FIND_BACK.bodyText} />
           </TouchableOpacity>

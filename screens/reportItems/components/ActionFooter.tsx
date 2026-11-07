@@ -28,7 +28,7 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
     >
       <TouchableOpacity activeOpacity={0.86} onPress={onPress} disabled={disabled}>
         <LinearGradient
-          colors={disabled ? ['#5a5b62', '#5a5b62'] : REPORT_COLORS.ctaGradient}
+          colors={disabled ? ['#22345A', '#22345A'] : REPORT_COLORS.ctaGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{

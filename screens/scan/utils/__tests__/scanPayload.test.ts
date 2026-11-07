@@ -9,51 +9,59 @@ describe('normalizeScanPayload', () => {
 
   it('accepts a valid raw item ID', () => {
     const result = normalizeScanPayload('abc-123-def');
-    expect(result).toEqual({ success: true, itemId: 'abc-123-def' });
+    expect(result).toEqual({ success: true, qrCodeId: 'abc-123-def' });
   });
 
   it('accepts alphanumeric ID', () => {
     const result = normalizeScanPayload('A1b2C3');
-    expect(result).toEqual({ success: true, itemId: 'A1b2C3' });
+    expect(result).toEqual({ success: true, qrCodeId: 'A1b2C3' });
   });
 
   it('trims whitespace from input', () => {
     const result = normalizeScanPayload('  abc-123  ');
-    expect(result).toEqual({ success: true, itemId: 'abc-123' });
+    expect(result).toEqual({ success: true, qrCodeId: 'abc-123' });
   });
 
   // ── Valid deep links ──────────────────────────────────────────
 
   it('extracts ID from lostfound://item/<id>', () => {
     const result = normalizeScanPayload('lostfound://item/my-item-id');
-    expect(result).toEqual({ success: true, itemId: 'my-item-id' });
+    expect(result).toEqual({ success: true, qrCodeId: 'my-item-id' });
   });
 
   it('extracts ID from lostfoundqr://item/<id>', () => {
     const result = normalizeScanPayload('lostfoundqr://item/abc-123');
-    expect(result).toEqual({ success: true, itemId: 'abc-123' });
+    expect(result).toEqual({ success: true, qrCodeId: 'abc-123' });
   });
 
   // ── Valid web URLs ────────────────────────────────────────────
 
   it('extracts ID from approved host URL', () => {
     const result = normalizeScanPayload('https://lostfound.app/item/abc-123');
-    expect(result).toEqual({ success: true, itemId: 'abc-123' });
+    expect(result).toEqual({ success: true, qrCodeId: 'abc-123' });
   });
 
   it('extracts ID from www.lostfound.app URL', () => {
     const result = normalizeScanPayload('https://www.lostfound.app/item/xyz-789');
-    expect(result).toEqual({ success: true, itemId: 'xyz-789' });
+    expect(result).toEqual({ success: true, qrCodeId: 'xyz-789' });
   });
 
-  it('extracts ID from app.lostfound.vn URL', () => {
-    const result = normalizeScanPayload('https://app.lostfound.vn/item/test-id');
-    expect(result).toEqual({ success: true, itemId: 'test-id' });
+  it('extracts the QR identity from app.lostfound.vn URLs', () => {
+    const result = normalizeScanPayload('https://app.lostfound.vn/item/qr-code-id-not-internal-id');
+    expect(result).toEqual({ success: true, qrCodeId: 'qr-code-id-not-internal-id' });
+  });
+
+  it.each([
+    'https://www.app.lostfound.vn/item/qr-1',
+    'https://findback.vn/item/qr-2',
+    'https://www.findback.vn/item/qr-3',
+  ])('accepts an approved QR host %s', url => {
+    expect(normalizeScanPayload(url).success).toBe(true);
   });
 
   it('strips query params from URL-extracted ID', () => {
     const result = normalizeScanPayload('https://lostfound.app/item/abc-123?ref=scan');
-    expect(result).toEqual({ success: true, itemId: 'abc-123' });
+    expect(result).toEqual({ success: true, qrCodeId: 'abc-123' });
   });
 
   // ── Rejection cases ───────────────────────────────────────────
@@ -107,7 +115,7 @@ describe('normalizeScanPayload', () => {
     const result = normalizeScanPayload('https://evil.com/item/abc-123');
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error).toContain('FindBack');
+      expect(result.error).toContain('Lost and Found QR');
     }
   });
 

@@ -3,21 +3,21 @@ import colors from '@/constants/colors';
 export const MY_ITEMS_COLORS = {
   background: colors.background,
   surface: colors.surface,
-  surfaceMuted: '#1F1F26',
+  surfaceMuted: '#162340',
   border: colors.border,
   textPrimary: colors.textPrimary,
   textSecondary: colors.textSecondary,
-  textMuted: '#71717A',
+  textMuted: '#6A7A96',
 
   primaryStart: colors.primary,
   primaryEnd: colors.tertiary,
-  primarySoft: 'rgba(124, 106, 246, 0.16)',
+  primarySoft: 'rgba(58, 169, 255, 0.16)',
 
   safeSoft: 'rgba(46, 204, 139, 0.14)',
   safeText: '#70FFBA',
   lostSoft: 'rgba(215, 51, 87, 0.14)',
   lostText: '#FF8DA3',
-  pendingSoft: 'rgba(244, 132, 95, 0.14)',
+  pendingSoft: 'rgba(255, 176, 32, 0.14)',
   pendingText: '#FFAA8E',
 } as const;
 

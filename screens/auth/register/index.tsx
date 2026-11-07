@@ -98,15 +98,18 @@ export const RegisterScreen: React.FC = () => {
       <StatusBar barStyle="light-content" backgroundColor={FIND_BACK.canvas} />
 
       {/* Header */}
-      <View className="flex-row items-center px-4 h-14 mt-2">
+      <View className="mt-2 flex-row items-center px-4 pb-2">
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Quay lại"
           onPress={handleGoBack}
-          className="w-10 h-10 items-center justify-center active:opacity-70"
+          hitSlop={8}
+          className="h-11 w-11 items-center justify-center rounded-full border border-fb-border-glass bg-fb-surface active:bg-fb-surface-elevated"
         >
-          <ChevronLeft size={28} color={FIND_BACK.bodyText} />
+          <ChevronLeft size={22} color={FIND_BACK.bodyText} />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-lg font-bold text-white mr-10 tracking-wider">
-          FindBack
+        <Text className="flex-1 pr-11 text-center text-base font-bold tracking-wide text-fb-content">
+          Lost and Found QR
         </Text>
       </View>
 
@@ -120,8 +123,8 @@ export const RegisterScreen: React.FC = () => {
         <ResponsiveContainer className="flex-1 px-6 mt-4 justify-center" variant="form">
           {/* Step Indicator */}
           <View className="mb-6">
-            <Text className="text-[10px] font-bold text-fb-primary tracking-widest mb-2">
-              BƯỚC 1/2
+            <Text className="mb-2 text-xs font-bold tracking-widest text-fb-primary-light">
+              BƯỚC 1 / 2
             </Text>
             <View className="flex-row h-1 bg-fb-surface-muted rounded-full overflow-hidden">
               <View className="flex-1 bg-fb-primary rounded-full" />
@@ -131,20 +134,16 @@ export const RegisterScreen: React.FC = () => {
 
           {/* Titles */}
           <View className="mb-8">
-            <Text className="text-[28px] font-bold text-white mb-2">Thông tin cá nhân</Text>
-            <Text className="text-[15px] text-fb-muted leading-6">
-              Hãy bắt đầu bằng cách tạo hồ sơ an toàn của bạn.
+            <Text className="mb-2 text-[28px] font-bold leading-[34px] tracking-tight text-fb-content">
+              Tạo tài khoản
+            </Text>
+            <Text className="text-[15px] leading-6 text-fb-muted">
+              Chỉ mất 1 phút. Thông tin của bạn luôn được ẩn với người lạ.
             </Text>
           </View>
 
           {/* Register Form */}
           <RegisterForm onSubmit={handleRegister} isLoading={isLoading} />
-
-          {/* Terms text */}
-          <Text className="text-center text-[11px] text-fb-muted mt-4 mb-2 px-4 leading-4">
-            Bằng việc tiếp tục, bạn đồng ý với Điều khoản Dịch vụ và Chính sách Bảo mật của chúng
-            tôi.
-          </Text>
         </ResponsiveContainer>
       </KeyboardAwareScrollView>
     </SafeAreaView>

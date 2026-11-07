@@ -38,7 +38,7 @@
 
 ## C. Design System Audit
 
-- Giữ nguyên FindBack / Obsidian và palette `FIND_BACK`, `SEMANTIC_TOKENS`, spacing/radius hiện có.
+- Giữ nguyên Lost and Found QR / Obsidian và palette `FIND_BACK`, `SEMANTIC_TOKENS`, spacing/radius hiện có.
 - Shared `StatusBadge`, `LoadingState`, `EmptyState`, `ErrorState` tiếp tục được tái sử dụng; không tạo design system thứ hai.
 - Be Vietnam Pro được load ở bootstrap và typography scale chuẩn.
 - Contrast của dòng thông báo báo mất đạt chuẩn semantic secondary text (cỡ 14, line-height 20).

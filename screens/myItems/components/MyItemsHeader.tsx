@@ -12,7 +12,7 @@ interface MyItemsHeaderProps {
 export const MyItemsHeader: React.FC<MyItemsHeaderProps> = ({ totalItems, onAddClick }) => {
   return (
     <LinearGradient
-      colors={['rgba(26, 21, 48, 0.96)', 'rgba(20, 18, 34, 0.96)']}
+      colors={['rgba(22, 35, 64, 0.96)', 'rgba(20, 18, 34, 0.96)']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.wrapper}
@@ -30,13 +30,13 @@ export const MyItemsHeader: React.FC<MyItemsHeaderProps> = ({ totalItems, onAddC
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
         <LinearGradient
-          colors={['#7C6AF6', '#6B5AE8']}
+          colors={['#2B7FE8', '#1D62C9']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.addButtonGradient}
           pointerEvents="none"
         >
-          <Plus size={20} color="#F9F5FD" strokeWidth={2.5} />
+          <Plus size={20} color="#F1F6FF" strokeWidth={2.5} />
         </LinearGradient>
       </TouchableOpacity>
     </LinearGradient>

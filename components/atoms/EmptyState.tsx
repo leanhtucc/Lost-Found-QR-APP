@@ -23,12 +23,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   return (
     <View className={cn('items-center justify-center p-6 text-center', className)}>
-      <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated">
+      <View className="mb-4 h-20 w-20 items-center justify-center rounded-3xl border border-fb-border-glass bg-fb-surface-elevated">
         {icon || <PackageOpen size={32} color={FIND_BACK.primaryLight} strokeWidth={1.75} />}
       </View>
-      <Text className="text-center text-base font-bold text-fb-content">{title}</Text>
+      <Text className="text-center text-lg font-bold text-fb-content">{title}</Text>
       {description ? (
-        <Text className="mt-1.5 max-w-[280px] text-center text-xs leading-5 text-fb-muted">
+        <Text className="mt-2 max-w-[300px] text-center text-sm leading-5 text-fb-muted">
           {description}
         </Text>
       ) : null}
@@ -38,9 +38,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           onPress={onAction}
           accessibilityRole="button"
           accessibilityLabel={actionTitle}
-          className="mt-4 rounded-xl border border-fb-primary/25 bg-fb-primary/10 px-5 py-2.5"
+          className="mt-5 min-h-[48px] justify-center rounded-2xl border border-fb-primary/30 bg-fb-primary/10 px-6"
         >
-          <Text className="text-xs font-semibold text-fb-primary-light">{actionTitle}</Text>
+          <Text className="text-sm font-semibold text-fb-primary-light">{actionTitle}</Text>
         </TouchableOpacity>
       ) : null}
     </View>

@@ -66,7 +66,7 @@ export const SlideItem: React.FC<SlideItemProps> = ({
         {/* Text group */}
         <View className={`w-full items-center ${isCompactHeight ? 'mt-4 mb-2' : 'mt-8 mb-2'}`}>
           <Text
-            className={`${isCompactHeight ? 'mt-2 text-2xl' : 'mt-3 text-3xl'} mb-4 px-2 text-center font-bold text-white`}
+            className={`${isCompactHeight ? 'mt-2 text-2xl' : 'mt-3 text-[30px] leading-[38px]'} mb-4 px-2 text-center font-bold tracking-tight text-fb-content`}
           >
             {item.title}
           </Text>
@@ -77,7 +77,7 @@ export const SlideItem: React.FC<SlideItemProps> = ({
                 : isCompactHeight
                   ? 'text-sm leading-6 px-3'
                   : 'text-base leading-6 px-4'
-            } max-w-xs text-center text-gray-400`}
+            } max-w-xs text-center text-fb-muted`}
           >
             {item.description}
           </Text>

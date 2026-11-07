@@ -136,18 +136,24 @@ export const OnboardingScreen: React.FC = () => {
               paddingTop: Math.max(Constants.statusBarHeight * 0.08, 2),
             }}
           >
-            {/* ── Header: Logo FindBack + Skip ── */}
+            {/* ── Header: Logo Lost and Found QR + Skip ── */}
             <View
               className={`flex-row items-center justify-between ${isCompactHeight ? 'mt-2' : 'mt-4'}`}
             >
               <View className="flex-row items-center gap-[7px]">
-                <IconLogoOnboarding width={32} height={32} />
+                <IconLogoOnboarding tile width={36} height={36} />
                 <Text className="text-fb-content text-base font-bold tracking-[0.1px]">
-                  FindBack
+                  Lost and Found QR
                 </Text>
               </View>
-              <TouchableOpacity onPress={handleSkip} className="px-1.5 py-1" activeOpacity={0.6}>
-                <Text className="text-sm font-medium text-gray-400">Skip</Text>
+              <TouchableOpacity
+                onPress={handleSkip}
+                className="min-h-[44px] justify-center px-2"
+                activeOpacity={0.6}
+                accessibilityRole="button"
+                accessibilityLabel="Bỏ qua giới thiệu"
+              >
+                <Text className="text-sm font-semibold text-fb-muted">Bỏ qua</Text>
               </TouchableOpacity>
             </View>
 

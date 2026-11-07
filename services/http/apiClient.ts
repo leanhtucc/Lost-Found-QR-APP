@@ -1,6 +1,8 @@
 import { ENV } from '@/constants/environment';
 import { sessionEvents } from '@/lib/sessionEvents';
 import { authStorage } from '@/storage/auth';
+import { guestSessionStorage, type GuestSession } from '@/storage/guestSession';
+import { isGuestRouteAllowed } from './guestRoute';
 
 import { ApiError, BackendErrorShape } from './apiError';
 
@@ -151,6 +153,61 @@ const refreshAccessToken = async (): Promise<RefreshedSession> => {
   return refreshPromise;
 };
 
+const GUEST_REFRESH_SKEW_MS = 60_000;
+
+const refreshGuestToken = async (session: GuestSession): Promise<GuestSession> => {
+  try {
+    const response = await executeFetch(
+      resolveUrl('/api/guest/refresh'),
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + session.guestAccessToken,
+        },
+      },
+      DEFAULT_TIMEOUT_MS
+    );
+    const payload = await parseJsonSafely<
+      ApiEnvelope<{
+        guestAccessToken?: string;
+        guestAccessExpiresAt?: string;
+        accessToken?: string;
+        expiresAt?: string;
+      }>
+    >(response);
+    const data = (payload?.data || payload) as {
+      guestAccessToken?: string;
+      guestAccessExpiresAt?: string;
+      accessToken?: string;
+      expiresAt?: string;
+    } | null;
+    const accessToken = data?.guestAccessToken || data?.accessToken;
+    const expiresAt = data?.guestAccessExpiresAt || data?.expiresAt;
+
+    if (!response.ok || !accessToken || !expiresAt) {
+      await guestSessionStorage.clear();
+      throw new ApiError(
+        payload?.message || 'Phiên khách đã hết hạn. Vui lòng bắt đầu lại.',
+        response.status || 401,
+        'GUEST_SESSION_EXPIRED'
+      );
+    }
+
+    const updated = { ...session, guestAccessToken: accessToken, expiresAt };
+    await guestSessionStorage.save(updated);
+    return updated;
+  } catch (error) {
+    await guestSessionStorage.clear();
+    if (error instanceof ApiError && error.code === 'GUEST_SESSION_EXPIRED') throw error;
+    throw new ApiError(
+      'Phiên khách đã hết hạn hoặc không thể làm mới. Vui lòng bắt đầu lại.',
+      401,
+      'GUEST_SESSION_EXPIRED'
+    );
+  }
+};
+
 const fetchWithPolicy = async (
   input: string,
   options: ApiRequestOptions = {},
@@ -164,7 +221,24 @@ const fetchWithPolicy = async (
     ...requestOptions
   } = options;
   const headers = normalizeHeaders(requestOptions.headers);
-  const token = auth === 'none' ? null : await authStorage.getAccessToken();
+  const method = requestOptions.method || 'GET';
+  let guestSession = await guestSessionStorage.get();
+  const useGuestToken = Boolean(
+    guestSession && isGuestRouteAllowed(input, method, guestSession.returnSessionId)
+  );
+
+  if (useGuestToken && guestSession) {
+    const expiresAt = Date.parse(guestSession.expiresAt);
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() + GUEST_REFRESH_SKEW_MS) {
+      guestSession = await refreshGuestToken(guestSession);
+    }
+  }
+
+  const token = useGuestToken
+    ? guestSession?.guestAccessToken || null
+    : auth === 'none'
+      ? null
+      : await authStorage.getAccessToken();
 
   if (token && sessionExpiryPromise && !refreshPromise) sessionExpiryPromise = null;
   if (auth === 'required' && !token) {
@@ -173,7 +247,7 @@ const fetchWithPolicy = async (
   }
 
   delete headers.authorization;
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token) headers.Authorization = 'Bearer ' + token;
 
   const isFormData = typeof FormData !== 'undefined' && requestOptions.body instanceof FormData;
   if (requestOptions.body && !isFormData && !headers['content-type']) {
@@ -182,8 +256,27 @@ const fetchWithPolicy = async (
 
   const response = await executeFetch(resolveUrl(input), { ...requestOptions, headers }, timeoutMs);
 
+  if (useGuestToken && guestSession && response.status === 401 && !hasRetried && !skipRefresh) {
+    await refreshGuestToken(guestSession);
+    return fetchWithPolicy(input, options, true);
+  }
+
+  if (useGuestToken && [401, 403].includes(response.status)) {
+    await guestSessionStorage.clear();
+    throw new ApiError(
+      'Phiên khách đã hết hạn hoặc không còn quyền truy cập. Vui lòng bắt đầu lại.',
+      response.status,
+      'GUEST_SESSION_EXPIRED'
+    );
+  }
+
   const canRefresh =
-    response.status === 401 && !hasRetried && !skipRefresh && auth !== 'none' && Boolean(token);
+    response.status === 401 &&
+    !hasRetried &&
+    !skipRefresh &&
+    !useGuestToken &&
+    auth !== 'none' &&
+    Boolean(token);
 
   if (!canRefresh) return response;
 

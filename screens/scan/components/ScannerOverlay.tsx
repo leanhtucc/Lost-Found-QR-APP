@@ -183,11 +183,11 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ status, qrBounds
           >
             <LinearGradient
               colors={[
-                'rgba(124, 106, 246, 0)',
-                'rgba(124, 106, 246, 0.4)',
-                'rgba(124, 106, 246, 1)',
-                'rgba(124, 106, 246, 0.4)',
-                'rgba(124, 106, 246, 0)',
+                'rgba(58, 169, 255, 0)',
+                'rgba(58, 169, 255, 0.4)',
+                'rgba(58, 169, 255, 1)',
+                'rgba(58, 169, 255, 0.4)',
+                'rgba(58, 169, 255, 0)',
               ]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}

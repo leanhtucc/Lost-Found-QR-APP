@@ -204,7 +204,7 @@ export const HomeScreen: React.FC = () => {
       />
 
       <LinearGradient
-        colors={['rgba(10,10,15,0.96)', 'rgba(10,10,15,0.7)', 'rgba(10,10,15,0)']}
+        colors={['rgba(5, 11, 20,0.96)', 'rgba(5, 11, 20,0.7)', 'rgba(5, 11, 20,0)']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         pointerEvents="box-none"
@@ -250,7 +250,7 @@ export const HomeScreen: React.FC = () => {
                   ? 'Dịch vụ vị trí (GPS) đang tắt'
                   : 'Cần quyền truy cập vị trí'}
               </Text>
-              <Text className="mt-0.5 text-xs text-gray-300">
+              <Text className="mt-0.5 text-xs text-fb-muted">
                 Radar yêu cầu GPS để quét đồ thất lạc xung quanh bạn trong bán kính 10 km.
               </Text>
             </View>
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   bottomSheetBackground: {
-    backgroundColor: '#131318',
+    backgroundColor: '#0F1A2E',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
   },
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     zIndex: 25,
     padding: 14,
     borderRadius: 16,
-    backgroundColor: '#1c1b22',
+    backgroundColor: '#12203A',
     borderWidth: 1,
     borderColor: 'rgba(244, 63, 94, 0.4)',
     shadowColor: '#000',

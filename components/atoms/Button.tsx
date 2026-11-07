@@ -13,7 +13,12 @@ import {
 } from 'react-native';
 
 export type AppButtonVariant =
-  'primary' | 'secondary' | 'outlined' | 'inverted' | 'danger' | 'success';
+  | 'primary'
+  | 'secondary'
+  | 'outlined'
+  | 'inverted'
+  | 'danger'
+  | 'success';
 
 export interface ButtonProps extends Omit<PressableProps, 'children'> {
   variant?: AppButtonVariant;
@@ -40,7 +45,7 @@ const variantShell: Record<AppButtonVariant, string> = {
 };
 
 const variantText: Record<AppButtonVariant, string> = {
-  primary: 'text-fb-neutral font-semibold text-body-small',
+  primary: 'text-white font-semibold text-body-small',
   secondary: 'text-fb-content font-semibold text-body-small',
   outlined: 'text-fb-content font-semibold text-body-small',
   inverted: 'text-fb-neutral font-semibold text-body-small',
@@ -108,7 +113,7 @@ const ButtonInner = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
       >
         <View className="w-full overflow-hidden rounded-fb">
           <LinearGradient
-            colors={[FIND_BACK.primaryLight, FIND_BACK.primary, FIND_BACK.primaryDark]}
+            colors={[FIND_BACK.primary, FIND_BACK.primaryDark]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={gradientInnerStyle}

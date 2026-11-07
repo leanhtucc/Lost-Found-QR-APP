@@ -70,7 +70,7 @@ export function mapCodeBoundsToPreview(
 
 /**
  * Select the best QR code from multiple detections.
- * Policy: prefer valid FindBack QR closest to center, fallback to largest.
+ * Policy: prefer valid Lost and Found QR QR closest to center, fallback to largest.
  *
  * @param codes - Array of detected codes from VisionCamera.
  * @param previewLayout - The layout of the camera preview view.
@@ -101,7 +101,7 @@ export function selectBestCode(
     // Filter to QR type codes if type info available
     if (code.type && code.type !== 'qr') continue;
 
-    // Only consider valid FindBack payloads — never lock onto / emit a
+    // Only consider valid Lost and Found QR payloads — never lock onto / emit a
     // foreign QR when a valid one is present in frame.
     if (!extractItemId(code.value)) continue;
 

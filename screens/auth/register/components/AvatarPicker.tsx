@@ -193,8 +193,8 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
         activeOpacity={0.8}
       >
         {/* Gradient Border */}
-        <View className="w-[120px] h-[120px] rounded-full p-[3px] bg-gray-200 shadow-md shadow-blue-500/20">
-          <View className="flex-1 rounded-full bg-gray-50 justify-center items-center overflow-hidden">
+        <View className="w-[120px] h-[120px] rounded-full p-[3px] bg-fb-surface-muted shadow-md shadow-blue-500/20">
+          <View className="flex-1 rounded-full bg-fb-surface-muted justify-center items-center overflow-hidden">
             {isLoading ? (
               <View className="items-center justify-center">
                 <ActivityIndicator size="large" color={FIND_BACK.primary} />
@@ -216,13 +216,13 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
               </>
             ) : (
               <View className="items-center px-2.5">
-                <View className="w-14 h-14 rounded-full bg-gray-100 justify-center items-center mb-1.5">
+                <View className="w-14 h-14 rounded-full bg-fb-surface-muted justify-center items-center mb-1.5">
                   <User size={32} color={FIND_BACK.mutedText} />
                 </View>
-                <Text className="text-[11px] font-medium text-gray-500 text-center">
+                <Text className="text-[11px] font-medium text-fb-muted text-center">
                   Thêm ảnh đại diện
                 </Text>
-                <Text className="text-[9px] text-gray-400 mt-0.5">(Không bắt buộc)</Text>
+                <Text className="text-[9px] text-fb-muted mt-0.5">(Không bắt buộc)</Text>
               </View>
             )}
           </View>

@@ -6,6 +6,7 @@ const authState = {
   accessToken: 'access-old' as string | null,
   refreshToken: 'refresh-old' as string | null,
 };
+const mockGuestSessionState: { session: any } = { session: null };
 
 jest.mock('@/constants/environment', () => ({
   ENV: { API_URL: 'https://api.example.test' },
@@ -16,6 +17,17 @@ jest.mock('@/storage/auth', () => ({
     getRefreshToken: jest.fn(),
     saveTokens: jest.fn(),
     clearAll: jest.fn(),
+  },
+}));
+jest.mock('@/storage/guestSession', () => ({
+  guestSessionStorage: {
+    get: jest.fn(async () => mockGuestSessionState.session),
+    save: jest.fn(async (session: unknown) => {
+      mockGuestSessionState.session = session;
+    }),
+    clear: jest.fn(async () => {
+      mockGuestSessionState.session = null;
+    }),
   },
 }));
 jest.mock('@/lib/sessionEvents', () => ({
@@ -37,6 +49,7 @@ describe('central apiClient', () => {
     resetApiClientStateForTests();
     authState.accessToken = 'access-old';
     authState.refreshToken = 'refresh-old';
+    mockGuestSessionState.session = null;
     jest.clearAllMocks();
     mockAuthStorage.getAccessToken.mockImplementation(async () => authState.accessToken);
     mockAuthStorage.getRefreshToken.mockImplementation(async () => authState.refreshToken);
@@ -70,6 +83,80 @@ describe('central apiClient', () => {
 
     const options = (global.fetch as jest.Mock).mock.calls[0][1];
     expect(options.headers.Authorization).toBeUndefined();
+  });
+
+  it('never attaches a guest token to item or stream token requests', async () => {
+    mockGuestSessionState.session = {
+      guestId: 'guest-1',
+      returnSessionId: 'return-1',
+      channelId: 'channel-1',
+      guestAccessToken: 'guest-secret',
+      expiresAt: '2099-01-01T00:00:00.000Z',
+      chatToken: 'stream-token',
+    };
+    authState.accessToken = null;
+    global.fetch = jest.fn(async () => jsonResponse(200, {}));
+
+    await apiClient.fetch('/api/items/item-1', { auth: 'none' });
+    await apiClient.fetch('/api/stream/token', { auth: 'none', method: 'POST' });
+
+    const headers = (global.fetch as jest.Mock).mock.calls.map(([, options]) => options.headers);
+    expect(headers.every(value => value.Authorization === undefined)).toBe(true);
+  });
+
+  it('refreshes a guest token once after a return request returns 401', async () => {
+    mockGuestSessionState.session = {
+      guestId: 'guest-1',
+      returnSessionId: 'return-1',
+      channelId: 'channel-1',
+      guestAccessToken: 'guest-token-old',
+      expiresAt: '2099-01-01T00:00:00.000Z',
+      chatToken: 'stream-token',
+    };
+    authState.accessToken = null;
+    let returnCalls = 0;
+    global.fetch = jest.fn(async (url: string, options?: RequestInit) => {
+      if (url.endsWith('/api/guest/refresh')) {
+        return jsonResponse(200, {
+          success: true,
+          data: {
+            guestAccessToken: 'guest-token-new',
+            guestAccessExpiresAt: '2099-01-01T01:00:00.000Z',
+          },
+        });
+      }
+      returnCalls += 1;
+      if (returnCalls === 1) return jsonResponse(401, { message: 'expired' });
+      expect((options?.headers as Record<string, string>).Authorization).toBe(
+        'Bearer guest-token-new'
+      );
+      return jsonResponse(200, { success: true, data: { id: 'return-1' } });
+    }) as jest.Mock;
+
+    const response = await apiClient.fetch('/api/v1/returns/return-1');
+
+    expect(response.status).toBe(200);
+    expect(returnCalls).toBe(2);
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('clears the guest session after a forbidden guest call', async () => {
+    mockGuestSessionState.session = {
+      guestId: 'guest-1',
+      returnSessionId: 'return-1',
+      channelId: 'channel-1',
+      guestAccessToken: 'guest-token',
+      expiresAt: '2099-01-01T00:00:00.000Z',
+      chatToken: 'stream-token',
+    };
+    authState.accessToken = null;
+    global.fetch = jest.fn(async () => jsonResponse(403, { message: 'forbidden' }));
+
+    await expect(apiClient.fetch('/api/returns/return-1')).rejects.toMatchObject({
+      status: 403,
+      code: 'GUEST_SESSION_EXPIRED',
+    });
+    expect(mockGuestSessionState.session).toBeNull();
   });
 
   it('parses a normal 200 backend envelope', async () => {

@@ -38,7 +38,7 @@ export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({
       {/* Divider */}
       <View className="flex-row items-center mb-6">
         <View className="flex-1 h-[1px] bg-white/10" />
-        <Text className="px-4 text-[11px] text-gray-500 font-medium tracking-widest uppercase">
+        <Text className="px-4 text-[11px] text-fb-muted font-medium tracking-widest uppercase">
           Hoặc tiếp tục với
         </Text>
         <View className="flex-1 h-[1px] bg-white/10" />
@@ -48,12 +48,13 @@ export const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({
       <View className="flex-row justify-between space-x-4 gap-4">
         {/* Google Button */}
         <TouchableOpacity
-          className="h-[52px] flex-1 flex-row items-center justify-center rounded-2xl bg-fb-surface-muted active:opacity-70"
+          className="h-[56px] flex-1 flex-row items-center justify-center rounded-2xl border border-fb-border-glass bg-fb-surface active:bg-fb-surface-elevated"
           onPress={onGooglePress}
           accessibilityRole="button"
+          accessibilityLabel="Đăng nhập bằng Google"
         >
           <GoogleIcon />
-          <Text className="text-sm font-semibold text-white ml-2">Google</Text>
+          <Text className="ml-2 text-base font-semibold text-fb-content">Tiếp tục với Google</Text>
         </TouchableOpacity>
       </View>
     </View>

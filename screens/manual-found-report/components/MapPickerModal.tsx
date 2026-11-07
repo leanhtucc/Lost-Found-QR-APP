@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   mapSearchResultItemPressed: {
-    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    backgroundColor: 'rgba(43, 127, 232, 0.12)',
   },
   mapSearchResultItemBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,
-    backgroundColor: 'rgba(15, 12, 24, 0.9)',
+    backgroundColor: 'rgba(8, 17, 31, 0.9)',
   },
   mapCoordinateText: {
     color: FIND_BACK.bodyText,

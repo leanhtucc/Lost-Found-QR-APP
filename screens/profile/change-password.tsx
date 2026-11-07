@@ -109,7 +109,8 @@ export default function ChangePasswordScreen() {
         <SettingsScreenHeader title="Đổi mật khẩu" onBack={() => navigation.goBack()} />
         <View className="flex-1 items-center justify-center px-8">
           <Text className="text-center text-base leading-6 text-fb-muted">
-            Tài khoản này đăng nhập bằng nhà cung cấp bên ngoài và không sử dụng mật khẩu FindBack.
+            Tài khoản này đăng nhập bằng nhà cung cấp bên ngoài và không sử dụng mật khẩu Lost and
+            Found QR.
           </Text>
         </View>
       </SafeAreaView>
@@ -228,7 +229,7 @@ export default function ChangePasswordScreen() {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(10, 10, 15, 0.85)',
+    backgroundColor: 'rgba(5, 11, 20, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: '#17171F',
+    backgroundColor: '#12203A',
     borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',

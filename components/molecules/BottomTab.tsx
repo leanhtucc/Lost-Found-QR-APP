@@ -8,13 +8,14 @@ import { FIND_BACK } from '@constants/theme';
 
 const FALLBACK_ACTIVE_COLOR = FIND_BACK.primary;
 const FALLBACK_INACTIVE_COLOR = FIND_BACK.mutedText;
-const SCAN_ICON_COLOR = FIND_BACK.bodyText;
+const SCAN_ICON_COLOR = '#FFFFFF';
 
 function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const focusedRoute = state.routes[state.index];
   const tabBarStyle = descriptors[focusedRoute.key]?.options?.tabBarStyle as
-    { display?: string; height?: number } | undefined;
+    | { display?: string; height?: number }
+    | undefined;
   const activeTintColor =
     (descriptors[focusedRoute.key]?.options?.tabBarActiveTintColor as string | undefined) ??
     FALLBACK_ACTIVE_COLOR;
@@ -128,7 +129,7 @@ function BottomTabBarInner({ state, descriptors, navigation }: BottomTabBarProps
         style={styles.scanTabButton}
       >
         <LinearGradient
-          colors={[FIND_BACK.primary, FIND_BACK.primaryLight]}
+          colors={[FIND_BACK.primary, FIND_BACK.primaryDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.scanFab}
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     backgroundColor: FIND_BACK.glassBackground,
     borderWidth: 1,
-    borderColor: 'rgba(142, 108, 255, 0.22)',
+    borderColor: 'rgba(43, 127, 232, 0.22)',
     justifyContent: 'center',
     overflow: 'visible',
     shadowColor: FIND_BACK.neutral,
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrapActive: {
-    backgroundColor: 'rgba(108, 76, 241, 0.18)',
+    backgroundColor: 'rgba(43, 127, 232, 0.18)',
   },
   centerGap: {
     width: 72,

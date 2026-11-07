@@ -60,12 +60,12 @@ export const useImageQRScanner = (
         return;
       }
 
-      // ── 3. Filter to valid FindBack QR payloads ───────────────
-      const validPayloads: { raw: string; itemId: string }[] = [];
+      // ── 3. Filter to valid Lost and Found QR payloads ───────────────
+      const validPayloads: { raw: string; qrCodeId: string }[] = [];
       for (const rawValue of qrResult.values) {
         const normalized = normalizeScanPayload(rawValue);
         if (normalized.success) {
-          validPayloads.push({ raw: rawValue, itemId: normalized.itemId });
+          validPayloads.push({ raw: rawValue, qrCodeId: normalized.qrCodeId });
         }
       }
 
@@ -77,7 +77,7 @@ export const useImageQRScanner = (
 
       if (validPayloads.length > 1) {
         // Multiple distinct valid QR codes — require user to isolate
-        const uniqueIds = new Set(validPayloads.map(p => p.itemId));
+        const uniqueIds = new Set(validPayloads.map(p => p.qrCodeId));
         if (uniqueIds.size > 1) {
           setError('Ảnh chứa nhiều mã QR. Vui lòng chọn ảnh chỉ có một mã cần quét.');
           setIsLoading(false);

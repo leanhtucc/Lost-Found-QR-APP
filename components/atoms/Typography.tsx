@@ -3,7 +3,13 @@ import { memo, forwardRef } from 'react';
 import { Text, type TextProps } from 'react-native';
 
 export type TypographyVariant =
-  'headline' | 'title' | 'sectionTitle' | 'body' | 'bodySm' | 'label' | 'caption';
+  | 'headline'
+  | 'title'
+  | 'sectionTitle'
+  | 'body'
+  | 'bodySm'
+  | 'label'
+  | 'caption';
 
 export interface TypographyProps extends TextProps {
   variant?: TypographyVariant;

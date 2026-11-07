@@ -84,7 +84,14 @@ export interface HomeLostFeedData {
 }
 
 export type RadarCategory =
-  'electronics' | 'accessories' | 'bags' | 'documents' | 'clothing' | 'keys' | 'wallet' | 'other';
+  | 'electronics'
+  | 'accessories'
+  | 'bags'
+  | 'documents'
+  | 'clothing'
+  | 'keys'
+  | 'wallet'
+  | 'other';
 
 export interface RadarSubscribePayload {
   latitude: number;

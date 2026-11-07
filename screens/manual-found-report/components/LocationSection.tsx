@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: `${FIND_BACK.primaryLight}70`,
-    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    backgroundColor: 'rgba(43, 127, 232, 0.12)',
   },
   mapPickerButtonText: {
     color: FIND_BACK.primaryLight,

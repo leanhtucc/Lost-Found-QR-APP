@@ -62,18 +62,18 @@ export const ReportChoiceModal: React.FC<ReportChoiceModalProps> = ({
 
         <View style={styles.choices}>
           <Choice
+            title="Đồ của tôi bị mất"
+            description="Chọn món đồ bạn vừa làm mất và phát radar để mọi người quanh đó cùng tìm."
+            icon={<PackageSearch size={26} color={FIND_BACK.tertiary} />}
+            accent={FIND_BACK.tertiary}
+            onPress={onLostOwnItem}
+          />
+          <Choice
             title="Đồ tôi nhặt được"
-            description="Thêm vật dụng vừa nhặt được và tìm chủ sở hữu."
+            description="Chụp ảnh, ghim vị trí để tìm chủ nhân của món đồ vừa nhặt."
             icon={<QrCode size={26} color={FIND_BACK.secondary} />}
             accent={FIND_BACK.secondary}
             onPress={onFoundItem}
-          />
-          <Choice
-            title="Đồ của tôi bị mất"
-            description="Xem toàn bộ kho đồ và chọn vật dụng bạn vừa làm mất."
-            icon={<PackageSearch size={26} color={FIND_BACK.primaryLight} />}
-            accent={FIND_BACK.primaryLight}
-            onPress={onLostOwnItem}
           />
         </View>
       </Pressable>
@@ -126,9 +126,9 @@ const styles = StyleSheet.create({
     lineHeight: 29,
   },
   closeButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: FIND_BACK.surfaceElevated,

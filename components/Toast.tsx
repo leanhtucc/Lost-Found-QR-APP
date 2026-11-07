@@ -116,6 +116,8 @@ export const Toast: React.FC<ToastProps> = ({
   return (
     <Animated.View
       style={animatedStyle}
+      accessibilityRole="alert"
+      accessibilityLiveRegion="polite"
       className={`absolute top-12 left-4 right-4 z-50 ${colors.bg} border ${colors.border} rounded-2xl p-4 shadow-lg`}
     >
       <View className="flex-row items-start gap-3">
@@ -133,8 +135,10 @@ export const Toast: React.FC<ToastProps> = ({
         {/* Close button */}
         <TouchableOpacity
           onPress={hideToast}
+          accessibilityRole="button"
+          accessibilityLabel="Đóng thông báo"
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          className="p-1"
+          className="-mr-1 -mt-1 h-11 w-11 items-center justify-center"
         >
           <X size={18} color={colors.icon} />
         </TouchableOpacity>

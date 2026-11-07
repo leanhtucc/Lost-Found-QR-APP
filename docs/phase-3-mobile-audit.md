@@ -12,6 +12,7 @@
 Phase 1 & Phase 2 established a solid foundation: the Central API Client handles token rotation and concurrency flawlessly, the Design System is uniform, and Return Flow / Verification (Handover) logic exhibits sophisticated state-machine modeling.
 
 However, the **core Finder journey and Chat interaction are severely blocked or non-functional**:
+
 1. **Critical Scanner Routing Bug:** The QR scanner unconditionally routes finders into the Owner's `ItemDetails` screen rather than `PublicItemDetails`.
 2. **Unsafe Ownership Inference:** `isOwnItem = !isOpenChat` treats any SAFE item as owned by the finder.
 3. **Guest Lockout:** Unauthenticated users are barred by navigation guards from accessing the scanner, public item view, or reporting found items.
@@ -24,6 +25,7 @@ Implementation **CANNOT** proceed as a quick patch. It requires a targeted, phas
 ## A. Current QR Flow
 
 ### 1. Actual Trace
+
 ```
 Scanner (screens/scan/index.tsx)
   ↳ Camera (useQRScanner.ts) / Gallery (useImageQRScanner.ts) / Manual (ManualInputModal)
@@ -36,6 +38,7 @@ Scanner (screens/scan/index.tsx)
 ```
 
 ### 2. Detailed Technical Audit
+
 - **QR Formats Accepted:**
   - Raw alphanumeric identifiers containing `[a-zA-Z0-9_-]` (length: 1–128 characters).
   - Deep links: `lostfound://item/<id>` and `lostfoundqr://item/<id>`.
@@ -70,14 +73,14 @@ Scanner (screens/scan/index.tsx)
 
 ## B. Current Finder Flow
 
-| Capability | Current State | Evidence & Architectural Cause |
-|---|---|---|
-| **Scan without login** | **BLOCKED** | `navigation/index.tsx:224-235` forces navigation reset to `Login` if `!isAuthenticated`. `Scan` is omitted from `AUTH_ROUTE_NAMES`. `itemsApi.scanQR` also uses `auth: 'required'`. |
-| **View public item** | **PARTIAL** | Authenticated users can view via Home Radar feed (`PublicItemDetailsScreen`), but scanning a QR routes to Owner `ItemDetailsScreen` (which errors or leaks). Unauthenticated users cannot view at all. |
-| **Report found (QR item)** | **BLOCKED** | No flow exists to file a report against a scanned QR item if chat is unavailable. |
-| **Report found (non-QR)** | **WORKING** | Authenticated users can submit via `ManualFoundReportScreen` with photo, Gemini AI classification, and map coordinates. |
-| **Continue as guest** | **BLOCKED** | Backend contract `POST /api/scan/guest-init` is implemented in `itemsApi.initGuestScanSession`, but the mobile UI has **zero** intake screen, prompt, or local guest session store. |
-| **Guest-to-Auth transition**| **NON-EXISTENT**| No handoff mechanism exists to migrate anonymous scan sessions or guest chat tokens to an authenticated profile upon registration/login. |
+| Capability                   | Current State    | Evidence & Architectural Cause                                                                                                                                                                         |
+| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Scan without login**       | **BLOCKED**      | `navigation/index.tsx:224-235` forces navigation reset to `Login` if `!isAuthenticated`. `Scan` is omitted from `AUTH_ROUTE_NAMES`. `itemsApi.scanQR` also uses `auth: 'required'`.                    |
+| **View public item**         | **PARTIAL**      | Authenticated users can view via Home Radar feed (`PublicItemDetailsScreen`), but scanning a QR routes to Owner `ItemDetailsScreen` (which errors or leaks). Unauthenticated users cannot view at all. |
+| **Report found (QR item)**   | **BLOCKED**      | No flow exists to file a report against a scanned QR item if chat is unavailable.                                                                                                                      |
+| **Report found (non-QR)**    | **WORKING**      | Authenticated users can submit via `ManualFoundReportScreen` with photo, Gemini AI classification, and map coordinates.                                                                                |
+| **Continue as guest**        | **BLOCKED**      | Backend contract `POST /api/scan/guest-init` is implemented in `itemsApi.initGuestScanSession`, but the mobile UI has **zero** intake screen, prompt, or local guest session store.                    |
+| **Guest-to-Auth transition** | **NON-EXISTENT** | No handoff mechanism exists to migrate anonymous scan sessions or guest chat tokens to an authenticated profile upon registration/login.                                                               |
 
 **Stop Point:** The unauthenticated finder journey terminates before opening the camera. Authenticated finders scanning SAFE items terminate on a broken owner screen.
 
@@ -86,6 +89,7 @@ Scanner (screens/scan/index.tsx)
 ## C. Current Item Detail Flow
 
 ### 1. Owner Item Detail (`screens/item-detail/index.tsx`)
+
 - **Access Control:** Authenticated owner via `itemsApi.getItemById(itemId)`.
 - **Private Data Exposed to Owner:** Full name, description, registered safe-point address, exact GPS coordinates with map preview, internal item ID, and QR code vector.
 - **State Actions:**
@@ -96,6 +100,7 @@ Scanner (screens/scan/index.tsx)
   - **Chat Button:** Statically alerts `"Tính năng chat đang được phát triển"`.
 
 ### 2. Public Finder Item Detail (`screens/public-item-detail/index.tsx`)
+
 - **Access Control:** Public GET `/api/items/public/:id` (`auth: 'none'`).
 - **Privacy Enforcement:** **PASS.** Safe storage coordinates and private addresses are stripped. Only displays public image, name, category, lost notice, approximate lost address, and masked owner display name.
 - **Action:** `"Tôi đã nhặt được món đồ này"` executes `createChannel(itemId, finderId)`:
@@ -107,6 +112,7 @@ Scanner (screens/scan/index.tsx)
 ## D. Current Found Report Flow
 
 ### 1. Manual Found Report (`screens/manual-found-report/index.tsx`)
+
 - **Form & Input Validation:**
   - Name (required, max 100 characters).
   - Category selector (`CategorySelector`).
@@ -126,6 +132,7 @@ Scanner (screens/scan/index.tsx)
 - **Success & Navigation:** Success alert navigates to Home tab; revision counter increments to trigger feed reload.
 
 ### 2. Claim & Verification (`screens/found-report-detail/index.tsx`)
+
 - Allows owner to inspect claims (`foundReportsApi.getClaims`) and accept/reject them (`foundReportsApi.reviewClaim`).
 - Non-owners submit proof of ownership (minimum 10 characters) via `foundReportsApi.createClaim`.
 - Accepting a claim transitions owner to `Chat`.
@@ -135,12 +142,14 @@ Scanner (screens/scan/index.tsx)
 ## E. Current Chat Flow
 
 ### 1. Service Layer (`services/chat/api.ts`)
+
 - `createChannel(itemId, finderId)`: `POST /api/stream/channels/:itemId/:finderId`.
 - `getInbox()`: `GET /api/stream/channels`.
 - `closeChannel(channelId)`: `PUT /api/stream/channels/:channelId/close`.
 - `getChannelById(channelId)`: `GET /api/stream/channels/:channelId`.
 
 ### 2. Screen & Messaging (`screens/chat/detail/index.tsx`)
+
 - **CRITICAL GAP:** Chat messaging is **100% mocked**!
   - `INITIAL_MESSAGES` hardcoded lines 34–75 with pre-scripted dialogues.
   - `handleSend` appends message to local React state (`messages`).
@@ -156,6 +165,7 @@ Scanner (screens/scan/index.tsx)
 ## F. Current Return Flow
 
 ### 1. State Machine & Architecture
+
 - Service: `services/returns/api.ts` driving `/v1/returns`.
 - Zustand Store: `services/returns/store.ts` with `subscribeWithSelector`.
 - Lifecycle States:
@@ -164,6 +174,7 @@ Scanner (screens/scan/index.tsx)
 - Concurrency: Uses `If-Match` headers with `serverRevision`. Detects `REVISION_CONFLICT` and triggers resync.
 
 ### 2. Live Tracking & Location Permissions
+
 - Screen: `screens/return-flow/live-map/index.tsx` using Google Maps Dark style.
 - Hook: `useLiveTracking.ts`:
   - Request foreground permission only (`Location.requestForegroundPermissionsAsync`).
@@ -173,6 +184,7 @@ Scanner (screens/scan/index.tsx)
 - Proximity detection: Calculates geodesic distance between owner, finder, and meetup marker.
 
 ### 3. Cleanup & Disconnection
+
 - `returnSocketManager.disconnect()` cleans up WebSocket rooms on unmount/logout.
 - `returnApi.stopTracking` invalidates active Redis cache.
 
@@ -181,10 +193,12 @@ Scanner (screens/scan/index.tsx)
 ## G. Current Verification Flow (Handover & PIN)
 
 ### 1. Protocol Architecture
+
 - Endpoint: `POST /v1/returns/:id/handover/init` generates 6-digit CSPRNG token with 5-minute TTL and max 5 attempts.
 - Verification: `POST /v1/returns/:id/handover/confirm`.
 
 ### 2. Screen: `screens/return-flow/handover-confirm/index.tsx`
+
 - **Finder Experience:**
   - Automatically initializes handover on mount (`initHandover()`).
   - Renders 6-digit code in high-contrast typography and vector QR code (`react-native-qrcode-svg`).
@@ -192,9 +206,9 @@ Scanner (screens/scan/index.tsx)
   - Mandatory checklist confirmation: `"Tôi đã trao tận tay món đồ nguyên vẹn cho chủ sở hữu"`.
 - **Owner Experience:**
   - 3-point mandatory verification checklist:
-    1. *"Đúng món đồ của tôi"*
-    2. *"Tình trạng còn nguyên vẹn"*
-    3. *"Đã nhận trực tiếp từ người nhặt"*
+    1. _"Đúng món đồ của tôi"_
+    2. _"Tình trạng còn nguyên vẹn"_
+    3. _"Đã nhận trực tiếp từ người nhặt"_
   - 6-digit numeric input with keyboard type `number-pad`.
 - **Backend Error Handling:**
   - `INVALID_HANDOVER_CODE`: Localized alert.
@@ -224,20 +238,21 @@ Scanner (screens/scan/index.tsx)
 
 ## I. Acceptance Flows Compliance Matrix
 
-| Flow | Name | Verdict | Gaps & Failure Points |
-|---|---|---|---|
-| **FLOW A** | Owner: Login → Item → Lost Mode | **PASS** | Fully functional. GPS capture, reverse geocoding, status toggle, and Radar broadcast operate end-to-end. |
-| **FLOW B** | Finder: Scan → Resolver → Public Item | **FAIL** | 1. Scanner routes finder to Owner `ItemDetails`.<br>2. `isOwnItem = !isOpenChat` causes false ownership.<br>3. Unauthenticated scanning blocked by navigation guard.<br>4. Scanner doesn't send GPS coordinates. |
-| **FLOW C** | Finder: Report Found | **PARTIAL** | Non-QR manual flow (`ManualFoundReport`) passes. QR-linked found reporting is completely missing. |
-| **FLOW D** | Owner ↔ Finder: Chat | **FAIL** | Messaging engine is simulated with static in-memory mocks (`INITIAL_MESSAGES`). No real backend transport exists. |
-| **FLOW E** | Owner + Finder: Return Session | **PASS** | State machine, meetup proposal, WebSocket live tracking, and arrival notification are correctly architected. |
-| **FLOW F** | Verification: → RESOLVED | **PASS** | Handover PIN generation, 3-point checklist, code submission, payout receipt, rating, and resolution operate correctly. |
+| Flow       | Name                                  | Verdict     | Gaps & Failure Points                                                                                                                                                                                            |
+| ---------- | ------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **FLOW A** | Owner: Login → Item → Lost Mode       | **PASS**    | Fully functional. GPS capture, reverse geocoding, status toggle, and Radar broadcast operate end-to-end.                                                                                                         |
+| **FLOW B** | Finder: Scan → Resolver → Public Item | **FAIL**    | 1. Scanner routes finder to Owner `ItemDetails`.<br>2. `isOwnItem = !isOpenChat` causes false ownership.<br>3. Unauthenticated scanning blocked by navigation guard.<br>4. Scanner doesn't send GPS coordinates. |
+| **FLOW C** | Finder: Report Found                  | **PARTIAL** | Non-QR manual flow (`ManualFoundReport`) passes. QR-linked found reporting is completely missing.                                                                                                                |
+| **FLOW D** | Owner ↔ Finder: Chat                  | **FAIL**    | Messaging engine is simulated with static in-memory mocks (`INITIAL_MESSAGES`). No real backend transport exists.                                                                                                |
+| **FLOW E** | Owner + Finder: Return Session        | **PASS**    | State machine, meetup proposal, WebSocket live tracking, and arrival notification are correctly architected.                                                                                                     |
+| **FLOW F** | Verification: → RESOLVED              | **PASS**    | Handover PIN generation, 3-point checklist, code submission, payout receipt, rating, and resolution operate correctly.                                                                                           |
 
 ---
 
 ## J. Findings by Severity (P0 / P1 / P2)
 
 ### P0 (Blockers — Critical Functional / Security Failures)
+
 1. **P0-1: Scanner Routes to Owner Screen**  
    `screens/scan/index.tsx:78` routes finders to `ItemDetails` instead of `PublicItemDetails`.
 2. **P0-2: Inverted Ownership Inference**  
@@ -250,6 +265,7 @@ Scanner (screens/scan/index.tsx)
    `screens/chat/detail/index.tsx:34-75` uses static strings and local `setTimeout` instead of live backend messaging.
 
 ### P1 (High Severity — Incomplete Flows & Gaps)
+
 1. **P1-1: Missing Guest Intake UI**  
    Backend endpoint `POST /api/scan/guest-init` has no mobile counterpart (no phone entry modal or guest token storage).
 2. **P1-2: Broken Item Deep Links**  
@@ -262,6 +278,7 @@ Scanner (screens/scan/index.tsx)
    If a scanned item is not LOST, finders have no UI to submit a "Found Report" linked to that `qrCodeId`.
 
 ### P2 (Medium / Low Severity — Tech Debt & Polish)
+
 1. **P2-1: Dead Mock Code in Returns API**  
    `services/returns/api.ts` contains `inMemorySessions` and mock generators that should be excised.
 2. **P2-2: Inconsistent Error Objects**  

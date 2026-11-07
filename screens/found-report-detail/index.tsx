@@ -118,7 +118,7 @@ export default function FoundReportDetailScreen() {
             {report.resolvedAt ? 'Đã trả lại' : 'Nhặt được · Đang tìm chủ sở hữu'}
           </Text>
           <Text className="text-2xl font-bold text-white">{report.name}</Text>
-          <Text className="text-gray-400">
+          <Text className="text-fb-muted">
             {CATEGORY_CONFIG[report.category]?.label ?? report.category}
           </Text>
           {report.description ? (
@@ -128,7 +128,7 @@ export default function FoundReportDetailScreen() {
             <MapPin size={20} color={FIND_BACK.primaryLight} />
             <Text className="flex-1 text-base text-white">{report.address}</Text>
           </View>
-          <Text className="text-sm text-gray-400">
+          <Text className="text-sm text-fb-muted">
             Đăng ngày {new Date(report.createdAt).toLocaleDateString('vi-VN')}
           </Text>
           {!report.resolvedAt && report.isOwn ? (
@@ -140,7 +140,7 @@ export default function FoundReportDetailScreen() {
                     <Text className="font-semibold text-white">
                       {claim.claimant?.displayName || 'Người nhận'}
                     </Text>
-                    <Text className="text-sm text-gray-300">{claim.ownershipProof}</Text>
+                    <Text className="text-sm text-fb-muted">{claim.ownershipProof}</Text>
                     <Text className="text-xs text-fb-primary-light">{claim.status}</Text>
                     {claim.status === 'PENDING' ? (
                       <View className="flex-row gap-3">
@@ -163,7 +163,7 @@ export default function FoundReportDetailScreen() {
                   </View>
                 ))
               ) : (
-                <Text className="text-sm text-gray-400">Chưa có yêu cầu nào.</Text>
+                <Text className="text-sm text-fb-muted">Chưa có yêu cầu nào.</Text>
               )}
             </View>
           ) : !report.resolvedAt ? (

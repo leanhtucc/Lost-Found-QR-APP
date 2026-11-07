@@ -34,7 +34,7 @@ export const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ onDelete }) 
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Quay lại"
-          className="h-11 w-11 items-center justify-center rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated"
+          className="h-11 w-11 items-center justify-center rounded-full border border-fb-border-glass bg-fb-surface-elevated"
         >
           <ArrowLeft size={20} color={FIND_BACK.bodyText} />
         </TouchableOpacity>
@@ -47,7 +47,7 @@ export const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ onDelete }) 
           onPress={handleDelete}
           accessibilityRole="button"
           accessibilityLabel="Xóa món đồ"
-          className="h-11 w-11 items-center justify-center rounded-2xl border border-fb-danger/20 bg-fb-danger/10"
+          className="h-11 w-11 items-center justify-center rounded-full border border-fb-danger/30 bg-fb-danger/10"
         >
           <Trash2 size={20} color={FIND_BACK.danger} />
         </TouchableOpacity>

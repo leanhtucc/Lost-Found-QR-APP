@@ -32,6 +32,35 @@ interface ReturnProgressCardProps {
   isLoading?: boolean;
 }
 
+const STEP_COUNT = 5;
+
+/** Maps the server-driven session status to a 1-5 progress step (display only). */
+const getStep = (
+  status: ReturnSession['status']
+): { current: number; label: string; done: boolean } => {
+  switch (status) {
+    case 'CHAT_ACTIVE':
+      return { current: 1, label: 'Trò chuyện', done: false };
+    case 'MEETUP_PROPOSED':
+      return { current: 2, label: 'Hẹn điểm gặp', done: false };
+    case 'MEETUP_ACCEPTED':
+    case 'TRACKING_ACTIVE':
+    case 'ARRIVAL_PENDING':
+      return { current: 3, label: 'Di chuyển & gặp mặt', done: false };
+    case 'HANDOVER_PENDING':
+    case 'HANDOVER_CONFIRMED':
+    case 'REWARD_RELEASING':
+      return { current: 4, label: 'Bàn giao', done: false };
+    case 'REWARD_PAID':
+    case 'RATING_PENDING':
+      return { current: 5, label: 'Đánh giá', done: false };
+    case 'COMPLETED':
+      return { current: 5, label: 'Hoàn tất', done: true };
+    default:
+      return { current: 1, label: 'Trò chuyện', done: false };
+  }
+};
+
 export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
   session,
   currentRole,
@@ -58,13 +87,13 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
           <View className="flex-row items-center justify-between">
             <View className="flex-1 mr-3">
               <Text className="text-xs font-bold text-fb-content">Thống nhất điểm gặp</Text>
-              <Text className="text-[11px] text-fb-muted">
+              <Text className="text-xs text-fb-muted">
                 Hẹn gặp tại nơi công cộng an toàn để trao nhận đồ
               </Text>
             </View>
             <TouchableOpacity
               onPress={onOpenMeetupModal}
-              className="flex-row items-center gap-1.5 rounded-xl bg-fb-primary px-3 py-2"
+              className="flex-row items-center gap-1.5 min-h-[44px] rounded-xl bg-fb-primary px-4"
             >
               <MapPin size={14} color="#fff" />
               <Text className="text-xs font-bold text-white">Chọn điểm hẹn</Text>
@@ -84,32 +113,32 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
               </View>
               <View className="flex-row items-center gap-1">
                 <Clock size={12} color={FIND_BACK.mutedText} />
-                <Text className="text-[10px] text-fb-muted">{meetup?.scheduledTime}</Text>
+                <Text className="text-xs text-fb-muted">{meetup?.scheduledTime}</Text>
               </View>
             </View>
 
             {isProposer ? (
               <View className="flex-row items-center justify-between pt-1">
-                <Text className="text-[11px] text-fb-muted">Đang chờ đối phương xác nhận...</Text>
+                <Text className="text-xs text-fb-muted">Đang chờ đối phương xác nhận...</Text>
                 <TouchableOpacity
                   onPress={onRejectMeetup}
-                  className="rounded-lg border border-fb-border-subtle bg-fb-surface-elevated px-2.5 py-1"
+                  className="min-h-[44px] justify-center rounded-lg border border-fb-border-glass bg-fb-surface-elevated px-3"
                 >
-                  <Text className="text-[11px] font-semibold text-fb-muted">Hủy đề xuất</Text>
+                  <Text className="text-xs font-semibold text-fb-muted">Hủy đề xuất</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View className="flex-row items-center gap-2 pt-1">
                 <TouchableOpacity
                   onPress={onRejectMeetup}
-                  className="flex-1 items-center justify-center rounded-xl border border-fb-border-subtle bg-fb-surface-elevated py-2"
+                  className="min-h-[44px] flex-1 items-center justify-center rounded-xl border border-fb-border-glass bg-fb-surface-elevated"
                 >
                   <Text className="text-xs font-semibold text-fb-muted">Đổi điểm khác</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={onAcceptMeetup}
-                  className="flex-1 items-center justify-center rounded-xl bg-fb-secondary py-2"
+                  className="min-h-[44px] flex-1 items-center justify-center rounded-xl bg-fb-secondary"
                 >
                   <Text className="text-xs font-bold text-black">Chấp nhận</Text>
                 </TouchableOpacity>
@@ -134,13 +163,13 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
                       : 'Đang chia sẻ vị trí'}
                 </Text>
               </View>
-              <Text className="text-[11px] text-fb-muted" numberOfLines={1}>
+              <Text className="text-xs text-fb-muted" numberOfLines={1}>
                 Điểm hẹn: {meetup?.name || meetup?.address}
               </Text>
             </View>
             <TouchableOpacity
               onPress={onOpenLiveMap}
-              className="flex-row items-center gap-1.5 rounded-xl bg-fb-primary px-3 py-2"
+              className="flex-row items-center gap-1.5 min-h-[44px] rounded-xl bg-fb-primary px-4"
             >
               <Navigation size={14} color="#fff" />
               <Text className="text-xs font-bold text-white">
@@ -155,13 +184,11 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
           <View className="flex-row items-center justify-between">
             <View className="flex-1 mr-3">
               <Text className="text-xs font-bold text-fb-secondary">Hai bên đã đến điểm hẹn!</Text>
-              <Text className="text-[11px] text-fb-muted">
-                Kiểm tra và xác nhận bàn giao đồ vật
-              </Text>
+              <Text className="text-xs text-fb-muted">Kiểm tra và xác nhận bàn giao đồ vật</Text>
             </View>
             <TouchableOpacity
               onPress={onOpenHandover}
-              className="flex-row items-center gap-1.5 rounded-xl bg-fb-secondary px-3 py-2"
+              className="flex-row items-center gap-1.5 min-h-[44px] rounded-xl bg-fb-secondary px-4"
             >
               <Handshake size={14} color="#000" />
               <Text className="text-xs font-bold text-black">Xác nhận bàn giao</Text>
@@ -175,13 +202,13 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
           <View className="flex-row items-center justify-between">
             <View className="flex-1 mr-3">
               <Text className="text-xs font-bold text-fb-content">Bàn giao thành công!</Text>
-              <Text className="text-[11px] text-fb-muted">
+              <Text className="text-xs text-fb-muted">
                 Đang giải ngân tiền thưởng qua ngân hàng
               </Text>
             </View>
             <TouchableOpacity
               onPress={onOpenRewardStatus}
-              className="flex-row items-center gap-1.5 rounded-xl bg-fb-primary px-3 py-2"
+              className="flex-row items-center gap-1.5 min-h-[44px] rounded-xl bg-fb-primary px-4"
             >
               <DollarSign size={14} color="#fff" />
               <Text className="text-xs font-bold text-white">Tiền thưởng</Text>
@@ -197,7 +224,7 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
               <Text className="text-xs font-bold text-fb-secondary">
                 {currentRole === 'OWNER' ? 'Đã nhận lại đồ thành công' : 'Đã nhận tiền thưởng!'}
               </Text>
-              <Text className="text-[11px] text-fb-muted">
+              <Text className="text-xs text-fb-muted">
                 {currentRole === 'OWNER'
                   ? 'Hãy dành chút thời gian đánh giá người nhặt'
                   : 'Giao dịch hoàn tất an toàn'}
@@ -206,7 +233,7 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
             {currentRole === 'OWNER' ? (
               <TouchableOpacity
                 onPress={onOpenRateFinder}
-                className="flex-row items-center gap-1.5 rounded-xl bg-fb-primary px-3 py-2"
+                className="flex-row items-center gap-1.5 min-h-[44px] rounded-xl bg-fb-primary px-4"
               >
                 <Star size={14} color="#fff" fill="#fff" />
                 <Text className="text-xs font-bold text-white">Đánh giá</Text>
@@ -214,7 +241,7 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
             ) : (
               <TouchableOpacity
                 onPress={onOpenRewardStatus}
-                className="flex-row items-center gap-1.5 rounded-xl border border-fb-secondary/30 bg-fb-secondary/15 px-3 py-2"
+                className="flex-row items-center gap-1.5 min-h-[44px] rounded-xl border border-fb-secondary/30 bg-fb-secondary/15 px-4"
               >
                 <CheckCircle size={14} color={FIND_BACK.secondary} />
                 <Text className="text-xs font-bold text-fb-secondary">Xem biên lai</Text>
@@ -248,8 +275,36 @@ export const ReturnProgressCard: React.FC<ReturnProgressCardProps> = ({
     }
   };
 
+  const step = getStep(status);
+
   return (
-    <View className="border-t border-fb-border-subtle bg-fb-surface px-4 py-2.5">
+    <View className="border-t border-fb-border-glass bg-fb-surface px-4 pb-3 pt-2.5">
+      <View
+        accessible
+        accessibilityLabel={`Bước ${step.current} trên ${STEP_COUNT}: ${step.label}`}
+        className="mb-2.5"
+      >
+        <View className="mb-1.5 flex-row items-center justify-between">
+          <Text className="text-xs font-bold tracking-wider text-fb-primary-light">
+            BƯỚC {step.current} / {STEP_COUNT}
+          </Text>
+          <Text className="text-xs font-semibold text-fb-muted">{step.label}</Text>
+        </View>
+        <View className="flex-row gap-1">
+          {Array.from({ length: STEP_COUNT }, (_, i) => (
+            <View
+              key={i}
+              className={`h-1 flex-1 rounded-full ${
+                i + 1 < step.current || step.done
+                  ? 'bg-fb-secondary'
+                  : i + 1 === step.current
+                    ? 'bg-fb-primary'
+                    : 'bg-white/10'
+              }`}
+            />
+          ))}
+        </View>
+      </View>
       {renderBody()}
     </View>
   );

@@ -22,7 +22,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ step, total = 4 })
               width: 48,
               height: 6,
               borderRadius: 999,
-              backgroundColor: isActive || isDone ? REPORT_COLORS.accentStrong : '#2a2a35',
+              backgroundColor: isActive || isDone ? REPORT_COLORS.accentStrong : '#22345A',
               shadowColor: isActive ? REPORT_COLORS.accentGlow : 'transparent',
               shadowOpacity: isActive ? 1 : 0,
               shadowRadius: isActive ? 8 : 0,

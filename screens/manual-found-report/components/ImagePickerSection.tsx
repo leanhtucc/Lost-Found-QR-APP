@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 10,
-    backgroundColor: 'rgba(10, 10, 15, 0.85)',
+    backgroundColor: 'rgba(5, 11, 20, 0.85)',
   },
   analyzeText: {
     color: FIND_BACK.secondary,

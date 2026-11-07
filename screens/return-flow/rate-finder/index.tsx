@@ -127,9 +127,9 @@ export default function RateFinderScreen() {
 
           <Text className="text-2xl font-black text-fb-content text-center mb-2">Cảm ơn bạn!</Text>
           <Text className="text-sm text-fb-muted text-center leading-relaxed mb-6">
-            Đánh giá của bạn giúp cộng đồng FindBack trở nên tin cậy và gắn kết hơn. Điểm uy tín của{' '}
-            <Text className="font-bold text-fb-content">{finder?.displayName}</Text> đã được ghi
-            nhận.
+            Đánh giá của bạn giúp cộng đồng Lost and Found QR trở nên tin cậy và gắn kết hơn. Điểm
+            uy tín của <Text className="font-bold text-fb-content">{finder?.displayName}</Text> đã
+            được ghi nhận.
           </Text>
 
           <TouchableOpacity

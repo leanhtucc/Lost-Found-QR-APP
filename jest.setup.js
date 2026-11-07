@@ -9,7 +9,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 // Mock Expo Constants
 jest.mock('expo-constants', () => ({
   expoConfig: {
-    name: 'FindBack',
+    name: 'Lost and Found QR',
     slug: 'lost-and-found-qr',
     version: '1.0.0',
     extra: {

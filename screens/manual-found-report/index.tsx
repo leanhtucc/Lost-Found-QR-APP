@@ -58,7 +58,7 @@ export default function ManualFoundReportScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <LinearGradient
-        colors={[FIND_BACK.canvas, '#151022', FIND_BACK.neutral]}
+        colors={[FIND_BACK.canvas, '#0B1A33', FIND_BACK.neutral]}
         style={StyleSheet.absoluteFillObject}
       />
 

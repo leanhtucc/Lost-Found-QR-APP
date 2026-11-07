@@ -23,8 +23,15 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({ title, onBack, right
         backgroundColor: 'rgba(8,8,15,0.88)',
       }}
     >
-      <TouchableOpacity onPress={onBack} activeOpacity={0.8}>
-        <X size={20} color={REPORT_COLORS.accent} />
+      <TouchableOpacity
+        onPress={onBack}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Đóng"
+        hitSlop={8}
+        style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+      >
+        <X size={22} color={REPORT_COLORS.accent} />
       </TouchableOpacity>
 
       <Text style={{ color: REPORT_COLORS.textPrimary, fontSize: 22, fontWeight: '700' }}>
@@ -44,7 +51,7 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({ title, onBack, right
           {rightLabel}
         </Text>
       ) : (
-        <View style={{ width: 20 }} />
+        <View style={{ width: 44 }} />
       )}
     </View>
   );

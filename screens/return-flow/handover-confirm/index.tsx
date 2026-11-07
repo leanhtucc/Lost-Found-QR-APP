@@ -15,7 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import QRCode from 'react-native-qrcode-svg';
 import {
@@ -31,12 +31,21 @@ import {
 import { FIND_BACK } from '@constants/theme';
 import { RootStackParamList } from '@/navigation';
 import { useReturnStore } from '@/services/returns/store';
+import { guestSessionStorage } from '@/storage/guestSession';
 import { ItemSummaryCard, DisputeModal } from '../components';
 
 type HandoverNavProp = StackNavigationProp<RootStackParamList>;
 
 export default function HandoverConfirmScreen() {
   const navigation = useNavigation<HandoverNavProp>();
+  const route = useRoute<RouteProp<RootStackParamList, 'HandoverConfirm'>>();
+  const [isGuestFinder, setIsGuestFinder] = useState(false);
+
+  useEffect(() => {
+    void guestSessionStorage.get().then(guest => {
+      setIsGuestFinder(guest?.returnSessionId === route.params.returnSessionId);
+    });
+  }, [route.params.returnSessionId]);
 
   const session = useReturnStore(state => state.session);
   const currentRole = useReturnStore(state => state.currentRole);
@@ -79,7 +88,7 @@ export default function HandoverConfirmScreen() {
     void init();
   }, [currentRole, initHandover, session?.id]);
 
-  const isOwner = currentRole === 'OWNER';
+  const isOwner = !isGuestFinder && currentRole === 'OWNER';
   const partner = isOwner ? session?.finder : session?.owner;
 
   const canOwnerConfirm =
@@ -121,7 +130,7 @@ export default function HandoverConfirmScreen() {
   };
 
   const handleConfirm = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || isGuestFinder) return;
     clearError();
 
     const codeToVerify = isOwner ? inputCode.trim() : undefined;
@@ -147,12 +156,13 @@ export default function HandoverConfirmScreen() {
   };
 
   const handleDisputeSubmit = async (reason: string) => {
+    if (isGuestFinder) return;
     setIsDisputeVisible(false);
     const success = await disputeHandover(reason);
     if (success) {
       Alert.alert(
         'Đã gửi khiếu nại',
-        'Phiên bàn giao đã được tạm khóa. Bộ phận hỗ trợ FindBack sẽ kiểm tra và liên hệ sớm nhất.',
+        'Phiên bàn giao đã được tạm khóa. Bộ phận hỗ trợ Lost and Found QR sẽ kiểm tra và liên hệ sớm nhất.',
         [{ text: 'Đóng', onPress: () => navigation.goBack() }]
       );
     }
@@ -173,12 +183,14 @@ export default function HandoverConfirmScreen() {
 
         <Text className="text-base font-bold text-fb-content">Xác nhận trao nhận đồ</Text>
 
-        <TouchableOpacity
-          onPress={() => setIsDisputeVisible(true)}
-          className="h-10 w-10 items-center justify-center rounded-xl border border-fb-error/30 bg-fb-error/10"
-        >
-          <AlertTriangle size={18} color={FIND_BACK.danger} />
-        </TouchableOpacity>
+        {!isGuestFinder && (
+          <TouchableOpacity
+            onPress={() => setIsDisputeVisible(true)}
+            className="h-10 w-10 items-center justify-center rounded-xl border border-fb-error/30 bg-fb-error/10"
+          >
+            <AlertTriangle size={18} color={FIND_BACK.danger} />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
@@ -206,8 +218,16 @@ export default function HandoverConfirmScreen() {
           </Text>
         </View>
 
+        {isGuestFinder && (
+          <View className="mb-4 rounded-xl border border-fb-primary/30 bg-fb-primary/10 p-3">
+            <Text className="text-sm text-fb-content">
+              Hãy đưa mã bàn giao cho chủ đồ xác nhận trực tiếp.
+            </Text>
+          </View>
+        )}
+
         {/* ROLE: FINDER (Show code & QR) */}
-        {!isOwner && (
+        {!isOwner && !isGuestFinder && (
           <View className="mb-4 rounded-2xl border border-fb-border-subtle bg-fb-surface p-5 items-center">
             <Text className="text-xs font-bold uppercase tracking-wider text-fb-primary-light mb-1">
               Mã bàn giao bảo mật
@@ -394,6 +414,12 @@ export default function HandoverConfirmScreen() {
               Đang chờ đối phương xác nhận để chuyển sang bước nhận thưởng.
             </Text>
           </View>
+        ) : isGuestFinder ? (
+          <View className="mb-3 items-center rounded-xl bg-fb-surface-elevated p-3">
+            <Text className="text-xs text-fb-muted">
+              Chủ đồ cần xác nhận bàn giao trên tài khoản của họ.
+            </Text>
+          </View>
         ) : (
           <TouchableOpacity
             onPress={handleConfirm}
@@ -419,23 +445,27 @@ export default function HandoverConfirmScreen() {
         )}
 
         {/* Dispute Button */}
-        <TouchableOpacity
-          onPress={() => setIsDisputeVisible(true)}
-          className="items-center py-2 mb-8"
-        >
-          <Text className="text-xs font-semibold text-fb-error">
-            Có vấn đề? Báo cáo sự cố tại đây
-          </Text>
-        </TouchableOpacity>
+        {!isGuestFinder && (
+          <TouchableOpacity
+            onPress={() => setIsDisputeVisible(true)}
+            className="items-center py-2 mb-8"
+          >
+            <Text className="text-xs font-semibold text-fb-error">
+              Có vấn đề? Báo cáo sự cố tại đây
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       {/* Dispute Modal */}
-      <DisputeModal
-        visible={isDisputeVisible}
-        onClose={() => setIsDisputeVisible(false)}
-        onSubmit={handleDisputeSubmit}
-        isLoading={isSubmitting}
-      />
+      {!isGuestFinder && (
+        <DisputeModal
+          visible={isDisputeVisible}
+          onClose={() => setIsDisputeVisible(false)}
+          onSubmit={handleDisputeSubmit}
+          isLoading={isSubmitting}
+        />
+      )}
     </SafeAreaView>
   );
 }

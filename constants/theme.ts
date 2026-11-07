@@ -1,45 +1,45 @@
 /**
- * FindBack / Obsidian — design tokens (dark, glassmorphism).
+ * Lost and Found QR / Beacon — design tokens (deep navy, beacon blue, amber signal).
  * Legacy THEME ramps kept for gradual migration; brand accents match marketing UI.
  */
 
 /** Core brand hex from design spec */
 export const FIND_BACK = {
-  primary: '#7C6AF6',
-  primaryLight: '#978CF8',
-  primaryDark: '#6B5AE8',
+  primary: '#2B7FE8',
+  primaryLight: '#7CC4FF',
+  primaryDark: '#1D62C9',
   secondary: '#2ECC8B',
-  tertiary: '#F4845F',
-  neutral: '#0A0A0F',
-  canvas: '#0E0E13',
-  surface: '#131319',
-  surfaceMuted: '#1F1F26',
-  surfaceElevated: '#25252D',
-  bodyText: '#F9F5FD',
-  mutedText: '#ACAAB1',
-  labelText: '#71717A',
+  tertiary: '#FFB020',
+  neutral: '#050B14',
+  canvas: '#08111F',
+  surface: '#0F1A2E',
+  surfaceMuted: '#162340',
+  surfaceElevated: '#1C2B4A',
+  bodyText: '#F1F6FF',
+  mutedText: '#9AA9C2',
+  labelText: '#6A7A96',
   borderGlass: 'rgba(255, 255, 255, 0.12)',
-  borderSubtle: 'rgba(72, 71, 77, 0.15)',
-  glassBackground: 'rgba(19, 19, 25, 0.72)',
-  danger: '#D73357',
-  warning: '#F4845F',
+  borderSubtle: 'rgba(120, 150, 200, 0.16)',
+  glassBackground: 'rgba(15, 26, 46, 0.72)',
+  danger: '#E5365B',
+  warning: '#FFB020',
   success: '#2ECC8B',
-  info: '#ADA3FF',
-  bodyMuted: '#ACAAB1',
-  subtleText: '#71717A',
+  info: '#8FD3FF',
+  bodyMuted: '#9AA9C2',
+  subtleText: '#6A7A96',
   returnFlow: {
-    mapOverlay: 'rgba(10, 10, 15, 0.94)',
-    mapScrim: 'rgba(10, 10, 15, 0.42)',
-    tracking: '#7C6AF6',
+    mapOverlay: 'rgba(5, 11, 20, 0.94)',
+    mapScrim: 'rgba(5, 11, 20, 0.42)',
+    tracking: '#2B7FE8',
     arrived: '#2ECC8B',
-    warning: '#F4845F',
+    warning: '#FFB020',
     cardRadius: 24,
     controlRadius: 16,
     screenPadding: 16,
   },
 } as const;
 
-/** Standardized Semantic Tokens for FindBack / Obsidian Design System */
+/** Standardized Semantic Tokens for Lost and Found QR / Obsidian Design System */
 export const SEMANTIC_TOKENS = {
   // Surfaces & Backgrounds
   background: FIND_BACK.canvas,
@@ -67,7 +67,7 @@ export const SEMANTIC_TOKENS = {
   borderSubtle: FIND_BACK.borderSubtle,
 
   // Overlays & Translucency
-  overlay: 'rgba(10, 10, 15, 0.78)',
+  overlay: 'rgba(5, 11, 20, 0.78)',
   glassBackground: FIND_BACK.glassBackground,
 } as const;
 
@@ -96,16 +96,16 @@ export const RADIUS_SCALE = {
 
 export const THEME = {
   primary: {
-    50: '#f6f4ff',
-    100: '#ece9ff',
-    200: '#d7d1ff',
-    300: '#bcb1ff',
-    400: '#a08fff',
-    500: '#7C6AF6',
-    600: '#6B5AE8',
-    700: '#5749cc',
-    800: '#4539a8',
-    900: '#342e80',
+    50: '#eef8ff',
+    100: '#d9efff',
+    200: '#bce3ff',
+    300: '#8fd3ff',
+    400: '#7CC4FF',
+    500: '#2B7FE8',
+    600: '#1D62C9',
+    700: '#1A6BC0',
+    800: '#18559A',
+    900: '#173F73',
   },
 
   secondary: {
@@ -122,16 +122,16 @@ export const THEME = {
   },
 
   tertiary: {
-    50: '#fff2ed',
-    100: '#ffe4d9',
-    200: '#fec6b3',
-    300: '#fca88d',
-    400: '#f78d6d',
-    500: '#F4845F',
-    600: '#de6f4d',
-    700: '#c05d41',
-    800: '#9b4a34',
-    900: '#7b3a2a',
+    50: '#fff8e6',
+    100: '#ffefc2',
+    200: '#ffe08a',
+    300: '#ffd05c',
+    400: '#ffc23a',
+    500: '#FFB020',
+    600: '#e69a0c',
+    700: '#bf7c0a',
+    800: '#8f5d0a',
+    900: '#6b450a',
   },
 
   error: {
@@ -140,7 +140,7 @@ export const THEME = {
     200: '#f1b3ca',
     300: '#e98baf',
     400: '#e1618c',
-    500: '#D73357',
+    500: '#E5365B',
     600: '#be2b4b',
     700: '#9e233f',
     800: '#7f1c32',
@@ -153,11 +153,11 @@ export const THEME = {
     200: '#d8d8e2',
     300: '#bcbccc',
     400: '#9a9ab0',
-    500: '#71717A',
+    500: '#6A7A96',
     600: '#515161',
     700: '#363644',
     800: '#1f1f2b',
-    900: '#0A0A0F',
+    900: '#050B14',
   },
 
   /** Backward-compatible aliases */
@@ -179,7 +179,7 @@ export const THEME = {
     200: '#fec6b3',
     300: '#fca88d',
     400: '#f78d6d',
-    500: '#F4845F',
+    500: '#FFB020',
     600: '#de6f4d',
     700: '#c05d41',
     800: '#9b4a34',

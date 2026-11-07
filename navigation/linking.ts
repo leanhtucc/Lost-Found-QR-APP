@@ -1,9 +1,18 @@
 import type { LinkingOptions } from '@react-navigation/native';
-import * as Linking from 'expo-linking';
 import type { RootStackParamList } from './index';
 
 export const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: [Linking.createURL('/'), 'lostfoundqr://', 'lostfound://', 'lostfoundapp://'],
+  prefixes: [
+    'lostfoundqr://',
+    'lostfound://',
+    'lostfoundapp://',
+    'https://lostfound.app',
+    'https://www.lostfound.app',
+    'https://app.lostfound.vn',
+    'https://www.app.lostfound.vn',
+    'https://findback.vn',
+    'https://www.findback.vn',
+  ],
   config: {
     screens: {
       ResetPassword: {

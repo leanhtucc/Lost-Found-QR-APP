@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Menu size={18} color={FIND_BACK.primaryLight} />
         </TouchableOpacity>
         <View className="max-w-[190px]">
-          <Text className="text-[32px] font-extrabold text-fb-primary/95">FindBack</Text>
+          <Text className="text-[32px] font-extrabold text-fb-primary/95">Lost and Found QR</Text>
           <Text className="-mt-1 text-xs text-fb-muted" numberOfLines={1}>
             Xin chào, {firstName}
           </Text>

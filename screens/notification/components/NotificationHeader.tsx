@@ -11,12 +11,12 @@ import { CATEGORY_TABS } from '../utils';
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
 const C = {
-  bg: '#0B0B0C',
-  surface: '#18181B',
+  bg: '#08111F',
+  surface: '#0F1A2E',
   border: 'rgba(255,255,255,0.08)',
-  textPrimary: '#F5F3FF',
-  textSecondary: '#A1A1AA',
-  purple: '#8B5CF6',
+  textPrimary: '#F1F6FF',
+  textSecondary: '#9AA9C2',
+  purple: '#2B7FE8',
 };
 
 interface NotificationHeaderProps {
@@ -141,9 +141,9 @@ export const NotificationHeader: React.FC<NotificationHeaderProps> = ({
               paddingHorizontal: 14,
               paddingVertical: 9,
               borderRadius: 999,
-              backgroundColor: 'rgba(139,92,246,0.12)',
+              backgroundColor: 'rgba(43, 127, 232,0.12)',
               borderWidth: 1,
-              borderColor: 'rgba(139,92,246,0.25)',
+              borderColor: 'rgba(43, 127, 232,0.25)',
             }}
           >
             <CheckCheck size={14} color={C.purple} />

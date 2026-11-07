@@ -18,6 +18,7 @@ import {
 } from '@/types/return-flow';
 import { returnApi } from './api';
 import { User } from '@/services/auth/types';
+import { guestSessionStorage } from '@/storage/guestSession';
 
 export interface ReturnState {
   session: ReturnSession | null;
@@ -139,8 +140,14 @@ export const useReturnStore = create<ReturnStore>()(
         const session = await returnApi.getSession(sessionId);
 
         // Re-evaluate role if user provided or exists
+        const guestSession = currentUser ? null : await guestSessionStorage.get();
         const uid =
-          currentUser?.id || currentUser?.memberId || currentUser?.uid || get().currentUserId;
+          currentUser?.id ||
+          currentUser?.memberId ||
+          currentUser?.uid ||
+          get().currentUserId ||
+          guestSession?.guestId ||
+          '';
         let role = get().currentRole;
 
         if (uid) {

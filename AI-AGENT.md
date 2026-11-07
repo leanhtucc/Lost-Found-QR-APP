@@ -616,17 +616,17 @@ Trước khi bắt đầu một task có thay đổi code, hãy xem danh sách s
 task. Chỉ đọc skill cần thiết cho task hiện tại; không cần nạp toàn bộ thư mục
 skill mỗi lần.
 
-| Loại task | Skill cần xem |
-| --------- | ------------- |
-| Xây tính năng hoặc sửa UI/backend | `.agents/skills/develop/SKILL.md` |
-| Chẩn đoán và sửa lỗi | `.agents/skills/debug/SKILL.md` |
-| Quyết định kiến trúc hoặc thiết kế chưa có trong spec | `.agents/skills/architect/SKILL.md` |
-| Khảo sát codebase hoặc bổ sung hướng dẫn AI | `.agents/skills/audit/SKILL.md` |
-| Viết/cập nhật test cho code đã đổi | `.agents/skills/test/SKILL.md` |
-| Xác minh thay đổi hoặc review trước merge | `.agents/skills/check/SKILL.md` |
-| Đồng bộ tài liệu hướng dẫn sau khi hoàn tất | `.agents/skills/sync/SKILL.md` |
-| Viết changelog, release note, postmortem hoặc PR prose | `.agents/skills/document/SKILL.md` |
-| Lập/cập nhật scope sản phẩm | `.agents/skills/scope/SKILL.md` |
+| Loại task                                              | Skill cần xem                       |
+| ------------------------------------------------------ | ----------------------------------- |
+| Xây tính năng hoặc sửa UI/backend                      | `.agents/skills/develop/SKILL.md`   |
+| Chẩn đoán và sửa lỗi                                   | `.agents/skills/debug/SKILL.md`     |
+| Quyết định kiến trúc hoặc thiết kế chưa có trong spec  | `.agents/skills/architect/SKILL.md` |
+| Khảo sát codebase hoặc bổ sung hướng dẫn AI            | `.agents/skills/audit/SKILL.md`     |
+| Viết/cập nhật test cho code đã đổi                     | `.agents/skills/test/SKILL.md`      |
+| Xác minh thay đổi hoặc review trước merge              | `.agents/skills/check/SKILL.md`     |
+| Đồng bộ tài liệu hướng dẫn sau khi hoàn tất            | `.agents/skills/sync/SKILL.md`      |
+| Viết changelog, release note, postmortem hoặc PR prose | `.agents/skills/document/SKILL.md`  |
+| Lập/cập nhật scope sản phẩm                            | `.agents/skills/scope/SKILL.md`     |
 
 Nếu task thuộc nhiều loại, đọc skill chính trước; đọc skill bổ trợ khi đến bước
 tương ứng. Skill là quy trình hướng dẫn cho agent, không thay thế yêu cầu trực

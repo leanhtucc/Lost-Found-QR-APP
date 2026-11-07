@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { MessageCircle } from 'lucide-react-native';
+import { Bell, MessageCircle, ShieldCheck } from 'lucide-react-native';
 import { Item } from '@/types/item';
 import { AppToggle } from '@/components';
 import { FIND_BACK } from '@constants/theme';
@@ -64,14 +64,31 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
   return (
     <Animated.View
       entering={FadeInDown.duration(300).delay(200)}
-      className="rounded-3xl border border-fb-border-subtle bg-fb-surface p-5"
+      className={`rounded-3xl border p-5 ${
+        isLost ? 'border-fb-tertiary/45 bg-fb-tertiary/10' : 'border-fb-border-glass bg-fb-surface'
+      }`}
     >
       {/* Header with Switch */}
       <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-1">
-          <Text className="text-base font-bold text-fb-content">Chế độ thất lạc</Text>
-          <Text className="mt-1 text-sm text-fb-muted">
-            Bật để cộng đồng có thể hỗ trợ tìm lại.
+        <View
+          className={`mr-3 h-12 w-12 items-center justify-center rounded-2xl ${
+            isLost ? 'bg-fb-tertiary' : 'bg-fb-secondary/15'
+          }`}
+        >
+          {isLost ? (
+            <Bell size={22} color="#050B14" strokeWidth={2.2} />
+          ) : (
+            <ShieldCheck size={22} color={FIND_BACK.secondary} />
+          )}
+        </View>
+        <View className="flex-1 pr-3">
+          <Text className="text-base font-bold text-fb-content">
+            {isLost ? 'Chế độ mất đồ đang bật' : 'Đang an toàn'}
+          </Text>
+          <Text className="mt-0.5 text-sm text-fb-muted">
+            {isLost
+              ? 'Người quét QR sẽ thấy lời nhắn của bạn.'
+              : 'Bật khi bạn làm mất đồ để cộng đồng cùng tìm.'}
           </Text>
         </View>
 
@@ -81,7 +98,7 @@ export const LostModeCard: React.FC<LostModeCardProps> = ({
           onValueChange={handleToggle}
           disabled={isBackendManaged}
           accessibilityLabel="Bật hoặc tắt chế độ thất lạc"
-          activeTrackColor={FIND_BACK.danger}
+          activeTrackColor={FIND_BACK.tertiary}
           inactiveTrackColor={FIND_BACK.surfaceElevated}
         />
       </View>

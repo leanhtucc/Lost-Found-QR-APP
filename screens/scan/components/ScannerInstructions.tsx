@@ -46,7 +46,7 @@ const getInstructionText = (
     default:
       return {
         title: 'Đưa mã QR vào khung hình',
-        subtitle: 'Đang quét...',
+        subtitle: 'Không cần đăng nhập để báo bạn đã nhặt được đồ',
       };
   }
 };
@@ -78,7 +78,7 @@ export const ScannerInstructions: React.FC<ScannerInstructionsProps> = ({
           <Text className="text-white text-lg font-semibold text-center mb-2 tracking-wide">
             {title}
           </Text>
-          <Text className="text-white/60 text-sm font-medium text-center tracking-wide">
+          <Text className="px-4 text-center text-sm font-medium tracking-wide text-white/80">
             {subtitle}
           </Text>
         </View>

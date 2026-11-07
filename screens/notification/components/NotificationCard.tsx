@@ -26,12 +26,12 @@ import { formatNotificationTime } from '../utils';
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
 const C = {
-  surface: '#18181B',
+  surface: '#0F1A2E',
   border: 'rgba(255,255,255,0.08)',
-  textPrimary: '#F5F3FF',
-  textSecondary: '#A1A1AA',
-  textMuted: '#71717A',
-  purple: '#8B5CF6',
+  textPrimary: '#F1F6FF',
+  textSecondary: '#9AA9C2',
+  textMuted: '#6A7A96',
+  purple: '#2B7FE8',
   green: '#22C55E',
   orange: '#F97316',
   cyan: '#22D3EE',
@@ -77,7 +77,7 @@ const getTypeVisual = (type: NotificationType): TypeVisual => {
     case 'NEW_CHAT':
       return {
         icon: <MessageCircle size={18} color={C.purple} />,
-        iconBg: 'rgba(139,92,246,0.15)',
+        iconBg: 'rgba(43, 127, 232,0.15)',
         accentColor: C.purple,
       };
     case 'ESCROW_LOCKED':
@@ -230,9 +230,9 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
               {isUnread && (
                 <View
                   style={{
-                    backgroundColor: 'rgba(139,92,246,0.15)',
+                    backgroundColor: 'rgba(43, 127, 232,0.15)',
                     borderWidth: 1,
-                    borderColor: 'rgba(139,92,246,0.3)',
+                    borderColor: 'rgba(43, 127, 232,0.3)',
                     borderRadius: 6,
                     paddingHorizontal: 8,
                     paddingVertical: 3,

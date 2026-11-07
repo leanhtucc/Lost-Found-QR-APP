@@ -126,7 +126,7 @@ export default function ReportItemsScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <LinearGradient
-        colors={[REPORT_COLORS.background, '#0f0b1a']}
+        colors={[REPORT_COLORS.background, '#08111F']}
         style={StyleSheet.absoluteFillObject}
       />
       <View style={styles.glowTop} pointerEvents="none" />
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(124, 58, 237, 0.22)',
+    backgroundColor: 'rgba(43, 127, 232, 0.22)',
   },
   glowBottom: {
     position: 'absolute',
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: 'rgba(196, 181, 253, 0.12)',
+    backgroundColor: 'rgba(124, 196, 255, 0.12)',
   },
   indicatorWrap: {
     height: 34,

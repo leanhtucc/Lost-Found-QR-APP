@@ -1,5 +1,5 @@
 /**
- * Typography scale for FindBack.
+ * Typography scale for Lost and Found QR.
  * Be Vietnam Pro is loaded in app-root.tsx and is the single app typeface.
  */
 

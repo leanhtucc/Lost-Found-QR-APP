@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderRadius: 999,
-    backgroundColor: 'rgba(124, 106, 246, 0.18)',
+    backgroundColor: 'rgba(58, 169, 255, 0.18)',
     paddingHorizontal: 9,
     paddingVertical: 6,
   },
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
   bottomArea: { paddingHorizontal: 12, paddingBottom: 8 },
   markerWrap: { alignItems: 'center' },
   markerHalo: { padding: 7, borderRadius: 999 },
-  myMarkerHalo: { backgroundColor: 'rgba(124, 106, 246, 0.25)' },
+  myMarkerHalo: { backgroundColor: 'rgba(58, 169, 255, 0.25)' },
   partnerMarkerHalo: { backgroundColor: 'rgba(46, 204, 139, 0.2)' },
   markerCore: {
     width: 30,

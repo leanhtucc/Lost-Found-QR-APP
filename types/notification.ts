@@ -1,6 +1,6 @@
 /**
  * Notification Types
- * Định nghĩa các kiểu dữ liệu cho hệ thống thông báo FindBack Alerts
+ * Định nghĩa các kiểu dữ liệu cho hệ thống thông báo Lost and Found QR Alerts
  * Matching API spec: /v1/notifications
  */
 

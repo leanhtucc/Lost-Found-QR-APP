@@ -147,9 +147,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
-    backgroundColor: 'rgba(124, 106, 246, 0.16)',
+    backgroundColor: 'rgba(58, 169, 255, 0.16)',
     borderWidth: 1,
-    borderColor: 'rgba(124, 106, 246, 0.3)',
+    borderColor: 'rgba(58, 169, 255, 0.3)',
   },
   ownBadgeText: {
     fontSize: 11,

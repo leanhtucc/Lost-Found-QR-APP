@@ -10,13 +10,13 @@ export const REPORT_COLORS = {
   textMuted: FIND_BACK.labelText,
   accent: FIND_BACK.primaryLight,
   accentStrong: FIND_BACK.primary,
-  accentSoft: 'rgba(124, 106, 246, 0.16)',
-  accentGlow: 'rgba(124, 106, 246, 0.42)',
-  chipBg: 'rgba(124, 106, 246, 0.14)',
+  accentSoft: 'rgba(58, 169, 255, 0.16)',
+  accentGlow: 'rgba(58, 169, 255, 0.42)',
+  chipBg: 'rgba(58, 169, 255, 0.14)',
   success: FIND_BACK.secondary,
   ctaText: FIND_BACK.bodyText,
   ctaGradient: [FIND_BACK.primary, FIND_BACK.primaryDark] as [string, string],
-  cardGradient: ['rgba(124, 106, 246, 0.12)', 'rgba(19, 19, 25, 0.68)'] as [string, string],
+  cardGradient: ['rgba(58, 169, 255, 0.12)', 'rgba(15, 26, 46, 0.68)'] as [string, string],
 };
 
 export const REPORT_LAYOUT = {

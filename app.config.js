@@ -57,18 +57,18 @@ if (
 
 export default {
   expo: {
-    name: 'FindBack',
+    name: 'Lost and Found QR',
     slug: 'lost-and-found-qr',
     scheme: 'lostfoundqr',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/logoApp.png',
+    icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     newArchEnabled: true,
     splash: {
-      image: './assets/logoApp.png',
+      image: './assets/splash-icon.png',
       resizeMode: 'contain',
-      backgroundColor: '#000000',
+      backgroundColor: '#08111F',
     },
     assetBundlePatterns: ['**/*'],
     ios: {
@@ -82,8 +82,8 @@ export default {
       package: 'com.lostfound.app',
       permissions: ['android.permission.POST_NOTIFICATIONS'],
       adaptiveIcon: {
-        foregroundImage: './assets/logoApp.png',
-        backgroundColor: '#000000',
+        foregroundImage: './assets/adaptive-icon.png',
+        backgroundColor: '#08111F',
       },
       config: {
         googleMaps: {
@@ -103,16 +103,16 @@ export default {
       ],
     },
     web: {
-      favicon: './assets/logoApp.png',
+      favicon: './assets/icon.png',
     },
     plugins: [
       [
         'expo-splash-screen',
         {
-          image: './assets/logoApp.png',
+          image: './assets/splash-icon.png',
           imageWidth: 220,
           resizeMode: 'contain',
-          backgroundColor: '#000000',
+          backgroundColor: '#08111F',
         },
       ],
       [

@@ -100,9 +100,9 @@ Development builds reject public remote API hosts unless `ALLOW_REMOTE_DEV_API=t
 
 `app.config.js` is the only Expo config source because config depends on the build environment. The obsolete `app.json` was removed, eliminating duplicate or conflicting fields and satisfying Expo's dynamic-config check.
 
-The dynamic config owns name (`FindBack`), slug, scheme, version, package/bundle IDs, plugins, permissions, new architecture, edge-to-edge behavior, and custom-scheme intent filter. Android package and iOS bundle ID remain `com.lostfound.app` to preserve Firebase/signing compatibility. No Universal Links, associated domains, runtime version, or updates policy was introduced in Phase 2.
+The dynamic config owns name (`Lost and Found QR`), slug, scheme, version, package/bundle IDs, plugins, permissions, new architecture, edge-to-edge behavior, and custom-scheme intent filter. Android package and iOS bundle ID remain `com.lostfound.app` to preserve Firebase/signing compatibility. No Universal Links, associated domains, runtime version, or updates policy was introduced in Phase 2.
 
-The npm package metadata was renamed from the unrelated `expertenglish` value to `findback-mobile`. This does not change native application identifiers.
+The npm package metadata was renamed from the unrelated `expertenglish` value to `lost-and-found-qr-mobile`. This does not change native application identifiers.
 
 The legacy client-side Telegram bot logger was removed. A bot token is a server secret and must never be embedded through `EXPO_PUBLIC_*` or Expo `extra`; existing Sentry reporting remains the client crash/error channel. Any previously used Telegram bot token must be rotated because earlier builds may already contain it.
 

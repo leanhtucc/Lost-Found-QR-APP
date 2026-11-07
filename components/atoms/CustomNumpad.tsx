@@ -58,7 +58,7 @@ export const CustomNumpad: React.FC<CustomNumpadProps> = ({ onPressDigit, onPres
               >
                 <Text className="text-[26px] text-white font-medium">{btn}</Text>
                 {letterMapping[btn] ? (
-                  <Text className="text-[10px] text-gray-400 font-medium tracking-widest mt-1">
+                  <Text className="text-[10px] text-fb-muted font-medium tracking-widest mt-1">
                     {letterMapping[btn]}
                   </Text>
                 ) : null}

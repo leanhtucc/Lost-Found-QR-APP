@@ -45,6 +45,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
+      accessibilityLabel={`${conversation.userName}, ${conversation.itemName}`}
       className={`mb-3 flex-row items-center rounded-3xl border p-4 ${
         conversation.unreadCount > 0
           ? 'border-fb-primary/30 bg-fb-primary/10'
@@ -53,7 +54,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
     >
       {/* Avatar */}
       <View className="relative">
-        <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated">
+        <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-fb-border-glass bg-fb-surface-elevated">
           {conversation.userAvatar ? (
             <Image
               source={{ uri: conversation.userAvatar }}
@@ -101,7 +102,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
 
           {conversation.unreadCount > 0 && (
             <View className="ml-2 h-6 min-w-[24px] items-center justify-center rounded-full bg-fb-primary px-1.5">
-              <Text className="text-xs font-bold text-fb-content">
+              <Text className="text-xs font-bold text-white">
                 {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
               </Text>
             </View>

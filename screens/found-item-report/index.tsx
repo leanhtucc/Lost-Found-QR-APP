@@ -17,7 +17,7 @@ export default function FoundItemReportScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <LinearGradient
-        colors={[FIND_BACK.canvas, '#151022', FIND_BACK.neutral]}
+        colors={[FIND_BACK.canvas, '#0B1A33', FIND_BACK.neutral]}
         style={StyleSheet.absoluteFillObject}
       />
 
@@ -40,8 +40,8 @@ export default function FoundItemReportScreen() {
         </View>
         <Text style={styles.title}>Thêm đồ bạn vừa nhặt được</Text>
         <Text style={styles.subtitle}>
-          Nếu vật dụng có mã FindBack, hãy quét QR. Nếu không có QR, bạn vẫn có thể đăng bài để tìm
-          chủ sở hữu.
+          Nếu vật dụng có mã Lost and Found QR, hãy quét QR. Nếu không có QR, bạn vẫn có thể đăng
+          bài để tìm chủ sở hữu.
         </Text>
 
         <Pressable
@@ -88,9 +88,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   headerSpacer: {
-    width: 42,
+    width: 44,
   },
   content: {
     flex: 1,

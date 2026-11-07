@@ -7,7 +7,7 @@
  * - Draggable marker with drag end update
  * - GPS current location button with permission checking and race condition protection
  * - Separate draft vs confirmed state management (cancellation discards draft changes)
- * - Safe area & dark mode styling matching FindBack design system
+ * - Safe area & dark mode styling matching Lost and Found QR design system
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   mapWrap: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#050B14',
   },
   markerContainer: {
     alignItems: 'center',
@@ -588,9 +588,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(19, 19, 25, 0.92)',
+    backgroundColor: 'rgba(15, 26, 46, 0.92)',
     borderWidth: 1,
-    borderColor: 'rgba(124, 106, 246, 0.4)',
+    borderColor: 'rgba(58, 169, 255, 0.4)',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 20,
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
     bottom: 16,
   },
   locationBadge: {
-    backgroundColor: 'rgba(19, 19, 25, 0.94)',
+    backgroundColor: 'rgba(15, 26, 46, 0.94)',
     borderWidth: 1,
     borderColor: 'rgba(46, 204, 139, 0.3)',
     borderRadius: 16,
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(19, 19, 25, 0.92)',
+    backgroundColor: 'rgba(15, 26, 46, 0.92)',
     borderWidth: 1,
     borderColor: FIND_BACK.borderGlass,
     borderRadius: 14,
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
     backgroundColor: FIND_BACK.primary,
   },
   confirmBtnDisabled: {
-    backgroundColor: 'rgba(124, 106, 246, 0.35)',
+    backgroundColor: 'rgba(58, 169, 255, 0.35)',
   },
   confirmBtnText: {
     color: '#FFFFFF',

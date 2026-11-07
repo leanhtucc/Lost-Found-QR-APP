@@ -18,13 +18,14 @@ import {
   resolveStoredNotificationDestination,
 } from '@/services/notifications';
 import { useNotificationContext } from '@/contexts/NotificationContext';
+import { ErrorState } from '@/components/atoms/ErrorState';
 import { NotificationHeader, NotificationCard, EmptyState, LoadingState } from './components';
-import { getMockNotifications, tabToCategory } from './utils';
+import { tabToCategory } from './utils';
 
 type NotificationNavigationProp = StackNavigationProp<RootStackParamList>;
 
-const BG = '#0B0B0C';
-const PURPLE = '#8B5CF6';
+const BG = '#08111F';
+const PURPLE = '#2B7FE8';
 
 export default function NotificationsScreen() {
   const navigation = useNavigation<NotificationNavigationProp>();
@@ -32,6 +33,7 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -51,6 +53,7 @@ export default function NotificationsScreen() {
           setNotifications(data.data);
         }
 
+        setLoadError(false);
         void refreshUnreadCount();
         setPage(data.pagination.page);
         setHasMore(data.pagination.hasNextPage);
@@ -67,11 +70,10 @@ export default function NotificationsScreen() {
           return;
         }
 
-        // Fallback to mock data
+        // Never fall back to demo data: show a real error with a retry instead.
         if (!append) {
-          console.log('[NotifScreen] Using mock data for demo');
-          const mockData = getMockNotifications();
-          setNotifications(mockData);
+          setNotifications([]);
+          setLoadError(true);
         }
       } finally {
         if (isMountedRef.current) {
@@ -102,6 +104,13 @@ export default function NotificationsScreen() {
     },
     [loadNotifications]
   );
+
+  // ── Retry after a failed load ──
+  const handleRetry = useCallback(() => {
+    setLoadError(false);
+    setIsLoading(true);
+    loadNotifications(tabToCategory(activeTab), 1, false);
+  }, [activeTab, loadNotifications]);
 
   // ── Pull-to-refresh ──
   const handleRefresh = useCallback(async () => {
@@ -195,6 +204,12 @@ export default function NotificationsScreen() {
 
       {isLoading ? (
         <LoadingState />
+      ) : loadError ? (
+        <ErrorState
+          title="Không tải được thông báo"
+          message="Kiểm tra kết nối Internet rồi thử lại."
+          onRetry={handleRetry}
+        />
       ) : notifications.length === 0 ? (
         <EmptyState />
       ) : (

@@ -14,10 +14,10 @@ import type { SvgProps } from 'react-native-svg';
 const SvgIconOnboarding = (props: SvgProps) => (
   <Svg width={24} height={24} fill="none" viewBox="0 0 390 416" {...props}>
     <G filter="url(#IconOnboarding_svg__a)">
-      <Rect width={256} height={256} x={67} y={80} fill="#715FEA" fillOpacity={0.1} rx={128} />
+      <Rect width={256} height={256} x={67} y={80} fill="#2B7FE8" fillOpacity={0.1} rx={128} />
     </G>
     <G filter="url(#IconOnboarding_svg__b)">
-      <Rect width={128} height={128} x={179} y={176} fill="#AD8BF8" fillOpacity={0.05} rx={64} />
+      <Rect width={128} height={128} x={179} y={176} fill="#7CC4FF" fillOpacity={0.05} rx={64} />
     </G>
     <G filter="url(#IconOnboarding_svg__c)">
       <G clipPath="url(#IconOnboarding_svg__d)">
@@ -26,7 +26,7 @@ const SvgIconOnboarding = (props: SvgProps) => (
           height={256}
           x={110.01}
           y={88.23}
-          fill="#25252D"
+          fill="#1C2B4A"
           rx={40}
           transform="rotate(-6 110.01 88.23)"
         />
@@ -40,7 +40,7 @@ const SvgIconOnboarding = (props: SvgProps) => (
           height={15.997}
           x={159.53}
           y={100.12}
-          fill="#0E0E13"
+          fill="#08111F"
           rx={7.999}
           transform="rotate(-6 159.53 100.12)"
         />
@@ -57,7 +57,7 @@ const SvgIconOnboarding = (props: SvgProps) => (
       />
     </G>
     <Rect width={12} height={12} x={293} y={98} fill="#4DE29F" rx={6} />
-    <Rect width={8} height={8} x={101} y={270} fill="#ADA3FF" rx={4} />
+    <Rect width={8} height={8} x={101} y={270} fill="#8FD3FF" rx={4} />
     <ForeignObject width={176.617} height={176.617} x={106.691} y={119.691}></ForeignObject>
     <G data-figma-bg-blur-radius={20}>
       <Rect
@@ -65,7 +65,7 @@ const SvgIconOnboarding = (props: SvgProps) => (
         height={128}
         x={135.62}
         y={139.691}
-        fill="#1F1F26"
+        fill="#162340"
         fillOpacity={0.9}
         rx={16}
         transform="rotate(4 135.62 139.691)"
@@ -75,7 +75,7 @@ const SvgIconOnboarding = (props: SvgProps) => (
         height={127}
         x={136.084}
         y={140.225}
-        stroke="#ADA3FF"
+        stroke="#8FD3FF"
         strokeOpacity={0.2}
         rx={15.5}
         transform="rotate(4 136.084 140.225)"
@@ -106,11 +106,11 @@ const SvgIconOnboarding = (props: SvgProps) => (
         height={89.999}
         x={153.249}
         y={159.971}
-        fill="#0E0E13"
+        fill="#08111F"
         rx={7}
         transform="rotate(4 153.249 159.971)"
       />
-      <G fill="#715FEA" opacity={0.8}>
+      <G fill="#2B7FE8" opacity={0.8}>
         <Rect
           width={11.6}
           height={11.6}
@@ -266,7 +266,7 @@ const SvgIconOnboarding = (props: SvgProps) => (
         y2={155.628}
         gradientUnits="userSpaceOnUse"
       >
-        <Stop stopColor="#131319" />
+        <Stop stopColor="#0F1A2E" />
         <Stop offset={1} stopColor="#2C2B33" stopOpacity={0.2} />
       </LinearGradient>
       <LinearGradient
@@ -277,8 +277,8 @@ const SvgIconOnboarding = (props: SvgProps) => (
         y2={251.836}
         gradientUnits="userSpaceOnUse"
       >
-        <Stop stopColor="#ADA3FF" />
-        <Stop offset={1} stopColor="#715FEA" />
+        <Stop stopColor="#8FD3FF" />
+        <Stop offset={1} stopColor="#2B7FE8" />
       </LinearGradient>
       <ClipPath id="IconOnboarding_svg__f">
         <G transform="translate(-106.691 -119.691)">

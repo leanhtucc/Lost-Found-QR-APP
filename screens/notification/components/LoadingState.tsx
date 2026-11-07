@@ -8,10 +8,10 @@ import { View, ActivityIndicator, Text } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 const C = {
-  bg: '#0B0B0C',
-  surface: '#18181B',
-  purple: '#8B5CF6',
-  textMuted: '#71717A',
+  bg: '#08111F',
+  surface: '#0F1A2E',
+  purple: '#2B7FE8',
+  textMuted: '#6A7A96',
 };
 
 export const LoadingState: React.FC = () => {

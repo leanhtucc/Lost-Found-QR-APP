@@ -1,11 +1,10 @@
 /**
- * Chat Input Component
- * Input bar với attachment và send buttons
+ * Chat composer: attach, pill input, circular send. All targets >= 44pt.
  */
 
 import React from 'react';
-import { View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Image, Send, Smile } from 'lucide-react-native';
+import { View, TextInput, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { ImagePlus, SendHorizontal, Smile } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
 
 interface ChatInputProps {
@@ -23,60 +22,63 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onAttachPress,
   onEmojiPress,
 }) => {
-  const handleSend = () => {
-    if (value.trim()) {
-      onSend();
-    }
-  };
+  const canSend = value.trim().length > 0;
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <View className="border-t border-fb-border-subtle bg-fb-surface px-4 py-3">
-        <View className="flex-row items-center gap-2">
-          {/* Attach Button */}
-          {onAttachPress && (
-            <TouchableOpacity
+      <View className="border-t border-fb-border-glass bg-fb-canvas px-3 pb-3 pt-2">
+        <View className="flex-row items-end gap-2">
+          {onAttachPress ? (
+            <Pressable
               onPress={onAttachPress}
+              accessibilityRole="button"
               accessibilityLabel="Đính kèm ảnh"
-              className="h-11 w-11 items-center justify-center rounded-2xl bg-fb-surface-elevated"
+              className="h-12 w-12 items-center justify-center rounded-full bg-fb-surface-elevated active:opacity-70"
             >
-              <Image size={20} color={FIND_BACK.mutedText} />
-            </TouchableOpacity>
-          )}
+              <ImagePlus size={20} color={FIND_BACK.mutedText} />
+            </Pressable>
+          ) : null}
 
-          {/* Input */}
-          <View className="flex-1 relative">
+          <View className="min-h-[48px] flex-1 flex-row items-center rounded-3xl border border-fb-border-glass bg-fb-surface px-4">
             <TextInput
               value={value}
               onChangeText={onChangeText}
               placeholder="Nhập tin nhắn..."
-              placeholderTextColor={FIND_BACK.mutedText}
-              className="max-h-28 min-h-[44px] rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated px-4 pr-10 text-fb-content"
+              accessibilityLabel="Nhập tin nhắn"
+              placeholderTextColor={FIND_BACK.labelText}
+              selectionColor={FIND_BACK.primaryLight}
+              className="max-h-28 min-h-[48px] flex-1 py-3 text-base text-fb-content"
               multiline
               maxLength={1000}
             />
-            {onEmojiPress && (
-              <TouchableOpacity onPress={onEmojiPress} className="absolute right-3 top-1/2 -mt-2.5">
+            {onEmojiPress ? (
+              <Pressable
+                onPress={onEmojiPress}
+                accessibilityRole="button"
+                accessibilityLabel="Chọn emoji"
+                hitSlop={8}
+                className="ml-2 h-11 w-8 items-center justify-center"
+              >
                 <Smile size={20} color={FIND_BACK.mutedText} />
-              </TouchableOpacity>
-            )}
+              </Pressable>
+            ) : null}
           </View>
 
-          {/* Send Button */}
-          <TouchableOpacity
-            onPress={handleSend}
-            disabled={!value.trim()}
+          <Pressable
+            onPress={() => canSend && onSend()}
+            disabled={!canSend}
             accessibilityRole="button"
             accessibilityLabel="Gửi tin nhắn"
-            className={`h-11 w-11 items-center justify-center rounded-2xl ${
-              value.trim() ? 'bg-fb-primary' : 'bg-fb-surface-elevated'
+            accessibilityState={{ disabled: !canSend }}
+            className={`h-12 w-12 items-center justify-center rounded-full ${
+              canSend ? 'bg-fb-primary active:bg-fb-primary-dark' : 'bg-fb-surface-elevated'
             }`}
           >
-            <Send size={19} color={value.trim() ? FIND_BACK.bodyText : FIND_BACK.labelText} />
-          </TouchableOpacity>
+            <SendHorizontal size={20} color={canSend ? '#FFFFFF' : FIND_BACK.labelText} />
+          </Pressable>
         </View>
       </View>
     </KeyboardAvoidingView>

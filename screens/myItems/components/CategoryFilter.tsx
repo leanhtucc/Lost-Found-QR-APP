@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     borderRadius: MY_ITEMS_RADIUS.chip,
     backgroundColor: MY_ITEMS_COLORS.surfaceMuted,
     borderWidth: 1,
-    borderColor: 'rgba(142, 108, 255, 0.26)',
+    borderColor: 'rgba(43, 127, 232, 0.26)',
   },
   activeLabel: {
     color: '#FFFFFF',

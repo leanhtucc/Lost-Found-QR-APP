@@ -50,13 +50,13 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess,
   return (
     <>
       <View className="flex-row items-center my-6">
-        <View className="flex-1 h-px bg-gray-200" />
-        <Text className="px-2 text-sm text-gray-500">hoặc</Text>
-        <View className="flex-1 h-px bg-gray-200" />
+        <View className="flex-1 h-px bg-fb-surface-muted" />
+        <Text className="px-2 text-sm text-fb-muted">hoặc</Text>
+        <View className="flex-1 h-px bg-fb-surface-muted" />
       </View>
 
       <TouchableOpacity
-        className="flex-row items-center justify-center h-12 border-2 border-gray-200 rounded-xl bg-white active:bg-gray-50"
+        className="flex-row items-center justify-center h-12 border-2 border-fb-border-glass rounded-xl bg-white active:bg-fb-surface-muted"
         onPress={() => signInWithGoogle()}
         disabled={loading}
       >
@@ -65,7 +65,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess,
         ) : (
           <GoogleIcon />
         )}
-        <Text className="text-base font-medium text-gray-900">
+        <Text className="text-base font-medium text-fb-content">
           {loading ? 'Đang đăng nhập...' : 'Đăng nhập bằng Google'}
         </Text>
       </TouchableOpacity>

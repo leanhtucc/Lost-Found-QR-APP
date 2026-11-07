@@ -1,6 +1,6 @@
 /**
  * Notifications API Service
- * FindBack Alerts — /v1/notifications
+ * Lost and Found QR Alerts — /v1/notifications
  *
  * Endpoints:
  *   GET    /v1/notifications?category=...&page=...&limit=...

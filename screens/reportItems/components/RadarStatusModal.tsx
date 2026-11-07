@@ -111,7 +111,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
                   height: 190,
                   borderRadius: 95,
                   borderWidth: 1,
-                  borderColor: 'rgba(167,139,250,0.18)',
+                  borderColor: 'rgba(43, 127, 232,0.18)',
                 }}
               />
               <View
@@ -121,7 +121,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
                   height: 138,
                   borderRadius: 69,
                   borderWidth: 1,
-                  borderColor: 'rgba(167,139,250,0.25)',
+                  borderColor: 'rgba(43, 127, 232,0.25)',
                 }}
               />
               <View
@@ -131,7 +131,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
                   height: 92,
                   borderRadius: 46,
                   borderWidth: 1,
-                  borderColor: 'rgba(167,139,250,0.35)',
+                  borderColor: 'rgba(43, 127, 232,0.35)',
                 }}
               />
               <View
@@ -154,7 +154,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
                   width: 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: '#c4b5fd',
+                  backgroundColor: '#7CC4FF',
                 }}
               />
               <View
@@ -165,7 +165,7 @@ export const RadarStatusModal: React.FC<RadarStatusModalProps> = ({
                   width: 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: '#a78bfa',
+                  backgroundColor: '#7CC4FF',
                 }}
               />
             </View>

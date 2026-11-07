@@ -19,7 +19,7 @@ import { ToastProvider } from '@contexts/ToastContext';
 import { ItemsProvider } from '@/contexts';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ErrorBoundary } from '@/components';
-import { logo } from '@assets';
+import { splashMark as logo } from '@assets';
 
 const CUSTOM_SPLASH_DURATION_MS = 2000;
 const CUSTOM_SPLASH_FADE_MS = 240;
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   overlayBackground: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#08111F',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#E5E6EE',
+    color: '#C9D6EA',
     letterSpacing: 0.6,
     fontFamily: 'BeVietnamPro_500Medium',
   },
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 48,
     fontSize: 12,
-    color: '#8B8DA0',
+    color: '#6A7A96',
     fontFamily: 'BeVietnamPro_400Regular',
   },
 });

@@ -17,7 +17,7 @@ const APPROVED_HOSTS = [
 
 export interface NormalizeResultSuccess {
   success: true;
-  itemId: string;
+  qrCodeId: string;
 }
 
 export interface NormalizeResultError {
@@ -71,7 +71,7 @@ export function normalizeScanPayload(raw: string): NormalizeResult {
       }
     } else if (protocol === 'http' || protocol === 'https') {
       if (!APPROVED_HOSTS.includes(url.hostname as any)) {
-        return { success: false, error: 'Liên kết không thuộc FindBack.' };
+        return { success: false, error: 'Liên kết không thuộc Lost and Found QR.' };
       }
 
       const pathParts = url.pathname.split('/').filter(Boolean);
@@ -105,7 +105,7 @@ export function normalizeScanPayload(raw: string): NormalizeResult {
     return { success: false, error: 'Mã QR không hợp lệ.' };
   }
 
-  return { success: true, itemId: extractedId };
+  return { success: true, qrCodeId: extractedId };
 }
 
 /**
@@ -116,5 +116,5 @@ export function normalizeScanPayload(raw: string): NormalizeResult {
  */
 export function extractItemId(raw: string): string | null {
   const result = normalizeScanPayload(raw);
-  return result.success ? result.itemId : null;
+  return result.success ? result.qrCodeId : null;
 }

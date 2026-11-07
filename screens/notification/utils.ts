@@ -43,14 +43,14 @@ export const getNotificationAccentColor = (type: NotificationType): string => {
     case 'QR_SCANNED':
       return '#22C55E'; // green
     case 'NEW_CHAT':
-      return '#8B5CF6'; // purple
+      return '#2B7FE8'; // purple
     case 'ESCROW_LOCKED':
       return '#22C55E'; // green
     case 'REFUNDED':
     case 'RELEASED':
       return '#22D3EE'; // cyan
     default:
-      return '#71717A';
+      return '#6A7A96';
   }
 };
 
@@ -109,7 +109,7 @@ export const getMockNotifications = (): Notification[] => [
     category: 'TRANSACTION',
     type: 'ESCROW_LOCKED',
     title: '500.000đ đã được khóa an toàn',
-    content: 'Giao dịch được bảo vệ bởi FindBack Escrow',
+    content: 'Giao dịch được bảo vệ bởi Lost and Found QR Escrow',
     metadata: { amount: 500000, transaction_id: 'txn-789', status: 'locked', post_id: 'post-123' },
     is_read: false,
     created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),

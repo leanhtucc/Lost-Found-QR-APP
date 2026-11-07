@@ -24,12 +24,15 @@ export const ScannerHeader: React.FC<ScannerHeaderProps> = ({ onClose }) => {
         activeOpacity={0.8}
         accessibilityRole="button"
         accessibilityLabel="Đóng trình quét"
-        className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-md items-center justify-center"
+        className="h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/40"
       >
         <X size={24} color={FIND_BACK.bodyText} />
       </TouchableOpacity>
 
-      <Text className="text-lg font-bold text-white">Quét mã QR</Text>
+      <View className="items-center">
+        <Text className="text-lg font-bold text-white">Quét mã QR</Text>
+        <Text className="text-xs text-white/80">Đưa mã vào giữa khung</Text>
+      </View>
 
       <View className="w-12" />
     </Animated.View>

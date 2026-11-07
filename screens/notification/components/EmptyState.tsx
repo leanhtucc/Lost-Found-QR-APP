@@ -12,13 +12,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
 
 const C = {
-  bg: '#0B0B0C',
-  surface: '#18181B',
+  bg: '#08111F',
+  surface: '#0F1A2E',
   border: 'rgba(255,255,255,0.08)',
-  textPrimary: '#F5F3FF',
-  textSecondary: '#A1A1AA',
-  textMuted: '#71717A',
-  purple: '#8B5CF6',
+  textPrimary: '#F1F6FF',
+  textSecondary: '#9AA9C2',
+  textMuted: '#6A7A96',
+  purple: '#2B7FE8',
   green: '#22C55E',
   cyan: '#22D3EE',
 };
@@ -79,9 +79,9 @@ export const EmptyState: React.FC = () => {
         activeOpacity={0.85}
         onPress={() => navigation.navigate('ReportItems')}
         style={{
-          backgroundColor: 'rgba(139,92,246,0.12)',
+          backgroundColor: 'rgba(43, 127, 232,0.12)',
           borderWidth: 1,
-          borderColor: 'rgba(139,92,246,0.3)',
+          borderColor: 'rgba(43, 127, 232,0.3)',
           borderRadius: 16,
           paddingVertical: 16,
           alignItems: 'center',
@@ -122,7 +122,7 @@ const TipCard: React.FC<{
     style={{
       flexDirection: 'row',
       gap: 14,
-      backgroundColor: '#18181B',
+      backgroundColor: '#0F1A2E',
       borderRadius: 16,
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.08)',
@@ -143,10 +143,10 @@ const TipCard: React.FC<{
       {icon}
     </View>
     <View style={{ flex: 1 }}>
-      <Text style={{ color: '#F5F3FF', fontSize: 14, fontWeight: '700', marginBottom: 4 }}>
+      <Text style={{ color: '#F1F6FF', fontSize: 14, fontWeight: '700', marginBottom: 4 }}>
         {title}
       </Text>
-      <Text style={{ color: '#A1A1AA', fontSize: 12, lineHeight: 17 }}>{subtitle}</Text>
+      <Text style={{ color: '#9AA9C2', fontSize: 12, lineHeight: 17 }}>{subtitle}</Text>
     </View>
   </View>
 );

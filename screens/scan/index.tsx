@@ -47,34 +47,9 @@ export const ScanScreen: React.FC = () => {
 
   const handleScanSuccess = useCallback(
     (result: ScanResult) => {
-      // Prevent stale navigation if the screen blurred while scan request was in flight
-      if (!isFocusedRef.current) {
-        console.log('Screen blurred before scan completed, ignoring navigation');
-        return;
-      }
-
+      if (!isFocusedRef.current) return;
       const rootNavigation = navigation.getParent<ScanNavigationProp>() ?? navigation;
-
-      if (result.action === 'open_chat') {
-        if (result.channelId) {
-          rootNavigation.navigate('Chat', {
-            channelId: result.channelId,
-            itemName: result.itemName || 'Vật dụng',
-            userName: result.ownerDisplayName || 'Chủ sở hữu',
-          });
-          return;
-        }
-
-        Alert.alert(
-          'Không thể mở cuộc trò chuyện',
-          'Đã quét thành công nhưng chưa nhận được kênh chat từ hệ thống. Vui lòng thử lại sau.'
-        );
-        rootNavigation.navigate('ItemDetails', { itemId: result.itemId });
-        return;
-      }
-
-      // Default: info_only or unknown response
-      rootNavigation.navigate('ItemDetails', { itemId: result.itemId });
+      rootNavigation.navigate('PublicItemDetails', { itemId: result.qrCodeId });
     },
     [navigation]
   );

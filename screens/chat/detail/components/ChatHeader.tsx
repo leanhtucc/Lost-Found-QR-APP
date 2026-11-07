@@ -41,7 +41,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             onPress={onBack}
             accessibilityRole="button"
             accessibilityLabel="Quay lại"
-            className="h-11 w-11 items-center justify-center rounded-2xl border border-fb-border-subtle bg-fb-surface-elevated"
+            className="h-11 w-11 items-center justify-center rounded-full border border-fb-border-glass bg-fb-surface-elevated"
           >
             <ArrowLeft size={20} color={FIND_BACK.bodyText} />
           </TouchableOpacity>
@@ -49,7 +49,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           {/* User Info */}
           <View className="flex-1 flex-row items-center gap-3">
             <View className="relative">
-              <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-fb-primary/30 bg-fb-primary/15">
+              <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-fb-primary/30 bg-fb-primary/15">
                 {avatarUrl ? (
                   <Image
                     source={{ uri: avatarUrl }}
@@ -92,7 +92,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               <TouchableOpacity
                 onPress={onCallPress}
                 accessibilityLabel="Gọi điện"
-                className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated"
+                className="h-11 w-11 items-center justify-center rounded-full bg-fb-surface-elevated"
               >
                 <Phone size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
@@ -101,7 +101,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               <TouchableOpacity
                 onPress={onVideoPress}
                 accessibilityLabel="Gọi video"
-                className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated"
+                className="h-11 w-11 items-center justify-center rounded-full bg-fb-surface-elevated"
               >
                 <Video size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>
@@ -110,7 +110,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               <TouchableOpacity
                 onPress={onMorePress}
                 accessibilityLabel="Tùy chọn cuộc trò chuyện"
-                className="h-10 w-10 items-center justify-center rounded-xl bg-fb-surface-elevated"
+                className="h-11 w-11 items-center justify-center rounded-full bg-fb-surface-elevated"
               >
                 <MoreVertical size={18} color={FIND_BACK.mutedText} />
               </TouchableOpacity>

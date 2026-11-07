@@ -13,15 +13,15 @@
     --font-display: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
     /* FindBack dark surfaces */
-    --background: 240 17% 7%;
-    --foreground: 280 45% 97%;
+    --background: 217 62% 8%;
+    --foreground: 214 100% 97%;
 
-    --card: 240 14% 12%;
-    --card-foreground: 280 45% 97%;
+    --card: 218 50% 12%;
+    --card-foreground: 214 100% 97%;
 
     /* Primary = FindBack violet */
-    --primary: 248 88% 69%;
-    --primary-foreground: 240 17% 7%;
+    --primary: 213 80% 53%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 154 63% 49%;
     --secondary-foreground: 240 17% 7%;
@@ -32,28 +32,28 @@
     --destructive: 345 66% 52%;
     --destructive-foreground: 280 45% 97%;
 
-    --muted: 240 10% 20%;
-    --muted-foreground: 240 7% 67%;
+    --muted: 220 40% 18%;
+    --muted-foreground: 217 28% 68%;
 
-    --border: 240 7% 29%;
+    --border: 218 35% 26%;
   }
 
   .dark {
-    --background: 240 17% 7%;
-    --foreground: 280 45% 97%;
-    --card: 240 14% 12%;
-    --card-foreground: 280 45% 97%;
-    --primary: 248 88% 69%;
-    --primary-foreground: 240 17% 7%;
+    --background: 217 62% 8%;
+    --foreground: 214 100% 97%;
+    --card: 218 50% 12%;
+    --card-foreground: 214 100% 97%;
+    --primary: 213 80% 53%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 154 63% 49%;
     --secondary-foreground: 240 17% 7%;
     --success: 154 63% 49%;
     --success-foreground: 240 17% 7%;
     --destructive: 345 66% 52%;
     --destructive-foreground: 280 45% 97%;
-    --muted: 240 10% 20%;
-    --muted-foreground: 240 7% 67%;
-    --border: 240 7% 29%;
+    --muted: 220 40% 18%;
+    --muted-foreground: 217 28% 68%;
+    --border: 218 35% 26%;
   }
 }
 

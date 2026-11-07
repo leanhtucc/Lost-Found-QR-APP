@@ -7,6 +7,7 @@
  */
 
 import { apiClient } from '@/services/http';
+import { guestSessionStorage, isTerminalReturnStatus } from '@/storage/guestSession';
 import { buildV1Url } from '@/services/shared/url';
 import {
   ReturnSession,
@@ -42,6 +43,16 @@ const fetchWithAuth = async (url: string, options: RequestInit): Promise<Respons
 const handleResponse = async <T>(response: Response): Promise<T> => {
   const json = await response.json().catch(() => ({}));
 
+  const data = json?.data !== undefined ? json.data : json;
+  const guestSession = await guestSessionStorage.get();
+  if (
+    guestSession &&
+    data?.id === guestSession.returnSessionId &&
+    isTerminalReturnStatus(data?.status)
+  ) {
+    await guestSessionStorage.clear();
+  }
+
   if (!response.ok) {
     const errorCode = json?.error?.code || json?.code || 'UNKNOWN_ERROR';
     const message = json?.message || `Yêu cầu thất bại (${response.status})`;
@@ -56,7 +67,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
     throw error;
   }
 
-  return (json.data !== undefined ? json.data : json) as T;
+  return data as T;
 };
 
 // ─── Dev Mock Session (Chỉ dùng khi USE_MOCK_FALLBACK = true) ────────────────

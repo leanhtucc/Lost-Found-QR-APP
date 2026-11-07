@@ -1,0 +1,88 @@
+{
+  "expo": {
+    "name": "Lost and Found QR",
+    "slug": "lost-and-found-qr",
+    "version": "1.0.0",
+    "scheme": "lostfoundqr",
+    "orientation": "portrait",
+    "icon": "./assets/logoApp.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/logoApp.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lostfound.app"
+    },
+    "android": {
+      "permissions": ["android.permission.POST_NOTIFICATIONS"],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logoApp.png",
+        "backgroundColor": "#000000"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.lostfound.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "lostfoundqr"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/logoApp.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logoApp.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "anh-tu-studio"
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cho phép ứng dụng truy cập thư viện ảnh để chọn hình ảnh đồ vật.",
+          "cameraPermission": "Cho phép ứng dụng truy cập camera để chụp ảnh đồ vật."
+        }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Cho phép ứng dụng truy cập camera để quét mã QR."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Cho phep Lost and Found QR truy cap vi tri de hien thi radar do that lac gan ban"
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-firebase/messaging"
+    ]
+  }
+}

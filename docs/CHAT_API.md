@@ -110,7 +110,9 @@ import { getInbox } from '@/services/chat';
 const data = await getInbox();
 console.log(`Total conversations: ${data.total}`);
 
-console.log(`Unread conversations: ${data.channels.filter(channel => channel.unread_count > 0).length}`);
+console.log(
+  `Unread conversations: ${data.channels.filter(channel => channel.unread_count > 0).length}`
+);
 ```
 
 ---

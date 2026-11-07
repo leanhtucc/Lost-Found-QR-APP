@@ -961,35 +961,43 @@ export const itemsApi = {
    * POST /api/scan/guest-init
    */
   async initGuestScanSession(payload: ScanGuestInitParams): Promise<ScanGuestInitResponse> {
-    if (!payload.itemId?.trim()) {
-      throw new Error('itemId is required');
-    }
-
-    if (!payload.phoneNumber?.trim()) {
-      throw new Error('phoneNumber is required');
-    }
+    if (!payload.itemId?.trim()) throw new Error('itemId is required');
+    if (!payload.phoneNumber?.trim()) throw new Error('phoneNumber is required');
 
     const response = await apiClient.fetch(buildScanUrl('guest-init'), {
       method: 'POST',
       auth: 'none',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         itemId: payload.itemId,
-        phoneNumber: payload.phoneNumber,
+        phoneNumber: payload.phoneNumber.trim(),
         lat: payload.lat,
         lng: payload.lng,
       }),
     });
 
-    const json = (await response.json()) as ScanGuestInitResponse & { error?: string };
-
-    if (!response.ok || !json.success) {
-      throw new Error(json.message || json.error || 'Failed to initialize guest session');
+    const json = await response.json().catch(() => ({}));
+    const data = json?.data || json;
+    if (
+      !response.ok ||
+      !data?.success ||
+      !data?.chatToken ||
+      !data?.guestId ||
+      !data?.channelId ||
+      !data?.returnSessionId ||
+      !data?.guestAccessToken ||
+      !data?.guestAccessExpiresAt ||
+      !data?.guestInfo
+    ) {
+      throw new Error(
+        data?.message ||
+          json?.message ||
+          json?.error ||
+          'Không thể tạo phiên khách. Vui lòng thử lại.'
+      );
     }
 
-    return json;
+    return data as ScanGuestInitResponse;
   },
 };
 

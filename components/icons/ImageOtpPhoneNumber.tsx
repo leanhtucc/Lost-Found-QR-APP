@@ -27,9 +27,9 @@ const SvgImageOtpPhoneNumber = (props: SvgProps) => (
         y2={0}
         gradientUnits="userSpaceOnUse"
       >
-        <Stop stopColor="#0E0E13" />
-        <Stop offset={0.5} stopColor="#0E0E13" stopOpacity={0} />
-        <Stop offset={1} stopColor="#0E0E13" stopOpacity={0} />
+        <Stop stopColor="#08111F" />
+        <Stop offset={0.5} stopColor="#08111F" stopOpacity={0} />
+        <Stop offset={1} stopColor="#08111F" stopOpacity={0} />
       </LinearGradient>
       <ClipPath id="ImageOTPPhoneNumber_svg__a">
         <Rect width={342} height={128} fill="#fff" rx={16} />

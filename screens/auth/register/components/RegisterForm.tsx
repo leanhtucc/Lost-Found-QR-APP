@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Keyboard } from 'react-native';
-import { Eye, EyeOff, User, Mail, Lock, CheckCircle2 } from 'lucide-react-native';
+import { View, Text, Pressable, Keyboard } from 'react-native';
+import { User, Mail, Lock, CheckCircle2, Check } from 'lucide-react-native';
 import { Button } from '../../../../components/atoms/Button';
+import { FormField } from '@components/kit';
 import { validateEmail, validateDisplayName, validateConfirmPassword } from '@services/auth';
 import { FIND_BACK } from '@constants/theme';
 
@@ -50,11 +51,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isDisplayNameFocused, setIsDisplayNameFocused] = useState(false);
-  const [isEmailFocused, setIsEmailFocused] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const passwordValidation = useMemo(() => {
@@ -96,6 +93,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
 
   const handleSubmit = () => {
     Keyboard.dismiss();
+    if (!acceptedTerms) return;
     if (validateForm()) {
       onSubmit(
         displayName.trim(),
@@ -117,142 +115,66 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
     }
   };
 
-  // Tính điểm đánh giá (0-3)
+  // Strength score (0-3)
   const strengthScore = passwordValidation.filter(r => r.passed).length;
+  const iconColor = (hasError: boolean) => (hasError ? FIND_BACK.danger : FIND_BACK.mutedText);
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
   return (
     <View className="gap-5">
-      {/* Display Name Input */}
-      <View className="w-full">
-        <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
-          Họ và tên
-        </Text>
-        <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
-            errors.displayName
-              ? 'border-red-500'
-              : isDisplayNameFocused
-                ? 'border-fb-primary'
-                : 'border-transparent'
-          }`}
-        >
-          <View className="mr-4">
-            <User size={20} color={errors.displayName ? FIND_BACK.danger : FIND_BACK.mutedText} />
-          </View>
-          <TextInput
-            className="flex-1 text-white text-[15px] h-full"
-            placeholder="Nguyễn Văn A"
-            placeholderTextColor={FIND_BACK.mutedText}
-            value={displayName}
-            onChangeText={text => {
-              setDisplayName(text);
-              clearError('displayName');
-            }}
-            onFocus={() => setIsDisplayNameFocused(true)}
-            onBlur={() => setIsDisplayNameFocused(false)}
-          />
-          <View className="ml-4 p-1" pointerEvents="none">
-            <View style={{ width: 20, height: 20 }} />
-          </View>
-        </View>
-        {errors.displayName ? (
-          <Text className="text-red-500 text-[13px] mt-2">{errors.displayName}</Text>
-        ) : null}
-      </View>
+      <FormField
+        label="Họ và tên"
+        icon={<User size={20} color={iconColor(!!errors.displayName)} />}
+        placeholder="Nguyễn Văn A"
+        value={displayName}
+        onChangeText={text => {
+          setDisplayName(text);
+          clearError('displayName');
+        }}
+        autoComplete="name"
+        textContentType="name"
+        error={errors.displayName}
+      />
 
-      {/* Email Input */}
-      <View className="w-full">
-        <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
-          Email
-        </Text>
-        <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
-            errors.email
-              ? 'border-red-500'
-              : isEmailFocused
-                ? 'border-fb-primary'
-                : 'border-transparent'
-          }`}
-        >
-          <View className="mr-4">
-            <Mail size={20} color={errors.email ? FIND_BACK.danger : FIND_BACK.mutedText} />
-          </View>
-          <TextInput
-            className="flex-1 text-white text-[15px] h-full"
-            placeholder="example@gmail.com"
-            placeholderTextColor={FIND_BACK.mutedText}
-            value={email}
-            onChangeText={text => {
-              setEmail(text);
-              clearError('email');
-            }}
-            onFocus={() => setIsEmailFocused(true)}
-            onBlur={() => setIsEmailFocused(false)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="email"
-            textContentType="emailAddress"
-          />
-          <View className="ml-4 p-1" pointerEvents="none">
-            <View style={{ width: 20, height: 20 }} />
-          </View>
-        </View>
-        {errors.email ? (
-          <Text className="text-red-500 text-[13px] mt-2">{errors.email}</Text>
-        ) : null}
-      </View>
+      <FormField
+        label="Email"
+        icon={<Mail size={20} color={iconColor(!!errors.email)} />}
+        placeholder="ten@email.com"
+        value={email}
+        onChangeText={text => {
+          setEmail(text);
+          clearError('email');
+        }}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
+        error={errors.email}
+      />
 
-      {/* Password Input */}
       <View>
-        <View className="w-full">
-          <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
-            Mật khẩu
-          </Text>
-          <View
-            className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
-              errors.password
-                ? 'border-red-500'
-                : isPasswordFocused
-                  ? 'border-fb-primary'
-                  : 'border-transparent'
-            }`}
-          >
-            <View className="mr-4">
-              <Lock size={20} color={errors.password ? FIND_BACK.danger : FIND_BACK.mutedText} />
-            </View>
-            <TextInput
-              className="flex-1 text-white text-[15px] h-full"
-              placeholder="••••••••••••"
-              placeholderTextColor={FIND_BACK.mutedText}
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={text => {
-                setPassword(text);
-                clearError('password');
-              }}
-              onFocus={() => setIsPasswordFocused(true)}
-              onBlur={() => setIsPasswordFocused(false)}
-            />
-            <TouchableOpacity className="ml-4 p-1" onPress={() => setShowPassword(!showPassword)}>
-              {showPassword ? (
-                <EyeOff size={20} color={FIND_BACK.mutedText} />
-              ) : (
-                <Eye size={20} color={FIND_BACK.mutedText} />
-              )}
-            </TouchableOpacity>
-          </View>
-          {errors.password ? (
-            <Text className="text-red-500 text-[13px] mt-2">{errors.password}</Text>
-          ) : null}
-        </View>
+        <FormField
+          label="Mật khẩu"
+          icon={<Lock size={20} color={iconColor(!!errors.password)} />}
+          placeholder="Ít nhất 8 ký tự"
+          value={password}
+          onChangeText={text => {
+            setPassword(text);
+            clearError('password');
+          }}
+          password
+          autoComplete="new-password"
+          textContentType="newPassword"
+          error={errors.password}
+        />
 
-        {/* Password Strength Indicator */}
-        <View className="flex-row items-center gap-1 mt-3 mb-2">
+        {/* Password strength: three segments plus a text label (never colour alone) */}
+        <View className="mb-2 mt-3 flex-row items-center gap-1">
           {[1, 2, 3].map(index => (
             <View
               key={index}
-              className={`h-1 flex-1 rounded-full ${
+              className={`h-1.5 flex-1 rounded-full ${
                 index <= strengthScore
                   ? strengthScore === 3
                     ? 'bg-fb-secondary'
@@ -262,69 +184,77 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, isLoading 
             />
           ))}
         </View>
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-xs font-semibold text-fb-muted">
+        <View className="flex-row items-center justify-between">
+          <Text
+            className={`text-xs font-semibold ${
+              strengthScore === 3 ? 'text-fb-secondary' : 'text-fb-muted'
+            }`}
+          >
             {strengthScore === 0 ? 'Chưa nhập' : strengthScore < 3 ? 'Trung bình' : 'Mạnh'}
           </Text>
-          <Text className="text-[10px] text-gray-500">Gợi ý: Thêm ký tự đặc biệt</Text>
+          <Text className="text-xs text-fb-muted">Gợi ý: thêm ký tự đặc biệt</Text>
         </View>
       </View>
 
-      {/* Confirm Password Input */}
-      <View className="w-full">
-        <Text className="text-gray-400 text-xs font-semibold tracking-wider mb-2 uppercase">
-          Xác nhận mật khẩu
-        </Text>
+      <FormField
+        label="Xác nhận mật khẩu"
+        icon={
+          <CheckCircle2
+            size={20}
+            color={
+              errors.confirmPassword
+                ? FIND_BACK.danger
+                : passwordsMatch
+                  ? FIND_BACK.secondary
+                  : FIND_BACK.mutedText
+            }
+          />
+        }
+        placeholder="Nhập lại mật khẩu"
+        value={confirmPassword}
+        onChangeText={text => {
+          setConfirmPassword(text);
+          clearError('confirmPassword');
+        }}
+        password
+        autoComplete="new-password"
+        textContentType="newPassword"
+        success={passwordsMatch}
+        error={errors.confirmPassword}
+      />
+
+      {/* Consent (required) */}
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: acceptedTerms }}
+        accessibilityLabel="Đồng ý Điều khoản dịch vụ và Chính sách bảo mật"
+        onPress={() => setAcceptedTerms(value => !value)}
+        className="min-h-[44px] flex-row items-start gap-3"
+      >
         <View
-          className={`flex-row items-center h-[56px] rounded-2xl bg-fb-surface-muted px-4 border ${
-            errors.confirmPassword
-              ? 'border-red-500'
-              : isConfirmPasswordFocused
-                ? 'border-fb-primary'
-                : 'border-transparent'
+          className={`mt-0.5 h-6 w-6 items-center justify-center rounded-lg border ${
+            acceptedTerms ? 'border-fb-primary bg-fb-primary' : 'border-white/30'
           }`}
         >
-          <View className="mr-4">
-            <CheckCircle2
-              size={20}
-              color={
-                errors.confirmPassword
-                  ? FIND_BACK.danger
-                  : confirmPassword && password === confirmPassword
-                    ? FIND_BACK.secondary
-                    : FIND_BACK.mutedText
-              }
-            />
-          </View>
-          <TextInput
-            className="flex-1 text-white text-[15px] h-full"
-            placeholder="••••••••••••"
-            placeholderTextColor={FIND_BACK.mutedText}
-            secureTextEntry={!showPassword}
-            value={confirmPassword}
-            onChangeText={text => {
-              setConfirmPassword(text);
-              clearError('confirmPassword');
-            }}
-            onFocus={() => setIsConfirmPasswordFocused(true)}
-            onBlur={() => setIsConfirmPasswordFocused(false)}
-          />
-          <View className="ml-4 p-1" pointerEvents="none">
-            <View style={{ width: 20, height: 20 }} />
-          </View>
+          {acceptedTerms ? <Check size={15} color="#FFFFFF" strokeWidth={3} /> : null}
         </View>
-        {errors.confirmPassword ? (
-          <Text className="text-red-500 text-[13px] mt-2">{errors.confirmPassword}</Text>
-        ) : null}
-      </View>
+        <Text className="flex-1 text-[13px] leading-5 text-fb-muted">
+          Tôi đồng ý với{' '}
+          <Text className="font-semibold text-fb-primary-light">Điều khoản dịch vụ</Text> và{' '}
+          <Text className="font-semibold text-fb-primary-light">Chính sách bảo mật</Text>, và cho
+          phép ứng dụng dùng vị trí khi tôi báo mất hoặc nhặt đồ.
+        </Text>
+      </Pressable>
 
-      <View className="mt-4 mb-6">
+      <View className="mb-6">
         <Button
-          variant="primary"
+          variant={acceptedTerms ? 'primary' : 'secondary'}
           onPress={handleSubmit}
           loading={isLoading}
+          disabled={!acceptedTerms}
+          accessibilityState={{ disabled: !acceptedTerms }}
           style={{ minHeight: 56 }}
-          textClassName="text-white text-base font-bold"
+          textClassName={acceptedTerms ? 'text-white text-base font-bold' : 'text-fb-label'}
         >
           Tiếp tục
         </Button>

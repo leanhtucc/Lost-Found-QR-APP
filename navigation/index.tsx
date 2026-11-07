@@ -3,7 +3,7 @@
  * Root navigation stack với authentication state management
  */
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -44,6 +44,9 @@ import AuthCodeVerifyScreen from '@/screens/auth/codeVerify';
 import AuthForgotPasswordScreen from '@/screens/auth/forgotPass';
 import AuthResetPasswordScreen from '@/screens/auth/resetPass';
 import { linking } from './linking';
+import { guestSessionStorage, type GuestSession } from '@/storage/guestSession';
+import { guestSessionEvents } from '@/lib/guestSessionEvents';
+import { canGuestAccessRoute } from './guestAccess';
 
 import { useNotificationHandler } from '@/hooks/useNotificationHandler';
 
@@ -79,6 +82,7 @@ export type RootStackParamList = {
     userAvatar?: string;
     memberId?: string; // For connecting with memberId
     isVerified?: boolean;
+    returnSessionId?: string;
   };
   LiveTracking: { returnSessionId: string };
   HandoverConfirm: { returnSessionId: string };
@@ -106,8 +110,6 @@ const AUTH_ROUTE_NAMES: (keyof RootStackParamList)[] = [
   'ResetPassword',
   'Congratulation',
 ];
-
-const GUEST_ROUTE_NAMES: (keyof RootStackParamList)[] = ['PublicItemDetails'];
 
 // Screen options for smooth transitions
 const screenOptions = {
@@ -152,6 +154,27 @@ export default function RootStack() {
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isNavReady, setIsNavReady] = useState(false);
+  const [guestSession, setGuestSession] = useState<GuestSession | null>(null);
+  const [isCheckingGuestSession, setIsCheckingGuestSession] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadGuestSession = async () => {
+      const session = await guestSessionStorage.get();
+      if (mounted) {
+        setGuestSession(session);
+        setIsCheckingGuestSession(false);
+      }
+    };
+    const unsubscribe = guestSessionEvents.subscribe(() => {
+      void loadGuestSession();
+    });
+    void loadGuestSession();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   // Check onboarding status on mount
   useEffect(() => {
@@ -179,17 +202,27 @@ export default function RootStack() {
 
   // Keep navigation state in sync with auth state changes
   useEffect(() => {
-    if (!isNavReady || authLoading || isCheckingOnboarding || !navigationRef.current) {
+    if (
+      !isNavReady ||
+      authLoading ||
+      isCheckingOnboarding ||
+      isCheckingGuestSession ||
+      !navigationRef.current
+    ) {
       return;
     }
 
     const currentRouteName = navigationRef.current.getCurrentRoute()?.name as
-      keyof RootStackParamList | undefined;
+      | keyof RootStackParamList
+      | undefined;
     const isCurrentAuthRoute = currentRouteName
       ? AUTH_ROUTE_NAMES.includes(currentRouteName)
       : false;
+    const currentParams = navigationRef.current.getCurrentRoute()?.params as
+      | Record<string, unknown>
+      | undefined;
     const isCurrentGuestRoute = currentRouteName
-      ? GUEST_ROUTE_NAMES.includes(currentRouteName)
+      ? canGuestAccessRoute(currentRouteName, currentParams, guestSession)
       : false;
 
     if (isAuthenticated) {
@@ -212,10 +245,60 @@ export default function RootStack() {
         routes: [{ name: unauthTargetRoute }],
       });
     }
-  }, [isAuthenticated, hasCompletedOnboarding, authLoading, isCheckingOnboarding, isNavReady]);
+  }, [
+    isAuthenticated,
+    hasCompletedOnboarding,
+    authLoading,
+    isCheckingOnboarding,
+    isCheckingGuestSession,
+    isNavReady,
+    guestSession,
+  ]);
+
+  const handleNavigationStateChange = useCallback(() => {
+    if (
+      !isNavReady ||
+      authLoading ||
+      isCheckingOnboarding ||
+      isCheckingGuestSession ||
+      isAuthenticated ||
+      !navigationRef.current
+    )
+      return;
+
+    void (async () => {
+      const session = await guestSessionStorage.get();
+      setGuestSession(session);
+      const route = navigationRef.current?.getCurrentRoute();
+      if (!route || AUTH_ROUTE_NAMES.includes(route.name as keyof RootStackParamList)) return;
+      if (
+        canGuestAccessRoute(
+          route.name,
+          route.params as Record<string, unknown> | undefined,
+          session
+        )
+      )
+        return;
+      if (navigationRef.current?.canGoBack()) {
+        navigationRef.current.goBack();
+      } else {
+        navigationRef.current?.reset({
+          index: 0,
+          routes: [{ name: hasCompletedOnboarding ? 'Login' : 'Onboarding' }],
+        });
+      }
+    })();
+  }, [
+    authLoading,
+    hasCompletedOnboarding,
+    isAuthenticated,
+    isCheckingGuestSession,
+    isCheckingOnboarding,
+    isNavReady,
+  ]);
 
   // Show loading while checking auth and onboarding status
-  if (authLoading || isCheckingOnboarding) {
+  if (authLoading || isCheckingOnboarding || isCheckingGuestSession) {
     return (
       <View
         style={{
@@ -231,7 +314,12 @@ export default function RootStack() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} linking={linking} onReady={() => setIsNavReady(true)}>
+    <NavigationContainer
+      ref={navigationRef}
+      linking={linking}
+      onReady={() => setIsNavReady(true)}
+      onStateChange={handleNavigationStateChange}
+    >
       <NotificationHandler />
       <Stack.Navigator initialRouteName={getInitialRoute()} screenOptions={screenOptions}>
         {/* Auth Screens */}

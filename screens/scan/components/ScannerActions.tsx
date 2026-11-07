@@ -34,14 +34,16 @@ export const ScannerActions = ({
             activeOpacity={0.7}
             onPress={onGalleryPress}
             disabled={isProcessing}
+            accessibilityRole="button"
+            accessibilityLabel="Chọn mã QR từ thư viện ảnh"
             className={cn(
-              'w-12 h-12 rounded-full bg-white/10 items-center justify-center border border-white/20',
+              'w-14 h-14 rounded-full bg-white/10 items-center justify-center border border-white/25',
               isProcessing && 'opacity-50'
             )}
           >
             <ImageIcon size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-white/60 text-xs font-medium">Thư viện</Text>
+          <Text className="text-[13px] font-medium text-white/85">Thư viện</Text>
         </View>
 
         {/* Nút Scan trung tâm — recenter / khởi động lại chế độ quét */}
@@ -54,7 +56,7 @@ export const ScannerActions = ({
             accessibilityLabel="Quét mã QR bằng camera"
           >
             <LinearGradient
-              colors={[FIND_BACK.primaryLight, FIND_BACK.primary, FIND_BACK.primaryDark]}
+              colors={[FIND_BACK.primary, FIND_BACK.primaryDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               className={cn(
@@ -73,14 +75,16 @@ export const ScannerActions = ({
             activeOpacity={0.7}
             onPress={onManualPress}
             disabled={isProcessing}
+            accessibilityRole="button"
+            accessibilityLabel="Nhập mã bằng tay"
             className={cn(
-              'w-12 h-12 rounded-full bg-white/10 items-center justify-center border border-white/20',
+              'w-14 h-14 rounded-full bg-white/10 items-center justify-center border border-white/25',
               isProcessing && 'opacity-50'
             )}
           >
             <KeyboardIcon size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-white/60 text-xs font-medium">Nhập mã</Text>
+          <Text className="text-[13px] font-medium text-white/85">Nhập mã</Text>
         </View>
       </View>
     </Animated.View>

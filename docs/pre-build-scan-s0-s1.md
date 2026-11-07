@@ -6,16 +6,16 @@ The mobile checkout is `LostAndFoundQR`; the backend checkout is `Documents/GitH
 
 ## 1. Baseline and after
 
-| Project/check | Baseline | After |
-|---|---|---|
-| Mobile TypeScript (`npx tsc --noEmit`) | Did not start: the `npx` shim points to a missing npm CLI file. `node_modules` is absent. | Not verified. |
-| Mobile Jest (`npm test`) | Did not start for the same broken npm shim. | Not verified. |
-| Mobile ESLint | Did not start for the same broken npm shim. | Not verified. |
-| Mobile Prettier | Available Prettier 3.9.6 found 8 files needing formatting. | `prettier --check "**/*.{js,jsx,ts,tsx,json}"` passes after formatting. The project’s pinned 3.7.x toolchain and `npm run validate` remain unavailable. |
-| Backend TypeScript (`npm run typecheck`) | Passed. | Passed. |
-| Backend Vitest | 25 files passed, 1 skipped; 184 passed, 11 skipped. The Phase 4 database integration gate was forced off, so no database was contacted. | Same counts after edits. |
-| Backend format check | 13 files failed. | `npm run format:check` passes after formatting and the log cleanup. |
-| `npm audit --omit=dev` | Registry advisory endpoint unavailable. | Still unavailable; no high/critical finding list could be obtained. |
+| Project/check                            | Baseline                                                                                                                                | After                                                                                                                                                   |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mobile TypeScript (`npx tsc --noEmit`)   | Did not start: the `npx` shim points to a missing npm CLI file. `node_modules` is absent.                                               | Not verified.                                                                                                                                           |
+| Mobile Jest (`npm test`)                 | Did not start for the same broken npm shim.                                                                                             | Not verified.                                                                                                                                           |
+| Mobile ESLint                            | Did not start for the same broken npm shim.                                                                                             | Not verified.                                                                                                                                           |
+| Mobile Prettier                          | Available Prettier 3.9.6 found 8 files needing formatting.                                                                              | `prettier --check "**/*.{js,jsx,ts,tsx,json}"` passes after formatting. The project’s pinned 3.7.x toolchain and `npm run validate` remain unavailable. |
+| Backend TypeScript (`npm run typecheck`) | Passed.                                                                                                                                 | Passed.                                                                                                                                                 |
+| Backend Vitest                           | 25 files passed, 1 skipped; 184 passed, 11 skipped. The Phase 4 database integration gate was forced off, so no database was contacted. | Same counts after edits.                                                                                                                                |
+| Backend format check                     | 13 files failed.                                                                                                                        | `npm run format:check` passes after formatting and the log cleanup.                                                                                     |
+| `npm audit --omit=dev`                   | Registry advisory endpoint unavailable.                                                                                                 | Still unavailable; no high/critical finding list could be obtained.                                                                                     |
 
 ## 2. S0 findings
 
@@ -23,23 +23,23 @@ The mobile checkout is `LostAndFoundQR`; the backend checkout is `Documents/GitH
 
 Dynamic values that could expose phone numbers, email details, message bodies, item data, location coordinates, identifiers, URLs, or full responses were removed or reduced to static event names. Authentication flow helpers now emit only the event name and timestamp; their detail objects are not printed.
 
-| File:line | Previous output | Action |
-|---|---|---|
-| `services/firebase/phoneAuth.ts:97` | Normalized destination phone number | Removed. |
-| `screens/scan/index.tsx:56` | Entire scan result, including the channel ID when present | Removed. |
-| `hooks/useNotificationHandler.ts:78` | Full foreground notification and notification data | Removed. |
-| `screens/home/index.tsx:148` | Feed previews, including pin latitude/longitude | Removed the debug effect. |
-| `screens/home/hooks/useMapDiscovery.ts:244` | Subscribe acknowledgement and socket ID | Removed. |
-| `screens/home/hooks/useHomeLostFeed.ts:125` | Subscribe acknowledgement; item identifiers in event logs | Removed/redacted. |
-| `screens/home/hooks/useLiveRadar.ts:250` | Server acknowledgement message and item identifier | Replaced with static event labels. |
-| `hooks/useAuth.ts:85`, `hooks/useFirebasePhoneAuth.ts:45`, `services/auth/api.ts:54`, `screens/auth/register/index.tsx:26`, `screens/auth/codeVerify/constants/helpers.ts:11` | Auth event details, which included masked email/phone values and response/error data | Emit event name and timestamp only. |
-| `services/items/api.ts:542,593` | Request URLs and raw request parameters | Replaced with static request-start labels. |
-| `services/notifications/api.ts:66,155,181,205,251,282` | URLs with notification/device identifiers, preferences, and response messages | Replaced with static event labels. |
-| `services/notifications/pushNotification.ts:86,137` | Device ID and platform | Replaced with static event labels. |
-| `services/upload/index.ts:129` | Upload URL and local file URI in debug output | Removed; only a static upload-start event remains. |
-| `screens/reportItems/hooks/useReportFlow.ts:688` | Full created-item response | Removed. Item-selection logs now omit item IDs and names. |
-| `docs/TEST_GOOGLE_LOGIN.md:81-83,257-267`, `docs/CHAT_API.md:66,114`, `docs/MODERATION_API.md:190,296`, `docs/ITEMS_API.md:299-302`, `docs/GOOGLE_SIGNIN_SETUP.md:136` | Examples printed tokens, user/message data, or channel details | Replaced with booleans, counts, or static status output. |
-| Backend `src/middlewares/query-to-body.middleware.ts:28` | Entire copied query/body | Removed. The remaining middleware log is static. |
+| File:line                                                                                                                                                                     | Previous output                                                                      | Action                                                    |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| `services/firebase/phoneAuth.ts:97`                                                                                                                                           | Normalized destination phone number                                                  | Removed.                                                  |
+| `screens/scan/index.tsx:56`                                                                                                                                                   | Entire scan result, including the channel ID when present                            | Removed.                                                  |
+| `hooks/useNotificationHandler.ts:78`                                                                                                                                          | Full foreground notification and notification data                                   | Removed.                                                  |
+| `screens/home/index.tsx:148`                                                                                                                                                  | Feed previews, including pin latitude/longitude                                      | Removed the debug effect.                                 |
+| `screens/home/hooks/useMapDiscovery.ts:244`                                                                                                                                   | Subscribe acknowledgement and socket ID                                              | Removed.                                                  |
+| `screens/home/hooks/useHomeLostFeed.ts:125`                                                                                                                                   | Subscribe acknowledgement; item identifiers in event logs                            | Removed/redacted.                                         |
+| `screens/home/hooks/useLiveRadar.ts:250`                                                                                                                                      | Server acknowledgement message and item identifier                                   | Replaced with static event labels.                        |
+| `hooks/useAuth.ts:85`, `hooks/useFirebasePhoneAuth.ts:45`, `services/auth/api.ts:54`, `screens/auth/register/index.tsx:26`, `screens/auth/codeVerify/constants/helpers.ts:11` | Auth event details, which included masked email/phone values and response/error data | Emit event name and timestamp only.                       |
+| `services/items/api.ts:542,593`                                                                                                                                               | Request URLs and raw request parameters                                              | Replaced with static request-start labels.                |
+| `services/notifications/api.ts:66,155,181,205,251,282`                                                                                                                        | URLs with notification/device identifiers, preferences, and response messages        | Replaced with static event labels.                        |
+| `services/notifications/pushNotification.ts:86,137`                                                                                                                           | Device ID and platform                                                               | Replaced with static event labels.                        |
+| `services/upload/index.ts:129`                                                                                                                                                | Upload URL and local file URI in debug output                                        | Removed; only a static upload-start event remains.        |
+| `screens/reportItems/hooks/useReportFlow.ts:688`                                                                                                                              | Full created-item response                                                           | Removed. Item-selection logs now omit item IDs and names. |
+| `docs/TEST_GOOGLE_LOGIN.md:81-83,257-267`, `docs/CHAT_API.md:66,114`, `docs/MODERATION_API.md:190,296`, `docs/ITEMS_API.md:299-302`, `docs/GOOGLE_SIGNIN_SETUP.md:136`        | Examples printed tokens, user/message data, or channel details                       | Replaced with booleans, counts, or static status output.  |
+| Backend `src/middlewares/query-to-body.middleware.ts:28`                                                                                                                      | Entire copied query/body                                                             | Removed. The remaining middleware log is static.          |
 
 Other retained application logs report static state changes, counts, or event names. Documentation examples in `SETUP_GOOGLE_SIGNIN.md` still print the public OAuth client ID; it is configuration metadata rather than an access token.
 
@@ -49,13 +49,13 @@ No `any` annotations were changed. The source scan found 60 mobile and 116 backe
 
 ### Backend stray files
 
-| Path | Finding | Recommendation |
-|---|---|---|
-| `prompt.txt` | Already absent in this working copy and shown as deleted by Git. No package/source reference was found. I did not delete it. | Preserve the current deletion unless the owner wants it restored. |
-| `test-gemini.js` | Standalone Gemini smoke-test script by name; no package/source reference found. Not executed. | Keep only if used manually; move under a developer-only scripts folder after its owner reviews it. |
-| `clean-test-user.js` | Standalone test-user cleanup script by name; no package/source reference found. Not executed. | Keep only if used manually; review its target safeguards before any use or removal. |
-| `dist/` | Build output. `build` creates it and `start`/`main` use it. It is ignored by Git and excluded by Docker and Render. | Keep excluded as a generated artifact. |
-| `uploads/images/` | Directory exists; no source reference to that exact path was found. `uploads/` is ignored/excluded by Git, Docker, and Render. | Retain local data until the owner confirms it is disposable; exclude it from archives. |
+| Path                 | Finding                                                                                                                        | Recommendation                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `prompt.txt`         | Already absent in this working copy and shown as deleted by Git. No package/source reference was found. I did not delete it.   | Preserve the current deletion unless the owner wants it restored.                                  |
+| `test-gemini.js`     | Standalone Gemini smoke-test script by name; no package/source reference found. Not executed.                                  | Keep only if used manually; move under a developer-only scripts folder after its owner reviews it. |
+| `clean-test-user.js` | Standalone test-user cleanup script by name; no package/source reference found. Not executed.                                  | Keep only if used manually; review its target safeguards before any use or removal.                |
+| `dist/`              | Build output. `build` creates it and `start`/`main` use it. It is ignored by Git and excluded by Docker and Render.            | Keep excluded as a generated artifact.                                                             |
+| `uploads/images/`    | Directory exists; no source reference to that exact path was found. `uploads/` is ignored/excluded by Git, Docker, and Render. | Retain local data until the owner confirms it is disposable; exclude it from archives.             |
 
 ### Packaging, environment examples, dependencies
 
@@ -71,39 +71,39 @@ The npm security audit could not reach `https://registry.npmjs.org/-/npm/v1/secu
 
 ### Route inventory
 
-| Route | Registered | Params | Callers/reachability | Issues |
-|---|---|---|---|---|
-| `TabNavigator` | Yes, stack | `{screen?: string}` | Initial route after auth | Nested screen is a broad string, not a typed tab param list. |
-| `Home` | Yes, stack and tab | `undefined` | Default tab; home actions | Reachable. |
-| `Scan` | Yes, stack and tab | `undefined` | Tab; found-report flow | Reachable. |
-| `MyItems` | Yes, stack and tab | `undefined` | Tab, profile, home | Reachable. |
-| `ChatInbox` | Tab only | `undefined` | Chat tab | Not in `RootStackParamList`; it is a child tab route. |
-| `Profile` | Yes, stack and tab | `undefined` | Tab and account actions | Protected. |
-| `ItemDetails` | Yes, stack | `{itemId: string}` | Owner item cards, owner notifications, scan result | Protected. Backend returns 403 to a non-owner. |
-| `PublicItemDetails` | Yes, stack | `{itemId: string}` | Home discovery; `item/:itemId` and `public-item/:itemId` links | Guest-allowed; public API request uses no auth. |
-| `ReportItems` | Yes, stack | `undefined` | Home and notification empty state | Protected. |
-| `FoundItemReport` | Yes, stack | `undefined` | Home | Protected. |
-| `ManualFoundReport` | Yes, stack | `undefined` | Found-item report flow | Protected. |
-| `FoundReportDetails` | Yes, stack | `{reportId: string}` | Home and notifications | Protected. |
-| `Notifications` | Yes, stack | `undefined` | Profile and notification tab actions | Protected. |
-| `ChatList` | Yes, stack | `undefined` | Notification handler and chat navigation | Separate from the `ChatInbox` tab name. |
-| `Chat` | Yes, stack | `{channelId, itemName, userName, userAvatar?, memberId?, isVerified?}` | Scan, found-report acceptance, public item contact, chat list, notifications | Protected; channel ID is required. |
-| `LiveTracking` | Yes, stack | `{returnSessionId: string}` | Chat detail | Protected. |
-| `HandoverConfirm` | Yes, stack | `{returnSessionId: string}` | Chat detail and live tracking | Protected. |
-| `RewardStatus` | Yes, stack | `{returnSessionId: string}` | Handover confirmation | Protected. |
-| `RateFinder` | Yes, stack | `{returnSessionId: string}` | Chat detail and reward flow | Protected. |
-| `EditProfile` | Yes, stack | `undefined` | Profile | Protected. |
-| `NotificationSettings` | Yes, stack | `undefined` | Profile | Protected. |
-| `ChangePassword` | Yes, stack | `undefined` | Profile | Protected. |
-| `DeleteAccount` | Yes, stack | `undefined` | Profile | Protected. |
-| `Onboarding` | Yes, stack | `undefined` | Initial route when onboarding is incomplete | Reachable without auth. |
-| `Login` | Yes, stack | `undefined` | Initial route, auth actions, protected-route redirect | Reachable without auth. |
-| `AuthRegister` | Yes, stack | `undefined` | Auth flow | Reachable without auth. |
-| `CodeVerify` | Yes, stack | `{email: string}` | Registration/auth flow | Reachable without auth. |
-| `ForgotPassword` | Yes, stack | `undefined` | Login | Reachable without auth. |
-| `ResetPassword` | Yes, stack | `{token?: string}` | `reset-password` link | Reachable without auth. |
-| `Congratulation` | Yes, stack | `undefined` | No call site found | Dead/unreachable from current app flows. |
-| `Register`, `QRCodeView`, `ScanResult`, `Settings`, `EditItem`, `Help`, `SignUp` | No | Declared in `RootStackParamList` only | No registered screen | Stale declarations. |
+| Route                                                                            | Registered         | Params                                                                 | Callers/reachability                                                         | Issues                                                       |
+| -------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `TabNavigator`                                                                   | Yes, stack         | `{screen?: string}`                                                    | Initial route after auth                                                     | Nested screen is a broad string, not a typed tab param list. |
+| `Home`                                                                           | Yes, stack and tab | `undefined`                                                            | Default tab; home actions                                                    | Reachable.                                                   |
+| `Scan`                                                                           | Yes, stack and tab | `undefined`                                                            | Tab; found-report flow                                                       | Reachable.                                                   |
+| `MyItems`                                                                        | Yes, stack and tab | `undefined`                                                            | Tab, profile, home                                                           | Reachable.                                                   |
+| `ChatInbox`                                                                      | Tab only           | `undefined`                                                            | Chat tab                                                                     | Not in `RootStackParamList`; it is a child tab route.        |
+| `Profile`                                                                        | Yes, stack and tab | `undefined`                                                            | Tab and account actions                                                      | Protected.                                                   |
+| `ItemDetails`                                                                    | Yes, stack         | `{itemId: string}`                                                     | Owner item cards, owner notifications, scan result                           | Protected. Backend returns 403 to a non-owner.               |
+| `PublicItemDetails`                                                              | Yes, stack         | `{itemId: string}`                                                     | Home discovery; `item/:itemId` and `public-item/:itemId` links               | Guest-allowed; public API request uses no auth.              |
+| `ReportItems`                                                                    | Yes, stack         | `undefined`                                                            | Home and notification empty state                                            | Protected.                                                   |
+| `FoundItemReport`                                                                | Yes, stack         | `undefined`                                                            | Home                                                                         | Protected.                                                   |
+| `ManualFoundReport`                                                              | Yes, stack         | `undefined`                                                            | Found-item report flow                                                       | Protected.                                                   |
+| `FoundReportDetails`                                                             | Yes, stack         | `{reportId: string}`                                                   | Home and notifications                                                       | Protected.                                                   |
+| `Notifications`                                                                  | Yes, stack         | `undefined`                                                            | Profile and notification tab actions                                         | Protected.                                                   |
+| `ChatList`                                                                       | Yes, stack         | `undefined`                                                            | Notification handler and chat navigation                                     | Separate from the `ChatInbox` tab name.                      |
+| `Chat`                                                                           | Yes, stack         | `{channelId, itemName, userName, userAvatar?, memberId?, isVerified?}` | Scan, found-report acceptance, public item contact, chat list, notifications | Protected; channel ID is required.                           |
+| `LiveTracking`                                                                   | Yes, stack         | `{returnSessionId: string}`                                            | Chat detail                                                                  | Protected.                                                   |
+| `HandoverConfirm`                                                                | Yes, stack         | `{returnSessionId: string}`                                            | Chat detail and live tracking                                                | Protected.                                                   |
+| `RewardStatus`                                                                   | Yes, stack         | `{returnSessionId: string}`                                            | Handover confirmation                                                        | Protected.                                                   |
+| `RateFinder`                                                                     | Yes, stack         | `{returnSessionId: string}`                                            | Chat detail and reward flow                                                  | Protected.                                                   |
+| `EditProfile`                                                                    | Yes, stack         | `undefined`                                                            | Profile                                                                      | Protected.                                                   |
+| `NotificationSettings`                                                           | Yes, stack         | `undefined`                                                            | Profile                                                                      | Protected.                                                   |
+| `ChangePassword`                                                                 | Yes, stack         | `undefined`                                                            | Profile                                                                      | Protected.                                                   |
+| `DeleteAccount`                                                                  | Yes, stack         | `undefined`                                                            | Profile                                                                      | Protected.                                                   |
+| `Onboarding`                                                                     | Yes, stack         | `undefined`                                                            | Initial route when onboarding is incomplete                                  | Reachable without auth.                                      |
+| `Login`                                                                          | Yes, stack         | `undefined`                                                            | Initial route, auth actions, protected-route redirect                        | Reachable without auth.                                      |
+| `AuthRegister`                                                                   | Yes, stack         | `undefined`                                                            | Auth flow                                                                    | Reachable without auth.                                      |
+| `CodeVerify`                                                                     | Yes, stack         | `{email: string}`                                                      | Registration/auth flow                                                       | Reachable without auth.                                      |
+| `ForgotPassword`                                                                 | Yes, stack         | `undefined`                                                            | Login                                                                        | Reachable without auth.                                      |
+| `ResetPassword`                                                                  | Yes, stack         | `{token?: string}`                                                     | `reset-password` link                                                        | Reachable without auth.                                      |
+| `Congratulation`                                                                 | Yes, stack         | `undefined`                                                            | No call site found                                                           | Dead/unreachable from current app flows.                     |
+| `Register`, `QRCodeView`, `ScanResult`, `Settings`, `EditItem`, `Help`, `SignUp` | No                 | Declared in `RootStackParamList` only                                  | No registered screen                                                         | Stale declarations.                                          |
 
 `RootStackParamList` also does not describe `ChatInbox` as a tab child. Calls to `Chat` use the required channel/item/user fields, and return-flow calls pass `returnSessionId`. The typed root list contains other routes used through the stack. Call-site inventory was source-based; dynamic targets were not executed.
 

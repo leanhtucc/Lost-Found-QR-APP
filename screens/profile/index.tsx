@@ -194,7 +194,7 @@ export default function ProfileScreen() {
               <LogoutButton onPress={handleLogoutPress} />
               <View className="pb-2 pt-6">
                 <Text className="text-center text-xs text-fb-label">
-                  FindBack v{Constants.expoConfig?.version || '1.0.0'}
+                  Lost and Found QR v{Constants.expoConfig?.version || '1.0.0'}
                 </Text>
               </View>
             </>

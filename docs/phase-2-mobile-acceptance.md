@@ -17,7 +17,7 @@ All authenticated backend REST modules route through a single transport policy i
 - Added identifier aliases and applied them to Item, Return, and Found Report DTOs.
 - Consolidated Expo config and strengthened environment profile validation.
 - Removed the legacy client-side Telegram bot logger/config so a server credential is no longer bundled; Sentry remains the client reporting channel.
-- Renamed npm package metadata to `findback-mobile` without changing native IDs.
+- Renamed npm package metadata to `lost-and-found-qr-mobile` without changing native IDs.
 - Added Phase 2 architecture and acceptance documentation.
 
 ## D. API Client
@@ -38,7 +38,7 @@ Typed aliases document internal item identity, public item identity, QR identity
 
 ## H. Config Consolidation
 
-`app.config.js` is the only Expo config source; the obsolete `app.json` was removed. Development remote-host and production private-host guards prevent accidental cross-environment API selection. Display name is `FindBack`; slug/scheme and `com.lostfound.app` native IDs remain stable.
+`app.config.js` is the only Expo config source; the obsolete `app.json` was removed. Development remote-host and production private-host guards prevent accidental cross-environment API selection. Display name is `Lost and Found QR`; slug/scheme and `com.lostfound.app` native IDs remain stable.
 
 ## I. Dependencies Removed/Kept
 
@@ -123,17 +123,17 @@ Attempted 2026-09-27. The on-device authenticated runtime sequence **could not b
 - **Metro:** **NOT STARTED.** With no device able to connect, starting a Metro dev server cannot cause any on-device JS to execute, so it would prove nothing about the runtime (checklist item 5: "Do not confuse opening DevLauncherActivity with the app JS actually running"). No JS-level runtime was observed.
 - **Test account:** **NOT AVAILABLE.** Per checklist item 7 ("If test credentials are not available: stop and report that exact blocker. Do not invent credentials."), no credentials were fabricated or hardcoded.
 
-| Gate | Result | Note |
-| --- | --- | --- |
-| Login | **BLOCKED** | needs device + dev backend + test account (none available) |
-| Home REST | **BLOCKED** | depends on Login |
-| My Items | **BLOCKED** | depends on Login |
-| Item Detail (incl. 404 → ApiError → ErrorState) | **BLOCKED** | depends on Login |
-| Logout / Login again | **BLOCKED** | depends on Login |
-| Refresh success (runtime) | **BLOCKED** | proven at unit level only (§E, §J) |
-| Parallel 401 (runtime) | **BLOCKED** | **Refresh requests observed: N/A.** Unit test `uses exactly one refresh request for three parallel 401 responses` proves count = 1 (§E, §J) |
-| Refresh failure (runtime) | **BLOCKED** | unit test `clears and emits session expiration once when shared refresh fails` + `does not enter a refresh loop when the single retry is still 401` prove single clear/emit and no loop (§E, §J) |
-| Firebase FIS (runtime) | **BLOCKED** | config proven healthy and live FIS API returns HTTP 200 (§M); on-device re-confirmation still needs a device + Metro |
+| Gate                                            | Result      | Note                                                                                                                                                                                             |
+| ----------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Login                                           | **BLOCKED** | needs device + dev backend + test account (none available)                                                                                                                                       |
+| Home REST                                       | **BLOCKED** | depends on Login                                                                                                                                                                                 |
+| My Items                                        | **BLOCKED** | depends on Login                                                                                                                                                                                 |
+| Item Detail (incl. 404 → ApiError → ErrorState) | **BLOCKED** | depends on Login                                                                                                                                                                                 |
+| Logout / Login again                            | **BLOCKED** | depends on Login                                                                                                                                                                                 |
+| Refresh success (runtime)                       | **BLOCKED** | proven at unit level only (§E, §J)                                                                                                                                                               |
+| Parallel 401 (runtime)                          | **BLOCKED** | **Refresh requests observed: N/A.** Unit test `uses exactly one refresh request for three parallel 401 responses` proves count = 1 (§E, §J)                                                      |
+| Refresh failure (runtime)                       | **BLOCKED** | unit test `clears and emits session expiration once when shared refresh fails` + `does not enter a refresh loop when the single retry is still 401` prove single clear/emit and no loop (§E, §J) |
+| Firebase FIS (runtime)                          | **BLOCKED** | config proven healthy and live FIS API returns HTTP 200 (§M); on-device re-confirmation still needs a device + Metro                                                                             |
 
 ## Final Validation
 

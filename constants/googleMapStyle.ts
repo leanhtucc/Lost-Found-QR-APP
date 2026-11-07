@@ -1,9 +1,9 @@
 import { MapStyleElement } from 'react-native-maps';
 
 export const DARK_GOOGLE_MAP_STYLE: MapStyleElement[] = [
-  { elementType: 'geometry', stylers: [{ color: '#17171f' }] },
+  { elementType: 'geometry', stylers: [{ color: '#12203A' }] },
   { elementType: 'labels.text.fill', stylers: [{ color: '#b8b5c8' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#17171f' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#12203A' }] },
   {
     featureType: 'administrative',
     elementType: 'geometry.stroke',
@@ -13,7 +13,7 @@ export const DARK_GOOGLE_MAP_STYLE: MapStyleElement[] = [
   { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#20202a' }] },
   { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#8e8a9d' }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#30303b' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#17171f' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#12203A' }] },
   { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#aaa6ba' }] },
   { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#474354' }] },
   { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#292934' }] },

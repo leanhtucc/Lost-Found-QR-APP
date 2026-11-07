@@ -166,7 +166,7 @@ describe('MapSection', () => {
     expect(publicMarker.props.pinColor).toBe('#f97316'); // Public item color
 
     const ownMarker = root.findByProps({ testID: 'radar-marker-item-own-2' });
-    expect(ownMarker.props.pinColor).toBe('#6366f1'); // Own item color
+    expect(ownMarker.props.pinColor).toBe('#2B7FE8'); // Own item color
   });
 
   it('displays RadarItemPreviewCard when a marker is pressed, and dismisses on close press', async () => {
@@ -447,14 +447,14 @@ describe('MapSection', () => {
 
     expect(allMarkers).toHaveLength(3);
 
-    // Verify pin colors: Public Lost = #f97316, Own Lost = #6366f1, Found = #10b981
+    // Verify pin colors: Public Lost = #f97316, Own Lost = #2B7FE8, Found = #10b981
     const publicLostMarker = allMarkers.find(m => m.props.testID === 'radar-marker-item-public-1');
     expect(publicLostMarker).toBeDefined();
     expect(publicLostMarker?.props.pinColor).toBe('#f97316');
 
     const ownLostMarker = allMarkers.find(m => m.props.testID === 'radar-marker-item-own-2');
     expect(ownLostMarker).toBeDefined();
-    expect(ownLostMarker?.props.pinColor).toBe('#6366f1');
+    expect(ownLostMarker?.props.pinColor).toBe('#2B7FE8');
 
     const foundMarker = allMarkers.find(m => m.props.testID === 'radar-marker-FOUND_REPORT:rep-1');
     expect(foundMarker).toBeDefined();
