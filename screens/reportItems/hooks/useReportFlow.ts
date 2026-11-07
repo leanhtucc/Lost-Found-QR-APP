@@ -666,13 +666,22 @@ export const useReportFlow = () => {
           }
         }
 
+        // The backend requires a hosted image URL; stop here instead of sending an empty one.
+        if (!publicImageUrl) {
+          Alert.alert(
+            'Không tải được ảnh',
+            'Không thể tải ảnh lên. Vui lòng kiểm tra kết nối mạng rồi thử lại.'
+          );
+          return;
+        }
+
         const itemName = aiResult?.name?.trim() || 'Vật phẩm mới';
         const itemCategory = (aiResult?.category as ItemCategory) || 'other';
 
         const createdItem = await itemsApi.createGuardianItem({
           name: itemName,
           category: itemCategory,
-          imagePublicUrl: publicImageUrl || '',
+          imagePublicUrl: publicImageUrl,
           details: {
             color: aiResult?.details.color || '',
             storage: aiResult?.details.storage || '',
