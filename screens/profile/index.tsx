@@ -29,7 +29,9 @@ function formatMemberSince(createdAt?: string) {
 
 function getShortMemberId(memberId?: string, uid?: string) {
   const source = memberId || uid || 'A3F2';
+  // Drop the USER_/user_ prefix: every id starts with it, so it carries no information.
   const normalized = source
+    .replace(/^user_/i, '')
     .replace(/[^a-zA-Z0-9]/g, '')
     .slice(0, 4)
     .toUpperCase();
