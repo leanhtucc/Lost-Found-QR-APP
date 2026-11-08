@@ -30,9 +30,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ onMenuPress, onSet
         </View>
       </TouchableOpacity>
 
-      <Text className="text-xl font-extrabold tracking-[-1px]">
-        <Text className="text-fb-content">Find</Text>
-        <Text className="text-fb-primary">Back</Text>
+      <Text numberOfLines={1} className="flex-1 px-3 text-center text-base font-extrabold">
+        <Text className="text-fb-content">Lost and Found </Text>
+        <Text className="text-fb-primary">QR</Text>
       </Text>
 
       <TouchableOpacity

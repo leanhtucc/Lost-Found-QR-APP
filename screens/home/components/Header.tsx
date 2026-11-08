@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { Bell, Menu, User } from 'lucide-react-native';
+import { Bell, User } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
 
 interface HeaderProps {
@@ -33,22 +33,18 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <View className="flex-row items-center justify-between px-6 pb-3 pt-5">
-      <View className="flex-row items-center gap-3">
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={onProfilePress}
-          accessibilityRole="button"
-          accessibilityLabel="Mở tài khoản"
-          className="h-9 w-9 items-center justify-center rounded-full bg-fb-surface/80"
+      <View className="mr-3 min-w-0 flex-1">
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          className="text-[22px] font-extrabold tracking-tight text-fb-primary-light"
         >
-          <Menu size={18} color={FIND_BACK.primaryLight} />
-        </TouchableOpacity>
-        <View className="max-w-[190px]">
-          <Text className="text-[32px] font-extrabold text-fb-primary/95">Lost and Found QR</Text>
-          <Text className="-mt-1 text-xs text-fb-muted" numberOfLines={1}>
-            Xin chào, {firstName}
-          </Text>
-        </View>
+          Lost and Found QR
+        </Text>
+        <Text className="mt-0.5 text-[13px] text-fb-muted" numberOfLines={1}>
+          Xin chào, {firstName}
+        </Text>
       </View>
 
       <View className="flex-row items-center gap-2">

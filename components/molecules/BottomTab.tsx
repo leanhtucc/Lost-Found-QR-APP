@@ -204,6 +204,7 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: 12,
     minHeight: 20,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },

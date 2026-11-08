@@ -28,6 +28,7 @@ const ProfileField = ({
   error,
   multiline,
   keyboardType,
+  placeholder,
 }: {
   label: string;
   value: string;
@@ -35,6 +36,7 @@ const ProfileField = ({
   error?: string;
   multiline?: boolean;
   keyboardType?: 'default' | 'phone-pad';
+  placeholder?: string;
 }) => (
   <View className="mb-5">
     <Text className="mb-2 text-sm font-semibold text-fb-muted">{label}</Text>
@@ -43,6 +45,7 @@ const ProfileField = ({
       onChangeText={onChangeText}
       multiline={multiline}
       keyboardType={keyboardType}
+      placeholder={placeholder}
       placeholderTextColor={FIND_BACK.labelText}
       className={`rounded-2xl border bg-fb-surface px-4 text-base text-fb-content ${
         multiline ? 'min-h-28 py-4' : 'h-14'
@@ -205,6 +208,7 @@ export default function EditProfileScreen() {
         />
         <ProfileField
           label="Số điện thoại"
+          placeholder="Ví dụ: 0912345678"
           value={phoneNumber}
           keyboardType="phone-pad"
           onChangeText={value => {
@@ -215,6 +219,7 @@ export default function EditProfileScreen() {
         />
         <ProfileField
           label="Địa chỉ"
+          placeholder="Phường, quận, thành phố"
           value={address}
           onChangeText={value => {
             setAddress(value);
@@ -224,6 +229,7 @@ export default function EditProfileScreen() {
         />
         <ProfileField
           label="Giới thiệu"
+          placeholder="Vài dòng về bạn (không bắt buộc)"
           value={bio}
           multiline
           onChangeText={value => {

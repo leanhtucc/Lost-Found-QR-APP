@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FIND_BACK } from '@constants/theme';
 import Animated, {
@@ -146,16 +146,16 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({ status, qrBounds
   const showScanLine = status === 'idle' || status === 'tracking';
 
   return (
-    <View className="absolute inset-0" pointerEvents="none">
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {/* Dark Overlay — we use a simple semi-transparent bg instead of cutout */}
-      <View className="absolute inset-0 bg-black/60" />
+      <View style={StyleSheet.absoluteFill} className="bg-black/60" />
 
       {/* Animated Scanner Frame */}
       <Animated.View entering={FadeIn.duration(400)} style={frameStyle}>
         {/* Semi-transparent border */}
         <Animated.View
-          style={borderStyle}
-          className="absolute inset-0 border border-white/15 rounded-3xl"
+          style={[StyleSheet.absoluteFill, borderStyle]}
+          className="border border-white/15 rounded-3xl"
         />
 
         {/* Corner Frames — Clean Design */}

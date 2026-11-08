@@ -69,7 +69,7 @@ export const ChatListScreen: React.FC = () => {
     <SafeAreaView className="flex-1 bg-fb-neutral" edges={['top']}>
       {/* Header */}
       <ChatListHeader
-        onBack={handleBack}
+        onBack={navigation.canGoBack() ? handleBack : undefined}
         unreadCount={conversations.filter(c => c.unreadCount > 0).length}
       />
 

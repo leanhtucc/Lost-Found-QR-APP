@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Search, Shield, Sparkles } from 'lucide-react-native';
+import { Search, PlusCircle } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
@@ -19,8 +19,6 @@ const C = {
   textSecondary: '#9AA9C2',
   textMuted: '#6A7A96',
   purple: '#2B7FE8',
-  green: '#22C55E',
-  cyan: '#22D3EE',
 };
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -85,68 +83,15 @@ export const EmptyState: React.FC = () => {
           borderRadius: 16,
           paddingVertical: 16,
           alignItems: 'center',
-          marginBottom: 32,
+          flexDirection: 'row',
+          justifyContent: 'center',
         }}
       >
-        <Text style={{ color: C.purple, fontSize: 15, fontWeight: '700' }}>
-          🔍 Báo mất vật phẩm
+        <PlusCircle size={18} color={C.purple} />
+        <Text style={{ color: C.purple, fontSize: 15, fontWeight: '700', marginLeft: 8 }}>
+          Báo mất vật phẩm
         </Text>
       </TouchableOpacity>
-
-      {/* ── Tips ── */}
-      <TipCard
-        icon={<Shield size={20} color={C.green} />}
-        iconBg="rgba(34,197,94,0.12)"
-        title="Bảo mật tài khoản"
-        subtitle="Kiểm tra trang thái bảo mật của bạn để nhận thông báo an toàn hơn."
-      />
-      <TipCard
-        icon={<Sparkles size={20} color={C.cyan} />}
-        iconBg="rgba(34,211,238,0.12)"
-        title="Mẹo tìm kiếm"
-        subtitle="Sử dụng bộ lọc thông minh để tìm thấy vật phẩm nhanh hơn 2 lần."
-      />
     </Animated.View>
   );
 };
-
-// ─── TipCard ─────────────────────────────────────────────────────────────────
-
-const TipCard: React.FC<{
-  icon: React.ReactNode;
-  iconBg: string;
-  title: string;
-  subtitle: string;
-}> = ({ icon, iconBg, title, subtitle }) => (
-  <View
-    style={{
-      flexDirection: 'row',
-      gap: 14,
-      backgroundColor: '#0F1A2E',
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.08)',
-      padding: 16,
-      marginBottom: 12,
-    }}
-  >
-    <View
-      style={{
-        width: 42,
-        height: 42,
-        borderRadius: 14,
-        backgroundColor: iconBg,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      {icon}
-    </View>
-    <View style={{ flex: 1 }}>
-      <Text style={{ color: '#F1F6FF', fontSize: 14, fontWeight: '700', marginBottom: 4 }}>
-        {title}
-      </Text>
-      <Text style={{ color: '#9AA9C2', fontSize: 12, lineHeight: 17 }}>{subtitle}</Text>
-    </View>
-  </View>
-);

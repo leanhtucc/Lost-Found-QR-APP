@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AlertCircle, RefreshCw, Settings } from 'lucide-react-native';
 import { FIND_BACK } from '@constants/theme';
@@ -27,7 +27,8 @@ export const ScannerError: React.FC<ScannerErrorProps> = ({
   return (
     <Animated.View
       entering={FadeIn.duration(400)}
-      className="absolute inset-0 items-center justify-center bg-fb-neutral px-6"
+      style={StyleSheet.absoluteFill}
+      className="items-center justify-center bg-fb-neutral px-6"
     >
       {/* Error Icon */}
       <View className="mb-6 h-20 w-20 items-center justify-center rounded-3xl border border-fb-danger/20 bg-fb-danger/10">

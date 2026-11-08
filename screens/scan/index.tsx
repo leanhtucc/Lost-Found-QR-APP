@@ -143,6 +143,15 @@ export const ScanScreen: React.FC = () => {
 
   // ── Handle close ──────────────────────────────────────────────
 
+  // Scan is a tab: with no history, goBack() is unhandled, so fall back to Home.
+  const leaveScanner = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Home' as never);
+    }
+  }, [navigation]);
+
   const handleClose = useCallback(() => {
     if (isProcessing) {
       Alert.alert('Đang quét mã', 'Bạn có muốn dừng quét mã QR?', [
@@ -150,13 +159,13 @@ export const ScanScreen: React.FC = () => {
         {
           text: 'Dừng',
           style: 'destructive',
-          onPress: () => navigation.goBack(),
+          onPress: leaveScanner,
         },
       ]);
     } else {
-      navigation.goBack();
+      leaveScanner();
     }
-  }, [isProcessing, navigation]);
+  }, [isProcessing, leaveScanner]);
 
   // ── Handle back button ────────────────────────────────────────
 
