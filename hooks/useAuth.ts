@@ -4,7 +4,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@navigation/index';
@@ -164,17 +163,13 @@ export const useAuth = (): UseAuthReturn => {
         } else {
           // Check if email not verified
           if (/(verify|verification|xác thực|xác minh|chưa xác)/i.test(response.message || '')) {
-            Alert.alert(
+            toast.warning(
               'Tài khoản chưa xác thực',
               'Vui lòng xác thực email của bạn trước khi đăng nhập.',
-              [
-                { text: 'Để sau', style: 'cancel' },
-                {
-                  text: 'Xác thực ngay',
-                  onPress: () =>
-                    navigation.navigate('CodeVerify', { email: normalizeEmail(email) }),
-                },
-              ]
+              {
+                actionLabel: 'Xác thực ngay',
+                onAction: () => navigation.navigate('CodeVerify', { email: normalizeEmail(email) }),
+              }
             );
           } else {
             setError(response.message || 'Email hoặc mật khẩu không đúng.');
@@ -318,7 +313,7 @@ export const useAuth = (): UseAuthReturn => {
           });
 
           setError(userMessage);
-          Alert.alert('Đăng ký thất bại', userMessage);
+          toast.error('Đăng ký thất bại', userMessage);
           return false;
         }
       } catch (err) {
@@ -330,7 +325,7 @@ export const useAuth = (): UseAuthReturn => {
 
         const errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
         setError(errorMessage);
-        Alert.alert('Lỗi', errorMessage);
+        toast.error('Lỗi kết nối', errorMessage);
         return false;
       } finally {
         setIsLoading(false);
@@ -341,7 +336,7 @@ export const useAuth = (): UseAuthReturn => {
         });
       }
     },
-    []
+    [toast]
   );
 
   /**
@@ -378,35 +373,31 @@ export const useAuth = (): UseAuthReturn => {
           }, 500);
           return true;
         } else {
-          // Check if the user was already verified previously
+          // No pending registration: the code expired or was never stored. The account was
+          // NOT created, so sending the user to Login would be misleading.
           if (
             response.message?.includes('No pending registration found') ||
             response.message?.includes('không tìm thấy đăng ký')
           ) {
-            Alert.alert(
-              'Tài khoản đã xác thực',
-              'Tài khoản này đã hoàn tất xác thực trước đó. Vui lòng đăng nhập để tiếp tục.',
-              [
-                {
-                  text: 'Đăng nhập ngay',
-                  onPress: () =>
-                    navigation.reset({
-                      index: 0,
-                      routes: [{ name: 'Login' }],
-                    }),
-                },
-              ]
+            setError('Phiên đăng ký đã hết hạn.');
+            toast.warning(
+              'Phiên đăng ký đã hết hạn',
+              'Tài khoản chưa được tạo. Vui lòng đăng ký lại để nhận mã mới.',
+              {
+                actionLabel: 'Đăng ký lại',
+                onAction: () => navigation.reset({ index: 0, routes: [{ name: 'AuthRegister' }] }),
+              }
             );
             return false;
           }
 
           if (response.message?.includes('expired') || response.message?.includes('hết hạn')) {
             setError('Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.');
-            Alert.alert('Mã hết hạn', 'Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.');
+            toast.warning('Mã đã hết hạn', 'Vui lòng yêu cầu mã mới.');
           } else {
             const errorMessage = formatAuthErrorMessage(response, 'Mã xác thực không đúng.');
             setError(errorMessage);
-            Alert.alert('Xác thực thất bại', errorMessage);
+            toast.error('Xác thực thất bại', errorMessage);
           }
           return false;
         }
@@ -414,7 +405,7 @@ export const useAuth = (): UseAuthReturn => {
       } catch (err) {
         const errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
         setError(errorMessage);
-        Alert.alert('Lỗi', errorMessage);
+        toast.error('Lỗi kết nối', errorMessage);
         return false;
       } finally {
         setIsLoading(false);
@@ -426,32 +417,35 @@ export const useAuth = (): UseAuthReturn => {
   /**
    * Resend OTP code to the registration email.
    */
-  const resendOtp = useCallback(async (email: string): Promise<boolean> => {
-    const normalizedEmail = normalizeEmail(email);
-    setIsLoading(true);
-    setError(null);
+  const resendOtp = useCallback(
+    async (email: string): Promise<boolean> => {
+      const normalizedEmail = normalizeEmail(email);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const response = await authApi.resendOtp({ email: normalizedEmail });
+      try {
+        const response = await authApi.resendOtp({ email: normalizedEmail });
 
-      if (response.success) {
-        Alert.alert('Đã gửi mã', 'Mã OTP mới đã được gửi đến email của bạn.');
-        return true;
-      } else {
-        setError(response.message || 'Không thể gửi lại mã. Vui lòng thử lại.');
-        Alert.alert('Lỗi', response.message || 'Không thể gửi lại mã. Vui lòng thử lại.');
+        if (response.success) {
+          toast.success('Đã gửi mã', 'Mã OTP mới đã được gửi đến email của bạn.');
+          return true;
+        } else {
+          setError(response.message || 'Không thể gửi lại mã. Vui lòng thử lại.');
+          toast.error('Không gửi lại được mã', response.message || 'Vui lòng thử lại sau ít phút.');
+          return false;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
+        const errorMessage = 'Không thể kết nối đến server.';
+        setError(errorMessage);
+        toast.error('Lỗi kết nối', errorMessage);
         return false;
+      } finally {
+        setIsLoading(false);
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      const errorMessage = 'Không thể kết nối đến server.';
-      setError(errorMessage);
-      Alert.alert('Lỗi', errorMessage);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [toast]
+  );
 
   // Backward-compatible aliases
   const verifyEmail = verifyOtp;
@@ -488,37 +482,40 @@ export const useAuth = (): UseAuthReturn => {
   /**
    * Request password reset email
    */
-  const forgotPassword = useCallback(async (email: string): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
+  const forgotPassword = useCallback(
+    async (email: string): Promise<boolean> => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const response = await authApi.forgotPassword({ email });
+      try {
+        const response = await authApi.forgotPassword({ email });
 
-      if (response.success) {
-        Alert.alert(
-          'Email đã gửi',
-          'Nếu tài khoản tồn tại, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu.'
-        );
-        return true;
-      } else {
-        // Still show success message for security (don't reveal if email exists)
-        Alert.alert(
-          'Email đã gửi',
-          'Nếu tài khoản tồn tại, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu.'
-        );
-        return true;
+        if (response.success) {
+          toast.success(
+            'Email đã gửi',
+            'Nếu tài khoản tồn tại, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu.'
+          );
+          return true;
+        } else {
+          // Still show success message for security (don't reveal if email exists)
+          toast.success(
+            'Email đã gửi',
+            'Nếu tài khoản tồn tại, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu.'
+          );
+          return true;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
+        const errorMessage = 'Không thể kết nối đến server. Vui lòng thử lại.';
+        setError(errorMessage);
+        toast.error('Lỗi kết nối', errorMessage);
+        return false;
+      } finally {
+        setIsLoading(false);
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      const errorMessage = 'Không thể kết nối đến server. Vui lòng thử lại.';
-      setError(errorMessage);
-      Alert.alert('Lỗi', errorMessage);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [toast]
+  );
 
   /**
    * Reset password with token
@@ -532,22 +529,19 @@ export const useAuth = (): UseAuthReturn => {
         const response = await authApi.resetPassword({ token, newPassword });
 
         if (response.success) {
-          Alert.alert(
-            'Thành công',
-            'Mật khẩu đã được đặt lại. Bạn có thể đăng nhập với mật khẩu mới.'
-          );
+          toast.success('Đã đặt lại mật khẩu', 'Bạn có thể đăng nhập với mật khẩu mới.');
           return true;
         } else {
           // Handle specific error messages
           if (response.message?.includes('expired')) {
             setError('Link đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu lại.');
-            Alert.alert('Hết hạn', 'Link đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu lại.');
+            toast.warning('Link đã hết hạn', 'Vui lòng yêu cầu đặt lại mật khẩu lần nữa.');
           } else if (response.message?.includes('Invalid')) {
             setError('Link đặt lại mật khẩu không hợp lệ.');
-            Alert.alert('Không hợp lệ', 'Link đặt lại mật khẩu không hợp lệ.');
+            toast.error('Link không hợp lệ', 'Vui lòng yêu cầu đặt lại mật khẩu lần nữa.');
           } else {
             setError(response.message || 'Không thể đặt lại mật khẩu.');
-            Alert.alert('Lỗi', response.message || 'Không thể đặt lại mật khẩu.');
+            toast.error('Không đặt lại được mật khẩu', response.message || 'Vui lòng thử lại.');
           }
           return false;
         }
@@ -555,13 +549,13 @@ export const useAuth = (): UseAuthReturn => {
       } catch (err) {
         const errorMessage = 'Không thể kết nối đến server. Vui lòng thử lại.';
         setError(errorMessage);
-        Alert.alert('Lỗi', errorMessage);
+        toast.error('Lỗi kết nối', errorMessage);
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [toast]
   );
 
   // ==================== NAVIGATION HELPERS ====================
